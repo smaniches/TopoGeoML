@@ -1,0 +1,163 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "topogeoml"
+version = "0.0.1"
+description = "Topology-aware geometric machine learning: persistent homology, higher-order domains, and geometric deep learning in reproducible ML pipelines."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "Santiago Maniches", email = "santiago@topologica.ai" },
+]
+keywords = [
+    "topology",
+    "persistent-homology",
+    "geometric-deep-learning",
+    "tda",
+    "machine-learning",
+    "hodge-laplacian",
+    "topological-deep-learning",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Typing :: Typed",
+]
+
+# Core dependencies — minimum needed for TopologyFeaturePipeline to work.
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "scikit-learn>=1.3",
+    "ripser>=0.6.4",
+    "persim>=0.3.1",
+    "networkx>=3.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# PyTorch / PyG: differentiable layers, GNN integration. Heavy install.
+torch = [
+    "torch>=2.0",
+    "torch-geometric>=2.4",
+]
+# Higher-order topological domains via TopoNetX.
+higher-order = [
+    "toponetx>=0.1.0",
+]
+# Heavier TDA backends (GUDHI is C++ underneath, giotto-tda is sklearn-style).
+tda = [
+    "gudhi>=3.9",
+    "giotto-tda>=0.6",
+]
+# Inference / descriptor service layer.
+api = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "pydantic>=2.5",
+]
+# Dev tooling.
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-benchmark>=4.0",
+    "ruff>=0.4",
+    "mypy>=1.8",
+    "hypothesis>=6.100",
+]
+all = [
+    "topogeoml[torch,higher-order,tda,api,dev]",
+]
+
+[project.urls]
+Homepage = "https://topologica.ai"
+Repository = "https://github.com/topologica-llc/topogeoml"
+Issues = "https://github.com/topologica-llc/topogeoml/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["topogeoml"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/topogeoml",
+    "/tests",
+    "/examples",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+]
+
+# ----- Lint / format -----
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "F",     # pyflakes
+    "W",     # pycodestyle warnings
+    "I",     # isort
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "C90",   # mccabe complexity
+    "RUF",   # ruff-specific
+    "NPY",   # numpy-specific
+    "SIM",   # flake8-simplify
+]
+ignore = [
+    "E501",  # line too long — handled by formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["N802", "N803"]  # test fns can use non-pep8 names
+
+# ----- Type checking -----
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+ignore_missing_imports = true  # ripser, persim, etc. lack stubs
+
+# ----- Tests -----
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gpu: requires CUDA",
+    "torch: requires torch / torch-geometric",
+    "gudhi: requires GUDHI",
+]
+
+[tool.coverage.run]
+source = ["topogeoml"]
+omit = ["*/tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]

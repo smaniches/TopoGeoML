@@ -1,0 +1,85 @@
+{
+  "config": {
+    "dataset": {
+      "n_per_class": 25,
+      "n_points": 40,
+      "name": "synthetic_shapes",
+      "noise": 0.05,
+      "seed": 42
+    },
+    "description": "Circles vs lines binary classification using only topological features. Benchmark from the v0.0.1 scope (item 3).\n",
+    "name": "synthetic_shapes_v001",
+    "output": {
+      "overwrite": true,
+      "path": "examples/outputs/synthetic_shapes_v001.json"
+    },
+    "pipeline": {
+      "kind": "topology_feature",
+      "max_edge_length": null,
+      "max_homology_dim": 1,
+      "metric": "euclidean",
+      "resolution": 15,
+      "sigma": 0.1,
+      "vectorizer": "persistence_image"
+    },
+    "tags": [
+      "benchmark",
+      "synthetic",
+      "topology-features"
+    ],
+    "validation": {
+      "cv_folds": 5,
+      "metric": "accuracy",
+      "seed": 42
+    }
+  },
+  "description": "Circles vs lines binary classification using only topological features. Benchmark from the v0.0.1 scope (item 3).\n",
+  "environment": {
+    "networkx_version": "3.6.1",
+    "numpy_version": "2.4.4",
+    "persim_version": "0.3.8",
+    "platform": "Linux-6.18.5-x86_64-with-glibc2.39",
+    "python_version": "3.12.3",
+    "ripser_version": "0.6.14",
+    "scikit_learn_version": "1.8.0",
+    "scipy_version": "1.17.1",
+    "topogeoml_version": "0.0.1"
+  },
+  "name": "synthetic_shapes_v001",
+  "results": {
+    "cv_mean": 1.0,
+    "cv_scores": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "cv_std": 0.0,
+    "feature_dim": 450,
+    "fit_provenance": {
+      "ambient_dim": 2,
+      "fallback_max": 2.9932203649363456,
+      "max_homology_dim": 1,
+      "metric": "euclidean",
+      "n_samples_seen": 50,
+      "output_dim": 450,
+      "pipeline_version": "0.0.1",
+      "vectorizer": "persistence_image"
+    },
+    "metric": "accuracy",
+    "n_samples": 50,
+    "train_score": 1.0
+  },
+  "tags": [
+    "benchmark",
+    "synthetic",
+    "topology-features"
+  ],
+  "timestamp_utc": "2026-05-20T01:38:03.850810+00:00",
+  "timing": {
+    "cross_val_s": 0.5793534870000485,
+    "dataset_build_s": 0.0006789809999645513,
+    "full_fit_s": 0.22509978699997646
+  }
+}

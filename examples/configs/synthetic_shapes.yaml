@@ -1,0 +1,38 @@
+# TopoGeomML v0.0.1 — synthetic shapes experiment
+#
+# Run with:
+#   python examples/run_experiment.py examples/configs/synthetic_shapes.yaml
+
+name: synthetic_shapes_v001
+description: >
+  Circles vs lines binary classification using only topological features.
+  Benchmark from the v0.0.1 scope (item 3).
+tags:
+  - benchmark
+  - synthetic
+  - topology-features
+
+dataset:
+  name: synthetic_shapes
+  n_per_class: 25
+  n_points: 40
+  noise: 0.05
+  seed: 42
+
+pipeline:
+  kind: topology_feature
+  max_homology_dim: 1
+  max_edge_length: null
+  vectorizer: persistence_image
+  resolution: 15
+  sigma: 0.1
+  metric: euclidean
+
+validation:
+  cv_folds: 5
+  metric: accuracy
+  seed: 42
+
+output:
+  path: examples/outputs/synthetic_shapes_v001.json
+  overwrite: true
