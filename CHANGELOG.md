@@ -79,4 +79,6 @@ Initial pre-stable release. The eleven-item v0.0.1 scope lock is fully implement
 - YAML round-trip, JSON output schema with mandatory fields, numpy serialization
 - End-to-end synthetic-shapes benchmark: 5-fold CV accuracy 1.0000 ± 0.0000
 
-### Total: 104 tests, all passing.
+### Test suite
+
+118 tests passing, 3 skipped (torch-gated: Hodge MP layer, differentiable PH, ShapeOfLearning callback — collected and run only when the `[torch]` extra is installed). Verified on Python 3.11 and 3.12, Ubuntu and macOS, via `.github/workflows/ci.yml`.
