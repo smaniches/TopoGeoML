@@ -25,7 +25,6 @@ import numpy as np
 from numpy.typing import NDArray
 from ripser import ripser
 
-
 # ---------------------------------------------------------------------------
 # Statistics extracted from a single persistence diagram
 # ---------------------------------------------------------------------------

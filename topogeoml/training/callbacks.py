@@ -31,9 +31,9 @@ Author: Santiago Maniches (ORCID: 0009-0005-6480-1987)
 
 from __future__ import annotations
 
-import math
 from collections import deque
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -177,7 +177,7 @@ class ShapeOfLearningCallback:
         acts: NDArray[np.float64],
     ) -> ShapeSnapshot:
         """Compute full topological summary of an activation matrix."""
-        n, dim = acts.shape
+        n, _dim = acts.shape
 
         # Nearest-neighbour distances (vectorized, §3.1: no Python sample loops)
         from sklearn.neighbors import NearestNeighbors

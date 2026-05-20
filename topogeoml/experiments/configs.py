@@ -134,7 +134,6 @@ def _environment_snapshot() -> dict[str, Any]:
         "scipy_version": _ver("scipy"),
         "scikit_learn_version": _ver("scikit-learn"),
         "ripser_version": _ver("ripser"),
-        "persim_version": _ver("persim"),
         "networkx_version": _ver("networkx"),
     }
 
@@ -180,7 +179,7 @@ def write_results(
         "results": _jsonify(results),
         "timing": dict(timing) if timing else {},
         "environment": _environment_snapshot(),
-        "timestamp_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "timestamp_utc": dt.datetime.now(dt.UTC).isoformat(),
     }
 
     # Binary write (elite-code-standards §2.1) — atomic-ish via temp + rename

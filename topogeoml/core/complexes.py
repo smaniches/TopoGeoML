@@ -29,7 +29,6 @@ from dataclasses import dataclass, field
 
 import numpy as np
 import scipy.sparse as sp
-from numpy.typing import NDArray
 
 Simplex = tuple[int, ...]
 """A simplex is a sorted tuple of vertex indices."""
@@ -86,7 +85,7 @@ class SimplicialComplex:
 
         # Build flat index for boundary construction.
         idx: dict[Simplex, int] = {}
-        for k, group in self.simplices.items():
+        for group in self.simplices.values():
             for i, s in enumerate(group):
                 idx[s] = i
         self._index = idx

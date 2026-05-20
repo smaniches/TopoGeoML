@@ -126,7 +126,7 @@ class TopologyFeaturePipeline(BaseEstimator, TransformerMixin):
     def fit(
         self,
         X: PointCloudBatch,
-        y: NDArray[np.floating[Any]] | None = None,  # noqa: ARG002 — sklearn API
+        y: NDArray[np.floating[Any]] | None = None,
     ) -> TopologyFeaturePipeline:
         """
         Fit the pipeline.

@@ -20,7 +20,6 @@ from topogeoml.core.complexes import (
     is_chain_complex,
 )
 
-
 # ---------- Construction ----------
 
 

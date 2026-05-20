@@ -20,8 +20,10 @@ v0.0.1 public surface:
     Experiments:
         load_experiment_config, write_results, ExperimentConfig and dataclasses.
 
-torch-dependent layers (nn.hodge.HodgeMessagePassing) are reachable via
-explicit `from topogeoml.nn.hodge import ...` and are NOT auto-imported here.
+torch-dependent symbols (`nn.hodge.HodgeMessagePassing`, `nn.diff_ph.*`,
+`training.callbacks.ShapeOfLearningCallback`) are reachable via explicit
+`from topogeoml.<subpkg> import ...` and are NOT auto-imported here, so the
+core package imports cleanly in torch-less environments.
 
 Author: Santiago Maniches (ORCID: 0009-0005-6480-1987)
 License: MIT
@@ -52,7 +54,6 @@ from topogeoml.experiments.configs import (
     write_results,
 )
 from topogeoml.pipelines.feature_pipeline import TopologyFeaturePipeline
-from topogeoml.training.callbacks import ShapeOfLearningCallback
 from topogeoml.signal import (
     TopologyFeatureConfig,
     estimate_delay_autocorrelation,
@@ -65,27 +66,26 @@ __all__ = [
     "BettiCurveVectorizer",
     "CubicalDiagnostic",
     "DiagramProvenance",
+    "DivergenceAlert",
     "EmbeddingTopologyAudit",
     "ExperimentConfig",
     "PersistenceDiagram",
     "PersistenceImageVectorizer",
     "RipsFiltration",
+    "ShapeSnapshot",
     "SimplicialComplex",
+    "TopologyFeatureConfig",
     "TopologyFeaturePipeline",
     "__version__",
     "audit_embedding",
     "betti_numbers",
     "cubical_mask_diagnostic",
+    "estimate_delay_autocorrelation",
     "graph_to_clique_complex",
     "hodge_laplacian",
     "is_chain_complex",
     "load_experiment_config",
-    "write_results",
-    "DivergenceAlert",
-    "ShapeOfLearningCallback",
-    "ShapeSnapshot",
-    "TopologyFeatureConfig",
-    "estimate_delay_autocorrelation",
     "sliding_window_topology_features",
     "takens_embedding",
+    "write_results",
 ]
