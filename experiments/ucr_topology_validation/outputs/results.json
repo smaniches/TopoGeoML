@@ -1,0 +1,978 @@
+{
+  "experiment": "ucr_topology_validation",
+  "timestamp_utc": "2026-05-20T04:27:50.892255+00:00",
+  "seed_global": 42,
+  "datasets": [
+    "ECG200",
+    "GunPoint",
+    "Coffee"
+  ],
+  "results_per_dataset": {
+    "ECG200": {
+      "fold_results": [
+        {
+          "dataset": "ECG200",
+          "cv_seed": 42,
+          "fold": 0,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.760989010989011
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 42,
+          "fold": 0,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7994505494505495
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 42,
+          "fold": 1,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8543956043956045
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 42,
+          "fold": 1,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8708791208791209
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 42,
+          "fold": 2,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.6951566951566952
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 42,
+          "fold": 2,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.6552706552706553
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 42,
+          "fold": 3,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.6965811965811965
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 42,
+          "fold": 3,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7350427350427351
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 42,
+          "fold": 4,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7321937321937322
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 42,
+          "fold": 4,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7905982905982906
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 43,
+          "fold": 0,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8159340659340659
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 43,
+          "fold": 0,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8351648351648351
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 43,
+          "fold": 1,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7664835164835164
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 43,
+          "fold": 1,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7252747252747254
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 43,
+          "fold": 2,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.6581196581196581
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 43,
+          "fold": 2,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7136752136752136
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 43,
+          "fold": 3,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7507122507122507
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 43,
+          "fold": 3,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8846153846153846
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 43,
+          "fold": 4,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8304843304843305
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 43,
+          "fold": 4,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7905982905982906
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 44,
+          "fold": 0,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8159340659340659
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 44,
+          "fold": 0,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7802197802197802
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 44,
+          "fold": 1,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7802197802197802
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 44,
+          "fold": 1,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7967032967032968
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 44,
+          "fold": 2,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8105413105413106
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 44,
+          "fold": 2,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.809116809116809
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 44,
+          "fold": 3,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.6780626780626781
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 44,
+          "fold": 3,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8105413105413106
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 44,
+          "fold": 4,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.6951566951566952
+        },
+        {
+          "dataset": "ECG200",
+          "cv_seed": 44,
+          "fold": 4,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7521367521367521
+        }
+      ],
+      "embedding_dim": 3,
+      "delay": 6,
+      "n_samples": 200,
+      "n_train_orig": 100,
+      "n_test_orig": 100,
+      "series_length": 96,
+      "class_distribution": {
+        "-1": 67,
+        "1": 133
+      },
+      "baseline_mean": 0.7560643060643063,
+      "baseline_std": 0.06169844605867466,
+      "augmented_mean": 0.7832858499525166,
+      "augmented_std": 0.06005707934563207,
+      "mean_difference": 0.027221543888210558,
+      "cohen_dz": 0.48480324883521225,
+      "permutation_p_value": 0.04609539046095391,
+      "permutation_n_iter": 10000,
+      "bootstrap_ci_lower": 0.0036019536019536113,
+      "bootstrap_ci_upper": 0.05818070897406734,
+      "bootstrap_alpha": 0.05,
+      "n_folds_total": 15,
+      "fold_differences": [
+        0.03846153846153855,
+        0.016483516483516425,
+        -0.03988603988603989,
+        0.03846153846153855,
+        0.05840455840455838,
+        0.019230769230769162,
+        -0.04120879120879106,
+        0.05555555555555547,
+        0.1339031339031339,
+        -0.03988603988603989,
+        -0.0357142857142857,
+        0.016483516483516536,
+        -0.0014245014245015675,
+        0.13247863247863256,
+        0.056980056980056926
+      ],
+      "cv_seconds": 17.380345705999957,
+      "bh_adjusted_p_value": 0.04609539046095391
+    },
+    "GunPoint": {
+      "fold_results": [
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 42,
+          "fold": 0,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.775
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 42,
+          "fold": 0,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.925
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 42,
+          "fold": 1,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.825
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 42,
+          "fold": 1,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.975
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 42,
+          "fold": 2,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.75
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 42,
+          "fold": 2,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.925
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 42,
+          "fold": 3,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.75
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 42,
+          "fold": 3,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.95
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 42,
+          "fold": 4,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.75
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 42,
+          "fold": 4,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.925
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 43,
+          "fold": 0,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.725
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 43,
+          "fold": 0,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.95
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 43,
+          "fold": 1,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.675
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 43,
+          "fold": 1,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.975
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 43,
+          "fold": 2,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8999999999999999
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 43,
+          "fold": 2,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8999999999999999
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 43,
+          "fold": 3,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.8
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 43,
+          "fold": 3,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.925
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 43,
+          "fold": 4,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.725
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 43,
+          "fold": 4,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.975
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 44,
+          "fold": 0,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.75
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 44,
+          "fold": 0,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.95
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 44,
+          "fold": 1,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7749999999999999
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 44,
+          "fold": 1,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.975
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 44,
+          "fold": 2,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.625
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 44,
+          "fold": 2,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.925
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 44,
+          "fold": 3,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.875
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 44,
+          "fold": 3,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.95
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 44,
+          "fold": 4,
+          "feature_set": "baseline",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.7
+        },
+        {
+          "dataset": "GunPoint",
+          "cv_seed": 44,
+          "fold": 4,
+          "feature_set": "augmented",
+          "n_train": 160,
+          "n_test": 40,
+          "balanced_accuracy": 0.95
+        }
+      ],
+      "embedding_dim": 3,
+      "delay": 9,
+      "n_samples": 200,
+      "n_train_orig": 50,
+      "n_test_orig": 150,
+      "series_length": 150,
+      "class_distribution": {
+        "1": 100,
+        "2": 100
+      },
+      "baseline_mean": 0.76,
+      "baseline_std": 0.07121396331779722,
+      "augmented_mean": 0.945,
+      "augmented_std": 0.02352809870285799,
+      "mean_difference": 0.18500000000000003,
+      "cohen_dz": 2.3105667406401937,
+      "permutation_p_value": 9.999000099990002e-05,
+      "permutation_n_iter": 10000,
+      "bootstrap_ci_lower": 0.14,
+      "bootstrap_ci_upper": 0.22,
+      "bootstrap_alpha": 0.05,
+      "n_folds_total": 15,
+      "fold_differences": [
+        0.15000000000000002,
+        0.15000000000000002,
+        0.17500000000000004,
+        0.19999999999999996,
+        0.17500000000000004,
+        0.22499999999999998,
+        0.29999999999999993,
+        0.0,
+        0.125,
+        0.25,
+        0.19999999999999996,
+        0.20000000000000007,
+        0.30000000000000004,
+        0.07499999999999996,
+        0.25
+      ],
+      "cv_seconds": 20.494752495999933,
+      "bh_adjusted_p_value": 0.00029997000299970003
+    },
+    "Coffee": {
+      "fold_results": [
+        {
+          "dataset": "Coffee",
+          "cv_seed": 42,
+          "fold": 0,
+          "feature_set": "baseline",
+          "n_train": 44,
+          "n_test": 12,
+          "balanced_accuracy": 0.75
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 42,
+          "fold": 0,
+          "feature_set": "augmented",
+          "n_train": 44,
+          "n_test": 12,
+          "balanced_accuracy": 1.0
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 42,
+          "fold": 1,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.9
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 42,
+          "fold": 1,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.9
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 42,
+          "fold": 2,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.8166666666666667
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 42,
+          "fold": 2,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.8166666666666667
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 42,
+          "fold": 3,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 1.0
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 42,
+          "fold": 3,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 1.0
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 42,
+          "fold": 4,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.9
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 42,
+          "fold": 4,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 1.0
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 43,
+          "fold": 0,
+          "feature_set": "baseline",
+          "n_train": 44,
+          "n_test": 12,
+          "balanced_accuracy": 0.8333333333333334
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 43,
+          "fold": 0,
+          "feature_set": "augmented",
+          "n_train": 44,
+          "n_test": 12,
+          "balanced_accuracy": 0.8333333333333334
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 43,
+          "fold": 1,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.7166666666666667
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 43,
+          "fold": 1,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.9
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 43,
+          "fold": 2,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.9
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 43,
+          "fold": 2,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 1.0
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 43,
+          "fold": 3,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.9166666666666667
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 43,
+          "fold": 3,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 1.0
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 43,
+          "fold": 4,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.9
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 43,
+          "fold": 4,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 1.0
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 44,
+          "fold": 0,
+          "feature_set": "baseline",
+          "n_train": 44,
+          "n_test": 12,
+          "balanced_accuracy": 0.9166666666666667
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 44,
+          "fold": 0,
+          "feature_set": "augmented",
+          "n_train": 44,
+          "n_test": 12,
+          "balanced_accuracy": 1.0
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 44,
+          "fold": 1,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.7166666666666667
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 44,
+          "fold": 1,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.9
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 44,
+          "fold": 2,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.8166666666666667
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 44,
+          "fold": 2,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.9166666666666667
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 44,
+          "fold": 3,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 0.9
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 44,
+          "fold": 3,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 1.0
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 44,
+          "fold": 4,
+          "feature_set": "baseline",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 1.0
+        },
+        {
+          "dataset": "Coffee",
+          "cv_seed": 44,
+          "fold": 4,
+          "feature_set": "augmented",
+          "n_train": 45,
+          "n_test": 11,
+          "balanced_accuracy": 1.0
+        }
+      ],
+      "embedding_dim": 3,
+      "delay": 17,
+      "n_samples": 56,
+      "n_train_orig": 28,
+      "n_test_orig": 28,
+      "series_length": 286,
+      "class_distribution": {
+        "0": 29,
+        "1": 27
+      },
+      "baseline_mean": 0.8655555555555555,
+      "baseline_std": 0.08896821856901439,
+      "augmented_mean": 0.951111111111111,
+      "augmented_std": 0.06680541118025517,
+      "mean_difference": 0.08555555555555555,
+      "cohen_dz": 1.1057369912010784,
+      "permutation_p_value": 0.0012998700129987,
+      "permutation_n_iter": 10000,
+      "bootstrap_ci_lower": 0.0511111111111111,
+      "bootstrap_ci_upper": 0.12777777777777774,
+      "bootstrap_alpha": 0.05,
+      "n_folds_total": 15,
+      "fold_differences": [
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.09999999999999998,
+        0.0,
+        0.18333333333333335,
+        0.09999999999999998,
+        0.08333333333333326,
+        0.09999999999999998,
+        0.08333333333333326,
+        0.18333333333333335,
+        0.10000000000000009,
+        0.09999999999999998,
+        0.0
+      ],
+      "cv_seconds": 11.976332528000057,
+      "bh_adjusted_p_value": 0.00194980501949805
+    }
+  },
+  "bh_correction": {
+    "alpha": 0.05,
+    "method": "Benjamini-Hochberg (1995)",
+    "n_tests": 3
+  },
+  "claim": "Across the UCR datasets tested, after BH-FDR correction at alpha=0.05, the topology-augmented feature representation yields a balanced-accuracy improvement that is statistically significant on at least one dataset with effect size d_z >= 0.5.",
+  "claim_status": "supported",
+  "significant_with_effect": [
+    "GunPoint",
+    "Coffee"
+  ],
+  "code_hash_sha256_16": "c492503e716cea56",
+  "environment": {
+    "python": "3.12.3",
+    "platform": "Linux-6.18.5-x86_64-with-glibc2.39",
+    "numpy": "2.3.5",
+    "scipy": "1.17.1",
+    "sklearn": "1.7.2",
+    "ripser": "0.6.14",
+    "aeon": "1.4.0"
+  }
+}

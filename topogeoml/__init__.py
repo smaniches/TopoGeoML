@@ -53,6 +53,12 @@ from topogeoml.experiments.configs import (
 )
 from topogeoml.pipelines.feature_pipeline import TopologyFeaturePipeline
 from topogeoml.training.callbacks import ShapeOfLearningCallback
+from topogeoml.signal import (
+    TopologyFeatureConfig,
+    estimate_delay_autocorrelation,
+    sliding_window_topology_features,
+    takens_embedding,
+)
 from topogeoml.training.snapshot import DivergenceAlert, ShapeSnapshot
 
 __all__ = [
@@ -78,4 +84,8 @@ __all__ = [
     "DivergenceAlert",
     "ShapeOfLearningCallback",
     "ShapeSnapshot",
+    "TopologyFeatureConfig",
+    "estimate_delay_autocorrelation",
+    "sliding_window_topology_features",
+    "takens_embedding",
 ]
