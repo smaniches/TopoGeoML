@@ -52,6 +52,8 @@ from topogeoml.experiments.configs import (
     write_results,
 )
 from topogeoml.pipelines.feature_pipeline import TopologyFeaturePipeline
+from topogeoml.training.callbacks import ShapeOfLearningCallback
+from topogeoml.training.snapshot import DivergenceAlert, ShapeSnapshot
 
 __all__ = [
     "BettiCurveVectorizer",
@@ -73,4 +75,7 @@ __all__ = [
     "is_chain_complex",
     "load_experiment_config",
     "write_results",
+    "DivergenceAlert",
+    "ShapeOfLearningCallback",
+    "ShapeSnapshot",
 ]
