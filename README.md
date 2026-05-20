@@ -23,7 +23,7 @@ A Python-first research and engineering stack connecting persistent homology, hi
                  features for sklearn         message passing in PyTorch
 ```
 
-[![Tests](https://img.shields.io/badge/tests-104%20passing-brightgreen)](#testing)
+[![CI](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
 [![Version](https://img.shields.io/badge/version-0.0.1--alpha-orange)](#status)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -232,7 +232,7 @@ pytest -m "not torch"           # skip layer tests if torch is unavailable
 pytest --cov=topogeoml          # with coverage
 ```
 
-Current coverage: 104 tests across diagrams, filtrations, vectorizers, complexes, cubical, graph lift, Hodge MP layer, embedding audit, configs, and the end-to-end pipeline. Topology recovery is verified on shapes with known Betti numbers (S¹, D², S², two circles, tetrahedron boundary, K_4 boundary).
+Current coverage: 118 tests across diagrams, filtrations, vectorizers, complexes, cubical, graph lift, embedding audit, configs, signal (Takens + sliding-window), and the end-to-end pipeline; 3 additional torch-gated tests (Hodge MP layer, differentiable PH, ShapeOfLearning callback) skip cleanly when torch is not installed. Topology recovery is verified on shapes with known Betti numbers (S¹, D², S², two circles, tetrahedron boundary, K_4 boundary).
 
 ## Limitations
 
@@ -256,8 +256,6 @@ This is v0.0.1 — pre-stable. The deliberate cuts in scope, known failure modes
   title        = {TopoGeomML: topology-aware geometric machine learning},
   year         = {2026},
   version      = {0.0.1},
-  publisher    = {Zenodo},
-  doi          = {10.5281/zenodo.XXXXXXX},
   url          = {https://github.com/topologica-llc/topogeoml},
   orcid        = {0009-0005-6480-1987}
 }
