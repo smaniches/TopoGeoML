@@ -13,8 +13,8 @@ import scipy.sparse as sp
 torch = pytest.importorskip("torch")
 
 # Imports below require torch — gated by importorskip.
-from topogeoml.core.complexes import SimplicialComplex, hodge_laplacian  # noqa: E402
-from topogeoml.nn.hodge import (  # noqa: E402
+from topogeoml.core.complexes import SimplicialComplex, hodge_laplacian
+from topogeoml.nn.hodge import (
     HodgeMessagePassing,
     build_hodge_layer_from_complex,
     normalize_hodge_laplacian,

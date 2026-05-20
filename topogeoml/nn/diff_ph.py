@@ -32,7 +32,6 @@ Author: Santiago Maniches (ORCID: 0009-0005-6480-1987)
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -50,7 +49,6 @@ except ImportError as exc:  # pragma: no cover
     ) from exc
 
 from ripser import ripser
-
 
 # ---------------------------------------------------------------------------
 # Core: differentiable diagram construction
@@ -85,13 +83,12 @@ def _critical_edges_h0(
 
     Returns list of (i, j) tuples in increasing MST weight order.
     """
-    n = D_np.shape[0]
     mst = scg.minimum_spanning_tree(sp.csr_matrix(D_np)).tocoo()
     # Sort by weight ascending to match ripser's bar order
     order = np.argsort(mst.data)
     rows = mst.row[order].tolist()
     cols = mst.col[order].tolist()
-    return list(zip(rows, cols))
+    return list(zip(rows, cols, strict=True))
 
 
 def _critical_edges_h1(

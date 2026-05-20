@@ -48,7 +48,8 @@ coverage.xml
 
 # Project
 *.log
-data/
+/data/
+!topogeoml/data/
 checkpoints/
 runs/
 wandb/

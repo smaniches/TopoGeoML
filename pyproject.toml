@@ -42,7 +42,6 @@ dependencies = [
     "scipy>=1.10",
     "scikit-learn>=1.3",
     "ripser>=0.6.4",
-    "persim>=0.3.1",
     "networkx>=3.0",
     "pyyaml>=6.0",
 ]
@@ -119,11 +118,27 @@ select = [
     "SIM",   # flake8-simplify
 ]
 ignore = [
-    "E501",  # line too long — handled by formatter
+    "E501",   # line too long — handled by formatter
+    # Mathematical-notation tolerances. Conventional names (X for design matrix,
+    # L for Laplacian, G for graph, D for distance/degree, etc.) and Unicode
+    # symbols in docstrings (σ, ×, –) are correct, not typos.
+    "N803",   # uppercase argument names
+    "N806",   # uppercase local variable names
+    "RUF002", # ambiguous unicode in docstring
+    "RUF003", # ambiguous unicode in comment
 ]
 
+[tool.ruff.lint.mccabe]
+# Topological / linear-algebra functions branch on dimension, simplex order,
+# and edge cases; the default threshold of 10 is unrealistically tight.
+max-complexity = 16
+
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["N802", "N803"]  # test fns can use non-pep8 names
+"tests/*" = [
+    "N802",  # test fns can use non-pep8 names
+    "E402",  # imports after `pytest.importorskip(...)` are standard practice
+    "B017",  # `pytest.raises(Exception)` is fine when the precise exception type is library-internal
+]
 
 # ----- Type checking -----
 [tool.mypy]

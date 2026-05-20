@@ -15,7 +15,6 @@ from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import NDArray
-from persim import PersistenceImager
 
 from topogeoml.core.diagrams import PersistenceDiagram
 
@@ -39,10 +38,51 @@ def _bars_for_pi(
     return out
 
 
+def _persistence_image_one(
+    bars: NDArray[np.float64],
+    resolution: int,
+    sigma: float,
+    fallback_max: float,
+    weight_power: float,
+) -> NDArray[np.float64]:
+    """
+    Persistence image for one (birth, death) bar set on a fixed birth-persistence grid.
+
+    Algorithm (Adams et al. 2017, "Persistence Images: A Stable Vector
+    Representation of Persistent Homology", JMLR):
+        1. Map (birth, death) → (birth, persistence = death − birth).
+        2. Each point contributes an isotropic 2D Gaussian (bandwidth ``sigma``)
+           weighted by ``persistence ** weight_power``.
+        3. Discretize on a ``resolution × resolution`` grid spanning
+           ``[0, fallback_max]`` on each axis.
+
+    Returns a flat float64 array of length ``resolution ** 2`` (row-major).
+    """
+    if bars.shape[0] == 0:
+        return np.zeros(resolution * resolution, dtype=np.float64)
+
+    births = bars[:, 0].astype(np.float64, copy=False)
+    pers = (bars[:, 1] - bars[:, 0]).astype(np.float64, copy=False)
+    # Negative persistences would indicate malformed bars; clip defensively.
+    pers = np.clip(pers, a_min=0.0, a_max=None)
+    weights = pers ** weight_power
+
+    edges = np.linspace(0.0, fallback_max, resolution + 1, dtype=np.float64)
+    centers = 0.5 * (edges[:-1] + edges[1:])  # (resolution,)
+    bx, py = np.meshgrid(centers, centers, indexing="xy")  # both (resolution, resolution)
+
+    inv_two_sigma_sq = 1.0 / (2.0 * sigma * sigma)
+    dx = bx[..., None] - births[None, None, :]  # (R, R, n)
+    dy = py[..., None] - pers[None, None, :]  # (R, R, n)
+    gauss = np.exp(-(dx * dx + dy * dy) * inv_two_sigma_sq)
+    img = (gauss * weights[None, None, :]).sum(axis=-1)  # (R, R)
+    return np.ascontiguousarray(img, dtype=np.float64).ravel()
+
+
 @dataclass
 class PersistenceImageVectorizer:
     """
-    Persistence Images (Adams et al. 2017) via persim.
+    Persistence Images (Adams et al. 2017), in-house NumPy implementation.
 
     Discretizes a persistence diagram into a (resolution × resolution) image
     by smoothing each (birth, persistence) point with a Gaussian kernel,
@@ -58,16 +98,17 @@ class PersistenceImageVectorizer:
     sigma : float
         Gaussian kernel bandwidth in birth-persistence coordinates.
     fallback_max : float
-        Finite value substituted for infinite deaths (typically the max
-        observed birth in your dataset; choose calibrated to data scale).
+        Finite value substituted for infinite deaths and the upper bound of the
+        birth and persistence axes (typically the max observed birth in your
+        dataset; choose calibrated to data scale).
     weight_power : float
         Persistence weight exponent (1.0 = linear in persistence, standard).
 
     Notes
     -----
-    Pixel range is fit per-dimension on the first transform call unless
-    `pixel_size` is overridden. For batch use, fit pixel range across the
-    full training set first; see TopologyFeaturePipeline for the fitted flow.
+    The grid is fixed to ``[0, fallback_max]`` on both axes. For batch use,
+    callers should fit ``fallback_max`` across the full training set first;
+    see TopologyFeaturePipeline for the fitted flow.
     """
 
     homology_dims: tuple[int, ...] = (0, 1)
@@ -83,19 +124,13 @@ class PersistenceImageVectorizer:
             raise ValueError(f"sigma must be positive, got {self.sigma}")
         if not self.homology_dims:
             raise ValueError("homology_dims must be non-empty")
+        if self.fallback_max <= 0:
+            raise ValueError(f"fallback_max must be positive, got {self.fallback_max}")
 
     @property
     def output_dim(self) -> int:
         """Length of the feature vector produced by transform()."""
         return len(self.homology_dims) * self.resolution * self.resolution
-
-    def _imager(self) -> PersistenceImager:
-        """Construct a fresh PersistenceImager configured for our settings."""
-        pi = PersistenceImager(
-            pixel_size=1.0 / self.resolution,
-            kernel_params={"sigma": [[self.sigma, 0.0], [0.0, self.sigma]]},
-        )
-        return pi
 
     def transform_one(self, diagram: PersistenceDiagram) -> NDArray[np.float64]:
         """
@@ -114,27 +149,15 @@ class PersistenceImageVectorizer:
         feats: list[NDArray[np.float64]] = []
         for dim in self.homology_dims:
             bars = _bars_for_pi(diagram, dim, self.fallback_max)
-            if bars.shape[0] == 0:
-                feats.append(np.zeros(self.resolution * self.resolution, dtype=np.float64))
-                continue
-            pi = self._imager()
-            # persim wants (birth, death) and converts internally to (birth, persistence).
-            pi.fit([bars])
-            # Force pixel range to a unit square in (birth, persistence) coords.
-            pi.birth_range = (0.0, self.fallback_max)
-            pi.pers_range = (0.0, self.fallback_max)
-            pi.pixel_size = self.fallback_max / self.resolution
-            img = pi.transform([bars])[0]
-            # Square image, flatten in C order for deterministic feature index mapping.
-            arr = np.ascontiguousarray(img, dtype=np.float64).ravel()
-            # persim image size may differ by ±1 pixel from resolution due to rounding.
-            # Pad or truncate to exactly resolution^2.
-            target = self.resolution * self.resolution
-            if arr.size < target:
-                arr = np.pad(arr, (0, target - arr.size))
-            elif arr.size > target:
-                arr = arr[:target]
-            feats.append(arr)
+            feats.append(
+                _persistence_image_one(
+                    bars,
+                    resolution=self.resolution,
+                    sigma=self.sigma,
+                    fallback_max=self.fallback_max,
+                    weight_power=self.weight_power,
+                )
+            )
         return np.concatenate(feats).astype(np.float64, copy=False)
 
 
