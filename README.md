@@ -40,17 +40,17 @@ For architecture, strategic positioning, and the design intent behind v0.0.1 + t
 
 | # | Item | Status | Where |
 | --- | --- | --- | --- |
-| 1 | Topology feature pipeline for point clouds | ✅ | `topogeoml.pipelines.TopologyFeaturePipeline` |
-| 2 | Diagram statistics and Betti curve vectorizers | ✅ | `topogeoml.core.PersistenceImageVectorizer`, `BettiCurveVectorizer` |
-| 3 | Synthetic point cloud classification benchmark | ✅ | `examples/circles_vs_lines.py` + `examples/run_experiment.py` |
-| 4 | Cubical mask topology diagnostic | ✅ | `topogeoml.core.cubical_mask_diagnostic` |
-| 5 | Graph to clique complex lift | ✅ | `topogeoml.data.graph_to_clique_complex` |
-| 6 | Boundary operator validation | ✅ | `topogeoml.core.is_chain_complex` |
-| 7 | Hodge Laplacian utility | ✅ | `topogeoml.core.hodge_laplacian`, `betti_numbers` |
-| 8 | Minimal Hodge message passing layer | ✅ | `topogeoml.nn.hodge.HodgeMessagePassing` (requires torch) |
-| 9 | Embedding topology audit prototype | ✅ | `topogeoml.audit_embedding` |
-| 10 | YAML experiment configs and JSON outputs | ✅ | `topogeoml.experiments.load_experiment_config` / `write_results` |
-| 11 | Documentation with explicit limitations | ✅ | [`LIMITATIONS.md`](LIMITATIONS.md) |
+| 1 | Topology feature pipeline for point clouds | [done] | `topogeoml.pipelines.TopologyFeaturePipeline` |
+| 2 | Diagram statistics and Betti curve vectorizers | [done] | `topogeoml.core.PersistenceImageVectorizer`, `BettiCurveVectorizer` |
+| 3 | Synthetic point cloud classification benchmark | [done] | `examples/circles_vs_lines.py` + `examples/run_experiment.py` |
+| 4 | Cubical mask topology diagnostic | [done] | `topogeoml.core.cubical_mask_diagnostic` |
+| 5 | Graph to clique complex lift | [done] | `topogeoml.data.graph_to_clique_complex` |
+| 6 | Boundary operator validation | [done] | `topogeoml.core.is_chain_complex` |
+| 7 | Hodge Laplacian utility | [done] | `topogeoml.core.hodge_laplacian`, `betti_numbers` |
+| 8 | Minimal Hodge message passing layer | [done] | `topogeoml.nn.hodge.HodgeMessagePassing` (requires torch) |
+| 9 | Embedding topology audit prototype | [done] | `topogeoml.audit_embedding` |
+| 10 | YAML experiment configs and JSON outputs | [done] | `topogeoml.experiments.load_experiment_config` / `write_results` |
+| 11 | Documentation with explicit limitations | [done] | [`LIMITATIONS.md`](LIMITATIONS.md) |
 
 ## Installation
 
@@ -178,24 +178,24 @@ python examples/run_experiment.py examples/configs/synthetic_shapes.yaml
 ```text
 topogeoml/
 ├── core/                       # Mathematical objects (no torch)
-│   ├── diagrams.py             ✅ PersistenceDiagram + DiagramProvenance
-│   ├── filtrations.py          ✅ RipsFiltration (via ripser)
-│   ├── vectorizers.py          ✅ PersistenceImage, BettiCurve
-│   ├── complexes.py            ✅ SimplicialComplex, ∂_k, L_k, betti_numbers
-│   ├── cubical.py              ✅ Binary-mask topology diagnostic
-│   └── distances.py            🚧 v0.1: bottleneck, Wasserstein
+│   ├── diagrams.py             [done] PersistenceDiagram + DiagramProvenance
+│   ├── filtrations.py          [done] RipsFiltration (via ripser)
+│   ├── vectorizers.py          [done] PersistenceImage, BettiCurve
+│   ├── complexes.py            [done] SimplicialComplex, ∂_k, L_k, betti_numbers
+│   ├── cubical.py              [done] Binary-mask topology diagnostic
+│   └── distances.py            [v0.1] v0.1: bottleneck, Wasserstein
 ├── data/
-│   └── graph_to_complex.py     ✅ Graph → clique complex
+│   └── graph_to_complex.py     [done] Graph → clique complex
 ├── pipelines/
-│   └── feature_pipeline.py     ✅ TopologyFeaturePipeline (sklearn-compatible)
+│   └── feature_pipeline.py     [done] TopologyFeaturePipeline (sklearn-compatible)
 ├── audits/
-│   └── embedding_audit.py      ✅ Embedding topology audit (prototype)
+│   └── embedding_audit.py      [done] Embedding topology audit (prototype)
 ├── experiments/
-│   └── configs.py              ✅ YAML loader + JSON writer
+│   └── configs.py              [done] YAML loader + JSON writer
 ├── nn/                         # Requires torch
-│   └── hodge.py                ✅ HodgeMessagePassing layer
-├── services/                   🚧 v0.1: FastAPI descriptor service
-└── tests/                      ✅ 104 tests
+│   └── hodge.py                [done] HodgeMessagePassing layer
+├── services/                   [v0.1] v0.1: FastAPI descriptor service
+└── tests/                      [done] 104 tests
 ```
 
 ## Mathematical object contracts
