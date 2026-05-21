@@ -53,6 +53,8 @@ def all_backend_names() -> Iterator[str]:
 
 
 # Importing the wrapper modules auto-registers them via the decorator below.
+from benchmarks.backends import gudhi_python as _gudhi_python  # noqa: E402, F401
+from benchmarks.backends import hofer_2017_reference as _hofer_2017  # noqa: E402, F401
 from benchmarks.backends import topogeoml_diff_ph as _topogeoml  # noqa: E402, F401
 from benchmarks.backends import torch_topological as _torch_top  # noqa: E402, F401
 

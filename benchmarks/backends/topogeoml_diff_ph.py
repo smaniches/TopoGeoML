@@ -20,6 +20,7 @@ class TopoGeoMLDiffPH:
 
     name: ClassVar[str] = "topogeoml-diff-ph"
     version: ClassVar[str] = ""  # populated in `available()`; see below
+    differentiable: ClassVar[bool] = True
 
     @staticmethod
     def available() -> bool:

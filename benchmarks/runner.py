@@ -182,6 +182,12 @@ AXES: dict[str, AxisFn] = {
     "optimization": _axis_optimization,
 }
 
+#: Axes that invoke ``backend.loss_longest_h1`` and therefore require
+#: ``backend.differentiable == True``. The runner skips non-differentiable
+#: backends on these axes (with an explicit ``SkippedNonDifferentiable``
+#: cell so the skip is visible in the report).
+_DIFFERENTIABLE_AXES: frozenset[str] = frozenset({"stability", "speed", "optimization"})
+
 
 # ---------------------------------------------------------------------------
 # Run
@@ -253,6 +259,28 @@ def run(
 
                 for axis_name in axis_names:
                     axis_fn = AXES[axis_name]
+
+                    # Skip differentiability-requiring axes for non-diff
+                    # backends — but record the skip so reports surface it.
+                    if (
+                        axis_name in _DIFFERENTIABLE_AXES
+                        and not getattr(backend_cls, "differentiable", True)
+                    ):
+                        run_result.cells.append(CellResult(
+                            backend_name=backend_name,
+                            dataset_name=dataset_name,
+                            axis_name=axis_name,
+                            success=False,
+                            payload=None,
+                            error_kind="SkippedNonDifferentiable",
+                            error_message=(
+                                f"backend {backend_name!r} is non-differentiable; "
+                                f"axis {axis_name!r} requires autograd through loss_longest_h1"
+                            ),
+                            error_traceback=None,
+                        ))
+                        continue
+
                     try:
                         payload = axis_fn(backend_cls, dataset)
                         run_result.cells.append(CellResult(

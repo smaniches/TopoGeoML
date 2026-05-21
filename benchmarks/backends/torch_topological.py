@@ -18,6 +18,7 @@ from benchmarks.backends import register_backend
 class TorchTopological:
     name: ClassVar[str] = "torch-topological"
     version: ClassVar[str] = ""
+    differentiable: ClassVar[bool] = True
 
     @staticmethod
     def available() -> bool:
