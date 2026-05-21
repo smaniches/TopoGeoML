@@ -30,7 +30,7 @@ The rest of topogeoml does NOT require torch.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import scipy.sparse as sp
@@ -164,6 +164,19 @@ class HodgeMessagePassing(nn.Module):
         # Xavier/Glorot init.
         nn.init.xavier_uniform_(self.weight)
 
+    @property
+    def _laplacian(self) -> torch.Tensor:
+        """Typed accessor for the registered Laplacian buffer.
+
+        ``nn.Module.__getattr__`` returns ``Size | Tensor | Module`` for
+        any attribute (buffers, parameters, submodules all share the
+        dispatch). This property narrows the type to ``torch.Tensor`` so
+        mypy can verify the indexing in the shape-check assertions and
+        the ``torch.sparse.mm`` call below. The actual buffer is still
+        ``self.laplacian`` and continues to move with ``.to(device)``.
+        """
+        return cast(torch.Tensor, self.laplacian)
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Apply one round of Hodge propagation.
@@ -180,9 +193,9 @@ class HodgeMessagePassing(nn.Module):
         """
         if x.ndim != 2:
             raise ValueError(f"x must be 2D (n_k, in_features); got shape {tuple(x.shape)}")
-        if x.shape[0] != self.laplacian.shape[0]:
+        if x.shape[0] != self._laplacian.shape[0]:
             raise ValueError(
-                f"x has {x.shape[0]} rows but Laplacian has {self.laplacian.shape[0]} "
+                f"x has {x.shape[0]} rows but Laplacian has {self._laplacian.shape[0]} "
                 f"k-simplices — shape mismatch"
             )
         if x.shape[1] != self.in_features:
@@ -192,7 +205,7 @@ class HodgeMessagePassing(nn.Module):
 
         # Propagate: x' = activation( L @ x @ W + b )
         # torch.sparse.mm is the operator for sparse @ dense.
-        propagated = torch.sparse.mm(self.laplacian, x)
+        propagated = torch.sparse.mm(self._laplacian, x)
         transformed = propagated @ self.weight
         if self.bias is not None:
             transformed = transformed + self.bias
@@ -201,7 +214,7 @@ class HodgeMessagePassing(nn.Module):
     def extra_repr(self) -> str:
         return (
             f"in_features={self.in_features}, out_features={self.out_features}, "
-            f"n_simplices={self.laplacian.shape[0]}"
+            f"n_simplices={self._laplacian.shape[0]}"
         )
 
 

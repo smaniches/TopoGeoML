@@ -35,7 +35,6 @@ jobs:
 
       - name: Type-check with mypy
         run: mypy topogeoml
-        continue-on-error: true  # strict mypy on ripser/persim flags many missing stubs
 
       - name: Run tests with coverage
         run: pytest --cov=topogeoml --cov-report=xml --cov-report=term
