@@ -208,6 +208,61 @@ class TestStabilityBottleneckEdges:
         assert _bottleneck_distance_finite(only_inf, empty) == 0.0
         assert _bottleneck_distance_finite(empty, only_inf) == 0.0
 
+    def test_bottleneck_matches_gudhi_authoritative(self) -> None:
+        """Verify the framework's bottleneck distance equals gudhi's
+        authoritative implementation. This is the post-fix contract: we
+        delegate to ``gudhi.bottleneck.bottleneck_distance`` and the local
+        function is just the dtype/finite-mask wrapper around it."""
+        import gudhi.bottleneck
+
+        from benchmarks.axes.stability import _bottleneck_distance_finite
+
+        rng = np.random.default_rng(0)
+        for _ in range(5):
+            d1 = rng.uniform(0.0, 1.0, (10, 2))
+            d1[:, 1] += d1[:, 0]  # ensure birth <= death
+            d2 = d1 + 0.05 * rng.standard_normal(d1.shape)
+            d2[:, 1] = np.maximum(d2[:, 1], d2[:, 0])
+            our = _bottleneck_distance_finite(d1, d2)
+            ref = float(gudhi.bottleneck.bottleneck_distance(d1, d2))
+            assert our == pytest.approx(ref, abs=1e-9)
+
+    def test_bottleneck_diverges_from_wasserstein_1(self) -> None:
+        """Construct a case where bottleneck and Wasserstein-1 give
+        different answers, ensuring we're using the true min-max
+        matching rather than min-sum.
+
+        Two bars in d1 are matched against two slightly-different bars in
+        d2 plus diagonal projections. The bottleneck distance is the
+        single-largest discrepancy; Wasserstein-1 is the sum.
+        """
+        from scipy.optimize import linear_sum_assignment
+
+        from benchmarks.axes.stability import _bottleneck_distance_finite
+
+        d1 = np.array([[0.0, 1.0], [0.0, 5.0]])
+        d2 = np.array([[0.0, 1.5], [0.0, 5.3]])
+
+        # Hand-computed Wasserstein-1 (sum of L_inf matched-pair distances):
+        # min over matchings; the natural matching gives |1-1.5| + |5-5.3| = 0.8
+        diag1 = 0.5 * d1.sum(axis=1, keepdims=True) * np.array([[1.0, 1.0]])
+        diag2 = 0.5 * d2.sum(axis=1, keepdims=True) * np.array([[1.0, 1.0]])
+        A1 = np.concatenate([d1, diag2])
+        A2 = np.concatenate([d2, diag1])
+        diffs = np.abs(A1[:, None, :] - A2[None, :, :]).max(axis=-1)
+        diffs[d1.shape[0]:, d2.shape[0]:] = 0.0
+        r, c = linear_sum_assignment(diffs)
+        wasserstein_sum = float(diffs[r, c].sum())
+
+        # The bottleneck distance — what _bottleneck_distance_finite must compute:
+        bottleneck = _bottleneck_distance_finite(d1, d2)
+
+        # The bottleneck (max single matched distance) should be 0.5
+        # (bar 1: |1.0 - 1.5| = 0.5; bar 2: |5.0 - 5.3| = 0.3; max = 0.5).
+        assert bottleneck == pytest.approx(0.5, abs=1e-9)
+        # And W_1 should sum to ~0.8, strictly greater than d_B.
+        assert wasserstein_sum > bottleneck
+
 
 @pytest.mark.skipif(not _has_torch_topological(), reason="torch-topological not installed")
 class TestStabilityReportCoverage:
