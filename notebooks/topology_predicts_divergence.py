@@ -86,13 +86,12 @@ def _load_mnist_subset(
     X = X[perm]
     y = y[perm]
     X = X.astype(np.float64) / 16.0  # normalise to [0, 1]
+    # Stratified split in a single call: ``train_size`` + ``test_size``
+    # together select exactly the desired counts for each arm while
+    # preserving class balance — no post-hoc slicing needed.
     X_train, X_val, y_train, y_val = train_test_split(
-        X, y, train_size=n_train + n_val, random_state=seed, stratify=y,
+        X, y, train_size=n_train, test_size=n_val, random_state=seed, stratify=y,
     )
-    X_train = X_train[:n_train]
-    y_train = y_train[:n_train]
-    X_val = X_val[:n_val]
-    y_val = y_val[:n_val]
     return X_train, y_train, X_val, y_val
 
 
