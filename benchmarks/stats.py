@@ -303,17 +303,19 @@ def _block_bootstrap_distribution(
     n = samples.size
     n_blocks = (n + block_length - 1) // block_length
     n_starts = n - block_length + 1
-    # Precompute every possible block as a (n_starts, block_length) view.
-    # n_starts × block_length is at most n × block_length floats; for the
-    # benchmark sample sizes (n ≤ 200, L ≤ 10) this is trivially small.
     starts = rng.integers(0, n_starts, size=(n_resamples, n_blocks))
-    out = np.empty(n_resamples, dtype=np.float64)
     block_offset = np.arange(block_length)
-    for r in range(n_resamples):
-        # (n_blocks, block_length) index matrix → flat → truncate to n.
-        idx = (starts[r, :, None] + block_offset[None, :]).reshape(-1)[:n]
-        out[r] = reducer(samples[idx])
-    return out
+    # Fully vectorised: build (n_resamples, n_blocks * block_length) index
+    # matrix in one allocation, trim to n along the last axis, then run the
+    # reducer along axis=1. Memory cost is O(n_resamples · n) int64s —
+    # ≤ 16 MB for the sample sizes the benchmark targets (n ≤ 200,
+    # n_resamples ≤ 10000). The previous per-resample Python loop incurred
+    # one ``reducer`` call per resample, which dominated wall time for
+    # small ``n``.
+    all_indices = (
+        starts[:, :, None] + block_offset[None, None, :]
+    ).reshape(n_resamples, -1)[:, :n]
+    return np.asarray(reducer(samples[all_indices], axis=1), dtype=np.float64)
 
 
 def _auto_block_length(n: int) -> int:
