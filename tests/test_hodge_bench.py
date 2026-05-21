@@ -390,6 +390,49 @@ class TestRunner:
         assert len(result.reports) == 5
         assert len(result.pairwise_comparisons) == 10
 
+    def test_max_graphs_caps_dataset_per_seed(self) -> None:
+        """Hypothesis 004 mechanism test: ``max_graphs=N`` subsamples
+        the dataset to N graphs (deterministically per seed) before
+        the stratified train/test split. Two different seeds should
+        produce different subsets — the subsampling is per-seed, not
+        global — but each seed's training pipeline sees ≤ N graphs."""
+        from benchmarks.hodge.classification import run_classification
+        from benchmarks.hodge.datasets import MUTAGDataset
+        from benchmarks.hodge.models import MLPBaseline
+
+        # MUTAG has 188 graphs; cap at 100 → each seed sees 100.
+        report = run_classification(
+            model_cls=MLPBaseline,
+            dataset=MUTAGDataset(),
+            seeds=[0, 1],
+            n_epochs=2,
+            max_graphs=100,
+        )
+        for cell in report.cells:
+            assert cell.n_train + cell.n_test == 100, (
+                f"cap not applied: seed={cell.seed} got "
+                f"n_train={cell.n_train} + n_test={cell.n_test} = "
+                f"{cell.n_train + cell.n_test} != 100"
+            )
+
+    def test_max_graphs_noop_when_dataset_smaller(self) -> None:
+        """If ``max_graphs >= len(samples)``, the subsampling is a
+        no-op — the full dataset goes through the existing pipeline."""
+        from benchmarks.hodge.classification import run_classification
+        from benchmarks.hodge.datasets import MUTAGDataset
+        from benchmarks.hodge.models import MLPBaseline
+
+        # MUTAG has 188 graphs; cap at 500 → no subsampling.
+        report = run_classification(
+            model_cls=MLPBaseline,
+            dataset=MUTAGDataset(),
+            seeds=[0],
+            n_epochs=2,
+            max_graphs=500,
+        )
+        cell = report.cells[0]
+        assert cell.n_train + cell.n_test == 188
+
     def test_runner_writes_json_and_markdown(self, tmp_path) -> None:
         from benchmarks.hodge.runner import render_markdown, run, write_result
 

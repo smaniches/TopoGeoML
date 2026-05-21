@@ -157,8 +157,21 @@ def run_classification(
     n_epochs: int = 20,
     learning_rate: float = 1e-2,
     test_fraction: float = 0.2,
+    max_graphs: int | None = None,
 ) -> ClassificationReport:
-    """Run the classification axis for one (model, dataset) pair."""
+    """Run the classification axis for one (model, dataset) pair.
+
+    Parameters
+    ----------
+    max_graphs
+        Optional cap. If set and ``len(samples) > max_graphs``,
+        subsample the dataset (deterministically per seed) BEFORE the
+        stratified train/test split. Used by hypothesis 004 to isolate
+        the sample-size mechanism behind the residual-scale effect:
+        running NCI1 at ``max_graphs=188`` produces a MUTAG-sized
+        subset with NCI1's native feature distribution intact, so the
+        only variable that changes vs full NCI1 is sample count.
+    """
     from benchmarks.stats import bootstrap_ci
 
     samples, input_dim, num_classes = dataset.load()
@@ -166,8 +179,18 @@ def run_classification(
     cells: list[ClassificationCell] = []
     for seed in seeds:
         torch.manual_seed(seed)
+        # Per-seed deterministic subsampling. Done BEFORE the train/test
+        # split so the stratification still applies to the subsampled
+        # set (and the test fraction stays at 20% of the subset, not of
+        # the full dataset).
+        if max_graphs is not None and len(samples) > max_graphs:
+            rng = np.random.default_rng(seed)
+            indices = rng.choice(len(samples), size=max_graphs, replace=False)
+            seed_samples = [samples[int(i)] for i in indices]
+        else:
+            seed_samples = samples
         train_samples, test_samples = _stratified_split(
-            samples, test_fraction=test_fraction, seed=seed,
+            seed_samples, test_fraction=test_fraction, seed=seed,
         )
         model = model_cls.build(input_dim, num_classes, seed=seed)
         cell = _train_one_seed(

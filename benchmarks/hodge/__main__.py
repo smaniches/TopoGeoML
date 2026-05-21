@@ -20,11 +20,23 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover
         default=Path("benchmarks/hodge/leaderboard/current.json"),
     )
     parser.add_argument("--markdown", type=Path, default=None)
+    parser.add_argument(
+        "--max-graphs",
+        type=int,
+        default=None,
+        help=(
+            "Optional cap on dataset size. If set, subsample (per seed, "
+            "deterministically) before the stratified train/test split. "
+            "Used by hypothesis 004 to isolate sample-size as the "
+            "mechanism behind the residual-vs-MLP effect on NCI1."
+        ),
+    )
     args = parser.parse_args(argv)
 
     result = run(
         model_names=args.models, dataset_names=args.datasets,
         seeds=args.seeds, n_epochs=args.n_epochs, learning_rate=args.lr,
+        max_graphs=args.max_graphs,
     )
     write_result(result, args.output)
     md = render_markdown(result)
