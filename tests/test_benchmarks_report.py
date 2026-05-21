@@ -69,7 +69,7 @@ class TestCorrectnessSection:
     def _cell(self, *, success: bool, overall_pass: bool) -> dict[str, Any]:
         return {
             "backend_name": "test-backend",
-            "dataset_name": "noisy_circle",
+            "dataset_name": "mnist_mock_digit_0",
             "axis_name": "correctness",
             "success": success,
             "payload": {
@@ -106,7 +106,7 @@ class TestStabilitySection:
     def _cell(self, *, violations: int, gradcheck_rate: float) -> dict[str, Any]:
         return {
             "backend_name": "test-backend",
-            "dataset_name": "noisy_circle",
+            "dataset_name": "mnist_mock_digit_0",
             "axis_name": "stability",
             "success": True,
             "payload": {
@@ -148,7 +148,7 @@ class TestSpeedSection:
     def _cell(self, name: str, point_estimate_ms: float) -> dict[str, Any]:
         return {
             "backend_name": name,
-            "dataset_name": "noisy_circle",
+            "dataset_name": "mnist_mock_digit_0",
             "axis_name": "speed",
             "success": True,
             "payload": {
@@ -185,7 +185,7 @@ class TestOptimizationSection:
         payload = _empty_run()
         payload["cells"] = [{
             "backend_name": "test",
-            "dataset_name": "noisy_circle",
+            "dataset_name": "mnist_mock_digit_0",
             "axis_name": "optimization",
             "success": True,
             "payload": {
@@ -207,7 +207,7 @@ class TestOptimizationSection:
         payload = _empty_run()
         payload["cells"] = [{
             "backend_name": "test",
-            "dataset_name": "noisy_circle",
+            "dataset_name": "mnist_mock_digit_0",
             "axis_name": "optimization",
             "success": True,
             "payload": {
@@ -231,7 +231,7 @@ class TestFailuresSection:
         payload = _empty_run()
         payload["cells"] = [{
             "backend_name": "broken",
-            "dataset_name": "noisy_circle",
+            "dataset_name": "mnist_mock_digit_0",
             "axis_name": "stability",
             "success": False,
             "payload": None,

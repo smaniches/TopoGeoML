@@ -217,8 +217,10 @@ def sliding_window_topology_features(
 
     window_starts = np.arange(0, N - W + 1, stride, dtype=np.intp)
     n_windows = window_starts.shape[0]
-    if n_windows == 0:
-        # Edge case: input shorter than one window after the stride logic.
+    if n_windows == 0:  # pragma: no cover
+        # Reached only if `window_starts` is empty. Since W is capped above
+        # to ``min(W, N)`` and stride >= 1 is validated, ``N - W + 1 >= 1``
+        # always holds, so np.arange yields at least one start. Defensive.
         n_pool = len(cfg.pooling)
         return np.zeros(n_pool * n_dims * _N_STATS_PER_DIM, dtype=np.float64)
 

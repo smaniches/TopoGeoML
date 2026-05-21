@@ -38,7 +38,7 @@ class TestSpeedAxis:
 
         report = measure_speed(
             get_backend("topogeoml-diff-ph"),
-            get_dataset("noisy_circle"),
+            get_dataset("mnist_mock_digit_0"),
             n_points_list=[10],
             seeds=[0],
             warmup=1,
@@ -60,7 +60,7 @@ class TestSpeedAxis:
 
         report = measure_speed(
             get_backend("topogeoml-diff-ph"),
-            get_dataset("noisy_circle"),
+            get_dataset("mnist_mock_digit_0"),
             n_points_list=[10],
             seeds=[0],
             warmup=1,

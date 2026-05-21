@@ -79,11 +79,15 @@ dev = [
 all = [
     "topogeoml[torch,higher-order,tda,api,dev]",
 ]
-# Benchmark harness — compares `nn/diff_ph.py` against `torch-topological`.
-# Installed by the `.github/workflows/benchmark.yml` workflow.
+# Benchmark harness — compares `nn/diff_ph.py` against `torch-topological`
+# on real datasets (MNIST topology in Phase 2). torchvision provides the
+# canonical MNIST download with cached checksums.
 bench = [
     "torch>=2.0",
     "torch-topological>=0.1.9",
+    "torchvision>=0.15",
+    "gudhi>=3.7",
+    "torch-geometric>=2.4",
 ]
 
 [project.urls]

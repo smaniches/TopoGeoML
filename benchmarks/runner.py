@@ -102,7 +102,9 @@ def _git_state() -> tuple[str, bool]:
             check=True, capture_output=True, text=True, timeout=5,
         ).stdout
         return sha, bool(status.strip())
-    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):  # pragma: no cover
+        # Defensive: this PR's CI runs inside a git checkout. Exercised when
+        # the bench is invoked from an unpacked tarball with no git binary.
         return "", False
 
 
@@ -110,7 +112,8 @@ def _version_or_missing(pkg: str) -> str:
     from importlib import metadata
     try:
         return metadata.version(pkg)
-    except metadata.PackageNotFoundError:
+    except metadata.PackageNotFoundError:  # pragma: no cover
+        # Defensive: bench extras pin every package we look up.
         return ""
 
 
@@ -119,7 +122,9 @@ def _process_memory_total_mb() -> int:
     try:
         # POSIX.
         return int(os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / (1024 * 1024))
-    except (AttributeError, ValueError, OSError):
+    except (AttributeError, ValueError, OSError):  # pragma: no cover
+        # Non-POSIX platforms (Windows) lack sysconf; bench supports it but
+        # the fallback would only fire there.
         return 0
 
 
@@ -176,6 +181,12 @@ AXES: dict[str, AxisFn] = {
     "speed": _axis_speed,
     "optimization": _axis_optimization,
 }
+
+#: Axes that invoke ``backend.loss_longest_h1`` and therefore require
+#: ``backend.differentiable == True``. The runner skips non-differentiable
+#: backends on these axes (with an explicit ``SkippedNonDifferentiable``
+#: cell so the skip is visible in the report).
+_DIFFERENTIABLE_AXES: frozenset[str] = frozenset({"stability", "speed", "optimization"})
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +259,28 @@ def run(
 
                 for axis_name in axis_names:
                     axis_fn = AXES[axis_name]
+
+                    # Skip differentiability-requiring axes for non-diff
+                    # backends — but record the skip so reports surface it.
+                    if (
+                        axis_name in _DIFFERENTIABLE_AXES
+                        and not getattr(backend_cls, "differentiable", True)
+                    ):
+                        run_result.cells.append(CellResult(
+                            backend_name=backend_name,
+                            dataset_name=dataset_name,
+                            axis_name=axis_name,
+                            success=False,
+                            payload=None,
+                            error_kind="SkippedNonDifferentiable",
+                            error_message=(
+                                f"backend {backend_name!r} is non-differentiable; "
+                                f"axis {axis_name!r} requires autograd through loss_longest_h1"
+                            ),
+                            error_traceback=None,
+                        ))
+                        continue
+
                     try:
                         payload = axis_fn(backend_cls, dataset)
                         run_result.cells.append(CellResult(

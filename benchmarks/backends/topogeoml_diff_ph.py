@@ -20,6 +20,7 @@ class TopoGeoMLDiffPH:
 
     name: ClassVar[str] = "topogeoml-diff-ph"
     version: ClassVar[str] = ""  # populated in `available()`; see below
+    differentiable: ClassVar[bool] = True
 
     @staticmethod
     def available() -> bool:
@@ -30,7 +31,7 @@ class TopoGeoMLDiffPH:
 
             # ripser ships with topogeoml's core deps; diff_ph imports it.
             from topogeoml.nn import diff_ph as _diff_ph  # noqa: F401
-        except ImportError:
+        except ImportError:  # pragma: no cover  -- defensive: this PR's CI installs topogeoml.
             return False
 
         import topogeoml as _topogeoml

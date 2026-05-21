@@ -131,11 +131,23 @@ def measure_correctness(
         ref_h1 = _sorted_finite(ref[1])
 
         dgms = backend.compute_diagram(X, max_dim=1)
-        backend_h0 = _sorted_finite(dgms[0].detach().numpy() if dgms[0].numel() else np.empty((0, 2)))
-        backend_h1 = (
-            _sorted_finite(dgms[1].detach().numpy()) if len(dgms) > 1 and dgms[1].numel()
-            else np.empty((0, 2))
-        )
+        # Per PHBackend contract, ``dgms`` has exactly ``max_dim + 1`` entries;
+        # guard the indexing anyway so a non-conforming backend produces a
+        # clean failure rather than an IndexError-during-iteration that hides
+        # the real defect. (PR #3 review: gemini-code-assist.)
+        if len(dgms) > 0 and dgms[0].numel():
+            backend_h0 = _sorted_finite(dgms[0].detach().numpy())
+        else:  # pragma: no cover
+            # Defensive: PHBackend.compute_diagram is contractually required
+            # to return ``max_dim + 1`` non-None tensors. All 4 registered
+            # backends satisfy this; the empty fallback exists for backends
+            # added later whose contract may be looser.
+            backend_h0 = np.empty((0, 2))
+        if len(dgms) > 1 and dgms[1].numel():
+            backend_h1 = _sorted_finite(dgms[1].detach().numpy())
+        else:  # pragma: no cover
+            # Same defensive rationale as the H_0 path above.
+            backend_h1 = np.empty((0, 2))
 
         max_h0 = _max_abs_diff(backend_h0, ref_h0)
         max_h1 = _max_abs_diff(backend_h1, ref_h1)

@@ -122,15 +122,29 @@ _DEFAULT_PERTURBATIONS: tuple[float, ...] = (1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1)
 def _bottleneck_distance_finite(d1: np.ndarray, d2: np.ndarray) -> float:
     """Bottleneck distance between two persistence diagrams (finite bars only).
 
-    Uses an exact Hopcroft-Karp-style matching via scipy's
-    ``linear_sum_assignment`` on the bipartite-graph completion that adds
-    each diagonal projection. This is the standard formulation
-    (Edelsbrunner & Harer 2010, Chapter VIII).
+    Delegates to ``gudhi.bottleneck.bottleneck_distance`` — the authoritative
+    implementation backed by the Kerber-Morozov-Nigmetov algorithm
+    (Edelsbrunner & Harer 2010, Chapter VIII; Kerber-Morozov-Nigmetov,
+    SoCG 2017). The bottleneck distance is the *min-max* matching across
+    diagrams (with diagonal augmentation), distinct from the Wasserstein
+    distances which are min-sum.
+
+    Why not roll our own
+    --------------------
+    An earlier version of this function used ``scipy.optimize.linear_sum_assignment``,
+    which minimizes the *sum* of L_inf costs (Hungarian algorithm = Wasserstein-1).
+    That is mathematically different from the bottleneck distance
+    (= W_infinity), and would systematically over-estimate :math:`d_B` on
+    diagrams with multiple roughly-equally-large discrepancies. The
+    Cohen-Steiner stability check is only meaningful with the true
+    bottleneck distance; a min-sum surrogate produces both false negatives
+    on the theorem (sum overestimates max) and false positives elsewhere.
+    Gemini's review on PR #3 flagged this — fix lands here.
 
     Both ``d1`` and ``d2`` are ``(n, 2)`` arrays of (birth, death) pairs.
     Infinite-death bars are dropped — Cohen-Steiner bounds the finite part.
     """
-    from scipy.optimize import linear_sum_assignment
+    import gudhi.bottleneck
 
     d1 = np.asarray(d1, dtype=np.float64)
     d2 = np.asarray(d2, dtype=np.float64)
@@ -140,30 +154,9 @@ def _bottleneck_distance_finite(d1: np.ndarray, d2: np.ndarray) -> float:
     if d1.shape[0] == 0 and d2.shape[0] == 0:
         return 0.0
 
-    # Diagonal projection of each point: (b, d) -> ((b+d)/2, (b+d)/2).
-    diag1 = 0.5 * (d1.sum(axis=1, keepdims=True)) * np.array([[1.0, 1.0]]) if d1.size else np.empty((0, 2))
-    diag2 = 0.5 * (d2.sum(axis=1, keepdims=True)) * np.array([[1.0, 1.0]]) if d2.size else np.empty((0, 2))
-
-    # Augment each diagram with diagonal-projections of the OTHER diagram.
-    augmented_1 = np.concatenate([d1, diag2], axis=0)
-    augmented_2 = np.concatenate([d2, diag1], axis=0)
-
-    if augmented_1.shape[0] == 0 or augmented_2.shape[0] == 0:
-        return 0.0
-
-    # Distance from each point in augmented_1 to each in augmented_2, L_inf.
-    diffs = np.abs(augmented_1[:, None, :] - augmented_2[None, :, :]).max(axis=-1)
-
-    # Diagonal-to-diagonal pairs cost 0; enforce by zeroing out the
-    # bottom-right block (last n2 rows of augmented_1 are diag2 projections,
-    # last n1 cols of augmented_2 are diag1 projections; their crossing
-    # block is matching-of-diagonals which costs 0).
-    n1 = d1.shape[0]
-    n2 = d2.shape[0]
-    diffs[n1:, n2:] = 0.0
-
-    row_ind, col_ind = linear_sum_assignment(diffs)
-    return float(diffs[row_ind, col_ind].max())
+    # gudhi accepts either diagram empty and handles the diagonal projection
+    # internally with the correct semantics.
+    return float(gudhi.bottleneck.bottleneck_distance(d1, d2))
 
 
 def measure_stability(
@@ -263,8 +256,11 @@ def measure_stability(
 
         delta = (X_pert_req - X_req).detach()
         delta_norm = float(torch.linalg.norm(delta).item())
-        if delta_norm < 1e-12:
-            # Degenerate — skip this seed's contribution rather than divide by ~0.
+        if delta_norm < 1e-12:  # pragma: no cover
+            # Degenerate — skip rather than divide by ~0. The default
+            # perturbation magnitude (1e-3) makes this practically
+            # unreachable; covered as a safety net for callers that pass
+            # delta_scale = 0 or hit a numerical wipeout.
             continue
         grad_diff_norm = float(torch.linalg.norm(grad_pert - grad_base).item())
         lipschitz_estimates.append(grad_diff_norm / delta_norm)
@@ -286,9 +282,12 @@ def measure_stability(
                 atol=gradcheck_atol,
                 raise_exception=False,
             )
-        except RuntimeError:
+        except RuntimeError:  # pragma: no cover
             # Some backends raise rather than return False on subgradient
             # discontinuities. We record this as a fail but do not crash.
+            # The two backends shipped in Phase 1 respect raise_exception=False
+            # cleanly; this branch is a safety net for backends added in
+            # Phase 2+ whose gradcheck contract is looser.
             passed = False
         gradcheck_passes.append(bool(passed))
 
@@ -305,7 +304,9 @@ def measure_stability(
     elif len(lipschitz_estimates) == 1:
         lip_median = lipschitz_estimates[0]
         lip_lo = lip_hi = float("nan")
-    else:
+    else:  # pragma: no cover
+        # Reachable only when every seed hit the delta_norm < 1e-12 branch
+        # above and skipped its Lipschitz contribution. Defensive.
         lip_median = lip_lo = lip_hi = float("nan")
 
     return StabilityReport(
