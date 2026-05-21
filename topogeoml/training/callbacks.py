@@ -5,9 +5,26 @@ Probes the topology of model activations at regular intervals during
 training. Detects representational divergence — structural change in the
 learned representation that precedes (or contradicts) the training loss.
 
-The core claim this module is designed to demonstrate:
-    Topology of hidden activations on a probe set can detect generalization
-    failure BEFORE the training loss curve reveals it.
+Empirical claim (and what supports it)
+--------------------------------------
+On a controlled overfitting regime (200-sample ``sklearn.load_digits``,
+MLP with 64 hidden units, Adam, LR=1e-2, 600 steps, 30 independent
+seeds), the topology divergence score fires *no later than* a textbook
+val-loss-ratio watchdog, and in 14 of 30 seeds fires 10-30 steps
+earlier (rank-biserial r = +1.000; paired Wilcoxon p_raw = 5.77e-04;
+BCa 95% CI on the median advantage = [0, 10] steps — the CI lower
+bound is set by the topology baseline-window floor at step 30, not by
+a lack of effect).
+
+The full empirical report (per-seed table + statistical analysis) is
+in ``notebooks/results/topology_predicts_divergence_30seeds.md``;
+reproduce with ``python notebooks/topology_predicts_divergence.py
+--n-seeds 30``.
+
+The floor effect (every topology firing landing at step 30 — the
+earliest step its baseline window allows) means the magnitude is
+censored from below. The directional verdict (topology never loses)
+is robust; the magnitude estimate is a lower bound.
 
 Usage
 -----
