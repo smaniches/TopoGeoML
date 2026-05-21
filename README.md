@@ -45,7 +45,7 @@ See [`LIMITATIONS.md`](LIMITATIONS.md) for the full list of what does *not* work
 
 ## Empirical evidence
 
-Every claim in the rest of this README is backed by an in-repo experiment or a literature citation. Two empirical experiments have been run so far; both are reproducible from the scripts in `notebooks/`.
+Every claim in the rest of this README is backed by an in-repo experiment or a literature citation. The full empirical record — including pending experiments and the discipline rules — lives in [`LEADERBOARD.md`](LEADERBOARD.md). Three experiments have been run + reported so far; both reproducible from the scripts in `notebooks/`.
 
 ### 1. Topology divergence score detects overfitting no later than a val-loss watchdog (positive)
 

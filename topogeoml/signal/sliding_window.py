@@ -133,18 +133,25 @@ class TopologyFeatureConfig:
 
 
 def _pool(values: NDArray[np.float64], how: str) -> NDArray[np.float64]:
-    """Single pooling operation across the window axis (axis=0)."""
+    """Single pooling operation across the window axis (axis=0).
+
+    The cast to ``NDArray[np.float64]`` on each branch is necessary because
+    numpy's reductions return ``Any`` under strict typing (the return dtype
+    depends on the input dtype at runtime); the inputs here are statically
+    constrained to ``np.float64`` and the outputs preserve that, so the
+    cast is a safe annotation correction rather than a runtime change.
+    """
     if values.shape[0] == 0:
         return np.zeros(values.shape[1:], dtype=np.float64)
     if how == "mean":
-        return values.mean(axis=0)
+        return np.asarray(values.mean(axis=0), dtype=np.float64)
     if how == "max":
-        return values.max(axis=0)
+        return np.asarray(values.max(axis=0), dtype=np.float64)
     if how == "min":
-        return values.min(axis=0)
+        return np.asarray(values.min(axis=0), dtype=np.float64)
     if how == "std":
         # ddof=0: biased estimator, consistent across single-window edge cases.
-        return values.std(axis=0)
+        return np.asarray(values.std(axis=0), dtype=np.float64)
     raise ValueError(f"Unknown pooling function: {how!r}")
 
 

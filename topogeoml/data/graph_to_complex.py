@@ -20,6 +20,7 @@ Output complexes always satisfy the chain identity ∂_{k-1} ∘ ∂_k = 0
 from __future__ import annotations
 
 import itertools
+from typing import TypeAlias
 
 import networkx as nx
 import numpy as np
@@ -27,7 +28,7 @@ from numpy.typing import NDArray
 
 from topogeoml.core.complexes import SimplicialComplex
 
-GraphLike = nx.Graph | NDArray[np.floating]
+GraphLike: TypeAlias = nx.Graph | NDArray[np.floating]
 
 
 def graph_to_clique_complex(

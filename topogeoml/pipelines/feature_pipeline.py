@@ -53,7 +53,7 @@ class FitProvenance:
     extras: dict[str, Any] = field(default_factory=dict)
 
 
-class TopologyFeaturePipeline(BaseEstimator, TransformerMixin):
+class TopologyFeaturePipeline(BaseEstimator, TransformerMixin):  # type: ignore[misc]
     """
     Compute topological features from a batch of point clouds.
 
