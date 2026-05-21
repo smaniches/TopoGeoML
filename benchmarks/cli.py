@@ -109,9 +109,18 @@ def main(argv: list[str] | None = None) -> int:
     if summary_path:
         Path(summary_path).write_text(md)
 
-    # Return non-zero if any cell failed — CI should be loud about that.
-    failed_cells = [c for c in result.cells if not c.success]
-    return 1 if failed_cells else 0
+    # Return non-zero on *unexpected* failures only. Cells with
+    # ``error_kind="SkippedNonDifferentiable"`` are expected behaviour
+    # (non-differentiable backends like ``gudhi-python`` cannot satisfy
+    # the autograd-dependent axes; the runner emits a clean skip rather
+    # than silently omitting the row). The previous "any non-success →
+    # exit 1" check was a CI-blocking false positive caught when the
+    # first ``benchmark.yml`` workflow run finished under ``--quick``.
+    real_failures = [
+        c for c in result.cells
+        if not c.success and c.error_kind != "SkippedNonDifferentiable"
+    ]
+    return 1 if real_failures else 0
 
 
 if __name__ == "__main__":  # pragma: no cover

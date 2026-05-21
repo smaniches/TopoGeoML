@@ -1,6 +1,6 @@
 # Hypothesis 002: Does the H1-winning Hodge architecture beat MLP on PROTEINS, where MUTAG's discrimination ceiling doesn't apply?
 
-**Status.** Open as of 2026-05-21. Test in progress (this branch). Result will fill §6 when the 30-seed run completes.
+**Status.** Resolved 2026-05-21. **H4 refuted; H5 reconfirmed across datasets; H6 refuted; H7 unresolved.** See §6 for the full outcome.
 **Falsification target.** Paired Wilcoxon p_BH < 0.01 on the H1-vs-MLP comparison, with BCa CIs reported. This is a *strict* positive-difference test — equality is no longer enough to license v0.0.2.
 **Prior result that motivates this hypothesis.** `notebooks/results/mutag_hodge_ablation_30seeds.md` and `docs/hypotheses/HYPOTHESIS-001-hodge-mutag.md` §6 — the symm-normalised one-layer Hodge MP (arm H1) matches MLP on MUTAG (p_BH = 0.714). Errica et al. 2020 argue MUTAG's 188-graph size makes it incapable of discriminating between simple architectures; a larger dataset is the only way to convert the equality claim into a strict win.
 
@@ -74,9 +74,48 @@ These are deliberately preregistered (written *before* the 30-seed result lands)
 | Matches MLP (p_BH ≥ 0.05) | Two-dataset *equality* claim. Topology with symm-normalisation is competitive on small and medium TUDatasets. | v0.0.2 ships the equality claim as the headline, deferring strict-positive to hypothesis 003 |
 | Mixed (H4 confirmed but H5 ambiguous) | Combinatorial L is harmful but normalisation alone is not enough at PROTEINS scale. Need attention or polynomial filters. | Document and move to richer architectures in hypothesis 003 |
 
-## 6. Resolved outcome (filled in when the 30-seed run completes)
+## 6. Resolved outcome (2026-05-21, 30 seeds × 10 epochs)
 
-*Pending — 30-seed run started 2026-05-21, expected wall time ~25 min.*
+Full report: `notebooks/results/proteins_hodge_ablation_30seeds.md`. Headline accuracy table:
+
+| Arm | Median accuracy (95% BCa CI) | Wilcoxon p_BH vs MLP | Verdict |
+|---|---|---|---|
+| `hodge-mp-classifier` (combinatorial L) | 0.646 [0.605, 0.700] | 0.646 | matches MLP |
+| `hodge-mp-normalised` (H1) | 0.688 [0.670, 0.704] | 0.548 | matches MLP |
+| `hodge-mp-residual` (H2) | 0.686 [0.670, 0.717] | 0.339 | matches MLP |
+| `hodge-mp-deep-residual` (H3) | 0.695 [0.659, 0.709] | 0.426 | matches MLP |
+| `mlp-baseline` | 0.675 [0.596, 0.706] | — | control |
+
+**Headline finding.** After Benjamini-Hochberg correction at α = 0.05 across the 10 pairwise comparisons, **no Hodge arm produces a statistically significant difference from the MLP baseline on PROTEINS**. Median accuracies cluster between 64.6% and 69.5%, with overlapping 95% BCa CIs. The strong hypothesis H6 (H1 strictly beats MLP at p_BH < 0.01) is **refuted**.
+
+**Sub-hypotheses, resolved.**
+
+- **H4 (combinatorial Hodge < MLP on PROTEINS, same as MUTAG): REFUTED.** Median Δ = -0.029 (MLP higher) but p_BH = 0.646 — far from significance. The 9-percentage-point degradation of the combinatorial Laplacian observed on MUTAG (p_BH = 5.66e-04, rank-biserial r = -0.760) shrinks to a non-significant 2.9 pp on PROTEINS (r = -0.071, an order of magnitude smaller). **The MUTAG-specific normalisation effect does not generalise.** The combinatorial Laplacian's harm is dataset-dependent.
+- **H5 (H1 ≥ MLP on PROTEINS): CONFIRMED in the weak sense.** Median Δ = +0.0135, p_BH = 0.548. The symm-normalised arm reaches the same accuracy as MLP, replicating the MUTAG equality finding across a second dataset.
+- **H6 (H1 strictly beats MLP at p_BH < 0.01): REFUTED.** Far from the threshold; the strict positive-difference claim does not hold.
+- **H7 (depth helps at PROTEINS scale): UNRESOLVED.** H3 vs H1 has median Δ = -0.007 (essentially zero), p_BH = 0.646. Depth neither helps nor hurts.
+
+**Cross-dataset synthesis.**
+
+The symmetrically-normalised one-layer Hodge MP **matches** an MLP baseline of matched capacity on both MUTAG (p_BH = 0.714) and PROTEINS (p_BH = 0.548). The combinatorial Laplacian's MUTAG harm does not replicate on PROTEINS. Two interpretations:
+
+1. *Discrimination ceiling.* PROTEINS, at 1113 graphs and 39 avg nodes, is *also* below the threshold where simple architectures separate. The Errica et al. 2020 critique applies to PROTEINS too, not just MUTAG.
+2. *Effect-size shrinkage with scale.* MUTAG's small 18-node graphs amplify per-node degree spikes; PROTEINS' 39-node sum-pool averages them out. The combinatorial-vs-normalised contrast is a small-graph phenomenon.
+
+Both interpretations point in the same direction: **the next hypothesis (003) needs a substantively richer architecture (attention, polynomial filters, or higher-dimensional Hodge) to produce a positive-difference claim**, OR **a substantially larger dataset (NCI1 at 4110 graphs, DD at 1178 with larger graphs, COLLAB at 5000)**.
+
+**What this licenses the framework to claim.**
+
+> *On PROTEINS at 30 seeds × 10 epochs × hidden_dim=32, no Hodge variant (combinatorial L, symm L̃, symm L̃ + residual, symm L̃ + 2 stacked layers + residual) produces a statistically significant difference from a no-topology MLP of matched capacity after Benjamini-Hochberg correction at α = 0.05. The symm-normalised arm matches MLP with median Δ = +0.0135 (p_BH = 0.548), replicating the cross-dataset equality finding from MUTAG (p_BH = 0.714).*
+
+This is a **two-dataset equality claim**. It is a defensible Geo-subsystem result; it is *not* a "topology helps" claim. The strong claim is now ruled out on two TUDatasets at the architectures we've tested.
+
+**Next hypothesis (003).** Two possible directions:
+
+1. Architectural escalation: HL-HGAT-style attention + polynomial filters of order 3–5 on PROTEINS. Tests whether *the architecture* is the bottleneck.
+2. Scale escalation: take the H1 architecture to NCI1 (4110 graphs) or DD (1178 graphs but larger ~280 nodes/graph). Tests whether *the dataset* is the bottleneck.
+
+Decision deferred to the user; both are tractable in a single session.
 
 ---
 

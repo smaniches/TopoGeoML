@@ -86,7 +86,29 @@ On MUTAG at 30 seeds × 20 epochs × hidden_dim=32, a one-layer Hodge message-pa
 
 This is a **positive equality claim** ("topology with proper normalisation is competitive"), not a "topology helps" claim ("topology beats MLP"). The literature consensus (Errica et al. 2020, arXiv 1810.09155; Yang et al. 2024 Hodgelet GPs at 88.06 ± 7.99) is that MUTAG cannot discriminate between simple architectures at its scale; both confirmation and refutation of the strong "topology helps" claim require a larger dataset.
 
-Reproduce: `python -m benchmarks.hodge --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 20`.
+Reproduce: `python -m benchmarks.hodge --datasets mutag --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 20`.
+
+### 3. Cross-dataset replication on PROTEINS — equality holds; strict-positive refuted (mixed)
+
+PROTEINS benchmark (1113 protein graphs, 2 classes, Borgwardt et al. 2005 / Dobson & Doig 2003 via PyG TUDataset; 5.9× MUTAG's sample size, 2.2× MUTAG's average graph size). Same 5-arm ablation, 30 seeds × 10 epochs, matched-capacity. Preregistered as hypothesis 002 (`docs/hypotheses/HYPOTHESIS-002-hodge-proteins.md`) before the result was known.
+
+Per-arm result (full report in `notebooks/results/proteins_hodge_ablation_30seeds.md`):
+
+| Arm | Median accuracy (95% BCa CI) | Wilcoxon p_BH vs MLP | Verdict |
+|---|---|---|---|
+| `hodge-mp-classifier` (combinatorial L) | 0.646 [0.605, 0.700] | 0.646 | matches MLP |
+| `hodge-mp-normalised` (H1) | 0.688 [0.670, 0.704] | 0.548 | matches MLP |
+| `hodge-mp-residual` (H2) | 0.686 [0.670, 0.717] | 0.339 | matches MLP |
+| `hodge-mp-deep-residual` (H3) | 0.695 [0.659, 0.709] | 0.426 | matches MLP |
+| `mlp-baseline` | 0.675 [0.596, 0.706] | — | control |
+
+**What this means.** After BH correction across the 10 pairwise comparisons, **no arm produces a statistically significant difference from MLP**. The strong hypothesis (H1 *beats* MLP at p_BH < 0.01) is **refuted**. The cross-dataset equality (H1 = MLP) is **reconfirmed**: p_BH = 0.548 on PROTEINS replicates the p_BH = 0.714 on MUTAG.
+
+**Surprising cross-dataset cancellation.** The MUTAG combinatorial-L harm (9 pp gap to MLP, p_BH = 5.66 × 10⁻⁴) **does not replicate** on PROTEINS (2.9 pp gap, p_BH = 0.65). Effect size drops by ~10× — meaning the combinatorial vs symm-normalised contrast that defines hypothesis 001 is a small-graph phenomenon (MUTAG avg 18 nodes/graph) that washes out at PROTEINS scale (39 nodes/graph). Two interpretations remain in play: a discrimination ceiling that PROTEINS also sits below, or genuine cancellation by larger-graph sum-pooling.
+
+**Bottom line.** The Geo subsystem has a defensible *two-dataset equality* claim. A strict "topology helps" claim requires either a richer architecture (HL-HGAT attention, polynomial filters, SCConv up-down) or a substantially larger dataset (NCI1, DD, COLLAB). Hypothesis 003 picks the direction.
+
+Reproduce: `python -m benchmarks.hodge --datasets proteins --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10`.
 
 ---
 
