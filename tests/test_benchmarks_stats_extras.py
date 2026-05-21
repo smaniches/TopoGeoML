@@ -148,3 +148,66 @@ class TestComparisonAsDictRoundTrip:
         d = cmp.as_dict()
         s = json.dumps(d)
         assert "underpowered" in s
+
+
+class TestRemainingCoverage:
+    """Close the coverage gaps for paths reached only via specific inputs."""
+
+    def test_corrected_family_as_dict_serializes_comparisons(self) -> None:
+        """``CorrectedFamily.as_dict`` returns a dict that JSON-encodes
+        every comparison inside it."""
+        import json
+        rng = np.random.default_rng(0)
+        cmp = compare_independent(
+            rng.normal(0, 1, 30), rng.normal(0, 1, 30),
+            arm_a_name="a", arm_b_name="b",
+        )
+        family = benjamini_hochberg([cmp], alpha=0.05)
+        d = family.as_dict()
+        # JSON-serialisable end-to-end.
+        s = json.dumps(d)
+        recovered = json.loads(s)
+        assert recovered["alpha"] == 0.05
+        assert len(recovered["comparisons"]) == 1
+
+    def test_bootstrap_rejects_2d_samples(self) -> None:
+        with pytest.raises(ValueError, match="samples must be 1-D"):
+            bootstrap_ci(
+                np.zeros((4, 4)), n_resamples=2000,
+            )
+
+    def test_bootstrap_rejects_bad_confidence_level(self) -> None:
+        with pytest.raises(ValueError, match="confidence_level"):
+            bootstrap_ci(
+                np.linspace(0.0, 1.0, 30), n_resamples=2000, confidence_level=1.5,
+            )
+
+    def test_compare_independent_rejects_2d(self) -> None:
+        with pytest.raises(ValueError, match="arms must be 1-D"):
+            compare_independent(
+                np.zeros((2, 2)), np.ones(4),
+                arm_a_name="a", arm_b_name="b",
+            )
+
+    def test_compare_paired_underpowered_below_floor(self) -> None:
+        """Paired comparison with n < min_samples_for_pvalue returns an
+        UNDERPOWERED kind. Distinct from the all-zero-diff path which
+        returns NOT_SIGNIFICANT."""
+        a = np.array([1.0, 2.0, 3.0, 4.0])
+        b = np.array([1.1, 2.1, 3.1, 4.1])
+        cmp = compare_paired(a, b, arm_a_name="a", arm_b_name="b")
+        assert cmp.kind == ResultKind.UNDERPOWERED
+
+    def test_compare_paired_significant_path(self) -> None:
+        """Wilcoxon signed-rank actually executes (n above the floor,
+        diffs not all zero). Exercises the Kerby rank-biserial branch."""
+        rng = np.random.default_rng(0)
+        n = 40
+        a = rng.normal(0.0, 1.0, n)
+        b = a + rng.normal(1.0, 0.1, n)  # consistent shift
+        cmp = compare_paired(a, b, arm_a_name="a", arm_b_name="b_shifted")
+        assert cmp.test_name == "wilcoxon-signed-rank"
+        # With a real consistent shift the test should populate p_value_raw.
+        assert not np.isnan(cmp.p_value_raw)
+        # Rank-biserial r is in [-1, 1].
+        assert -1.0 <= cmp.effect_size <= 1.0
