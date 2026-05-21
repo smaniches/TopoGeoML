@@ -5,18 +5,58 @@ All notable changes to TopoGeomML will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased] — preparing v0.0.2
 
-### Planned for v0.1
-- Differentiable persistence (PyTorch autograd through diagram → loss)
-- PH metric cascade (Euclidean → Spectral → Fermat) with d_int/d_amb auto-selection
-- Cubical filtration for real-valued image / segmentation inputs
-- Drift-tensor correction layer (TOPOLOGICA proprietary)
-- Benchmark harness on one topology-shaped Kaggle competition
-- Bottleneck and Wasserstein diagram distances
-- Real-data dataset adapters (MUTAG, PROTEINS, ZINC, etc.)
-- Cross-platform atomic JSON write
-- MLflow / W&B tracking adapters
+Headline: **the framework has its first strict positive-difference real-data claim** (hypothesis 003, NCI1). The v0.0.2 release gate set in `docs/hypotheses/HYPOTHESIS-002-hodge-proteins.md` §5 ("strictly beats MLP at p_BH < 0.01") is met by the `hodge-mp-residual` arm on NCI1 (p_BH = 4.83 × 10⁻³, +8.6 pp). Release tagging is on hold pending explicit user approval.
+
+### Added — empirical results (all 30-seed, BCa CIs, paired Wilcoxon + BH-FDR; per-seed reports in `notebooks/results/`)
+
+- **PR #11 — Topology-divergence callback validated.** `ShapeOfLearningCallback.divergence_score` fires no later than a textbook val-loss-ratio watchdog on a controlled overfitting regime (200-sample `sklearn.load_digits`, p_raw = 5.77 × 10⁻⁴, r = +1.0).
+- **PR #15 (hypothesis 001) — MUTAG ablation, five-arm matched-capacity.** Symmetric Laplacian normalisation is sufficient to make a one-layer Hodge MP match an MLP baseline on MUTAG (p_BH = 0.714). The combinatorial Laplacian underperforms by 9 pp (p_BH = 5.66 × 10⁻⁴). The residual variant *underperforms* MLP at this scale (p_BH = 0.019).
+- **PR #16 (hypothesis 002) — PROTEINS replication.** Two-dataset equality holds for the symm-normalised arm (p_BH = 0.548). The MUTAG combinatorial-L harm does not replicate (Δ shrinks by ~10×). Strong "topology beats MLP" claim refuted on PROTEINS.
+- **PR #19 (hypothesis 003) — NCI1, the headline.** On 4110 chemical-compound graphs, the symm-normalised + residual variant **strictly beats** MLP at p_BH = 4.83 × 10⁻³ (median Δ = +0.086, BCa 95% CI: [0.581, 0.625] vs MLP's [0.513, 0.566]). The residual variant *inverts* its verdict from MUTAG to NCI1 — residuals scale with dataset size at this architectural class.
+
+### Added — public API surface
+
+**Neural-network layers** (requires torch)
+- `topogeoml.nn.diff_ph` — differentiable Vietoris-Rips persistent homology via critical-edge indexing (Hofer 2017 / Carrière 2021). Public surface: `rips_diagram_torch`, `finite_lifetimes`, `total_persistence_loss`, `persistence_entropy_loss`, `betti_matching_loss`.
+- `topogeoml.nn.cubical_diff_ph` — differentiable lower-star cubical persistent homology on 2-D/3-D images, with `CubicalTopologyLoss(nn.Module)` for image-segmentation training in the Clough et al. 2020 style.
+- `topogeoml.training.ShapeOfLearningCallback` — empirically validated topology-divergence watchdog for PyTorch training loops (see PR #11 row above).
+
+**Benchmark framework** (`benchmarks/`)
+- 4 backends × 4 measurement axes with statistically defensible reporting; `python -m benchmarks` CLI with `--quick` smoke tier.
+- `benchmarks.stats` — bootstrap CI (percentile, BCa, block), Mann-Whitney U + Cliff's δ, Wilcoxon signed-rank + rank-biserial, Benjamini-Hochberg FDR. All citations in module docstring.
+- `benchmarks.hodge` — graph-classification subsystem with five matched-capacity classifier arms (combinatorial L, symm L̃, +residual, +2-stacked+residual, MLP control) and three dataset adapters (MUTAG, PROTEINS, NCI1).
+
+**Documentation + discipline**
+- `LEADERBOARD.md` — single navigable record of every empirical claim with reproducibility instructions and discipline rules.
+- `docs/hypotheses/HYPOTHESIS-001-hodge-mutag.md` through `HYPOTHESIS-003-hodge-nci1.md` — preregistered hypothesis docs with falsifiable sub-predictions and post-hoc resolved outcomes.
+
+### Changed
+
+- The README's roadmap is narrower and honest: no "drift-tensor", no "TOPOLOGICA proprietary", no "GPU-batched", no peer-review or DOI promises. v0.0.2 is gated on the NCI1 positive claim; v1.0 is conditional on a deeper empirical record and a methods paper.
+- The "Hodge MP layer: minimal, not state-of-the-art" caveat in `LIMITATIONS.md` §1.8 is preserved; the framework now ships *five* Hodge arms in the benchmark, and the architectural element that produces the NCI1 win (residual + normalisation) is named explicitly.
+
+### Fixed
+
+- **Critical bug in `benchmarks/hodge/models.py` (PR #12).** The original `HodgeMessagePassing` layer was instantiated inside `forward_one()` per graph, so its weights were never registered with the optimizer and were re-randomised on every forward call. The pre-PR-#12 MUTAG numbers measured a 2-layer MLP through a random topology filter, not the Hodge architecture. Two regression tests prevent recurrence.
+- **`benchmarks/cli.py` exit-code logic** — `SkippedNonDifferentiable` and `UnavailableBackend` cells no longer count as failures (PR #16, #17). Real cell failures now surface on stderr.
+- **Bench workflow torch/torchvision ABI mismatch** — install both from the CPU wheel index so `torchvision::nms` resolves (PR #17).
+
+### Deferred indefinitely (no implementation timeline)
+- PH metric cascade (Euclidean → Spectral → Fermat)
+- TopoNetX integration for non-simplicial complexes
+- GPU-batched Rips
+- MLflow / W&B tracking
+- Multi-rank simplicial neural network (full SCN)
+- Real DRIVE numbers — pipeline shipped (PR #9), user-side GPU run pending
+
+### Quality gates as of preparing v0.0.2
+- `ruff check topogeoml tests benchmarks scripts notebooks`: clean
+- `pytest`: 489 passed (up from 118 at v0.0.1)
+- `coverage(topogeoml/ + benchmarks/)`: 100%
+- `mypy topogeoml`: 0 errors (CI enforcement deferred to a separate PR pending constrained-env reproduction)
+- 6 CI workflows on main, all green
 
 ## [0.0.1] — 2026-05-20
 
