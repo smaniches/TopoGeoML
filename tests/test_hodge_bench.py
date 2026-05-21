@@ -307,6 +307,28 @@ class TestPROTEINSLoader:
 
 
 @pytest.mark.skipif(not _has_pyg(), reason="torch-geometric not installed")
+class TestNCI1Loader:
+    def test_nci1_is_available(self) -> None:
+        from benchmarks.hodge.datasets import NCI1Dataset
+
+        assert NCI1Dataset.available() is True
+
+    def test_nci1_load_metadata(self) -> None:
+        """NCI1: 4110 chemical graphs, 2 classes; sample carries x/laplacian/label."""
+        from benchmarks.hodge.datasets import NCI1Dataset
+
+        ds = NCI1Dataset()
+        samples, input_dim, num_classes = ds.load()
+        assert len(samples) == 4110
+        assert num_classes == 2
+        assert input_dim > 0
+        s = samples[0]
+        assert s.x.shape[0] == s.laplacian.shape[0]
+        assert s.laplacian.shape[0] == s.laplacian.shape[1]
+        assert s.y in (0, 1)
+
+
+@pytest.mark.skipif(not _has_pyg(), reason="torch-geometric not installed")
 class TestClassificationAxis:
     def test_classification_axis_runs(self) -> None:
         """End-to-end smoke: HodgeClassifier trains for 2 epochs on MUTAG
