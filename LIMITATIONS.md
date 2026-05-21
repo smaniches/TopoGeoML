@@ -82,46 +82,59 @@ Above noise levels of ~10% of the data diameter, Betti curves count spurious sho
 
 ---
 
-## 3. What is **not validated**
+## 3. What is **not validated** — and what now is
 
-The following claims appear in docstrings or roadmap text but **have no executable test** in v0.0.1:
+Two real-data experiments have been run since v0.0.1 was first cut. Both are reproducible from `notebooks/`; per-seed JSON + a Markdown report live in `notebooks/results/`.
 
-- **Discriminability on real-world datasets.** All discrimination tests are on synthetic shapes (circles vs lines, two-circle complexes). No real benchmark dataset (MNIST, Cora, MUTAG, ZINC, PROTEINS, ROGII, BirdCLEF embeddings, etc.) is exercised. Real-data benchmarks land in v0.1 (item 3 will expand from "synthetic" to "Kaggle topology-shaped competition").
-- **Performance characteristics.** No `pytest-benchmark` micro-benchmark suite exists. Runtime/memory claims in this document are estimates from manual inspection, not measurements.
-- **Numerical stability at scale.** All tests run on small complexes (n_simplices < 20) or small point clouds (n_points ≤ 100). Behavior at production scale is not characterized.
-- **Cross-platform behavior.** CI is configured for Ubuntu and macOS on Python 3.11/3.12 but has not been run on Windows. Path handling and file I/O (`os.replace` semantics, BOM handling) are likely fine but unverified.
-- **Hodge MP layer learning convergence.** The forward/backward tests verify shape and gradient flow; **no test verifies that the layer learns anything useful on a real task.** Convergence behavior, training stability, and depth limits are uncharacterized.
+**Validated (positive).** The `ShapeOfLearningCallback` topology-divergence score fires *no later* than a textbook val-loss-ratio watchdog on a controlled overfitting regime (200-sample `sklearn.load_digits`, 30 seeds, paired Wilcoxon p_raw = 5.77 × 10⁻⁴, rank-biserial r = +1.0). See `notebooks/results/topology_predicts_divergence_30seeds.md`. The directional verdict is robust; the magnitude is floor-censored.
+
+**Validated (negative).** The minimal one-layer Hodge MP architecture in `benchmarks/hodge/models.py` *underperforms* an MLP baseline of matched capacity on MUTAG (30 seeds, 20 epochs, median Δ = −0.092, paired Wilcoxon p_BH = 5.66 × 10⁻⁵, rank-biserial r = −0.760). See `notebooks/results/mutag_hodge_vs_mlp_30seeds.md`. This is a negative result about the *architecture*, not about Hodge methods in general — the natural follow-up is deeper layers, normalised Laplacians, and richer node features.
+
+**Still NOT validated:**
+
+- **Discriminability on most real datasets.** No empirical claim exists yet on DRIVE, CIFAR, ImageNet, PROTEINS, NCI1, ZINC, or any embedding-quality benchmark. The DRIVE pipeline (`notebooks/drive_unet_topology_loss.py`) is shipped but requires manual dataset download + GPU to produce numbers.
+- **Performance characteristics at production scale.** `pytest-benchmark` micro-benchmarks exist for the diff-PH backends (`benchmarks/axes/speed.py`), but no end-to-end "topology layer in a real training loop on a real model" timing is published. Runtime claims in script docstrings are CPU estimates from manual inspection.
+- **Numerical stability at scale.** The Cohen-Steiner stability check is verified at n_points ≤ 50; larger point clouds and longer training horizons are uncharacterised.
+- **Cross-platform behaviour.** CI runs Ubuntu + macOS on Python 3.11/3.12. Windows is not tested.
 
 ---
 
 ## 4. What is **explicitly out of scope** for v0.0.1
 
-The following are deliberately deferred and will not be addressed by minor patches:
+Status updated to reflect work since the initial v0.0.1 cut.
 
-- Drift-tensor correction layer (`D: M → TM`) — v0.1 / proprietary TOPOLOGICA contribution
-- PH metric cascade (Euclidean → Spectral → Fermat with d_int/d_amb selection) — v0.1
-- Topology losses for segmentation (Clough et al. style cubical persistence losses) — v0.1
-- TopoNetX integration for non-simplicial complexes (cell complexes, combinatorial complexes) — v0.1
-- Differentiable persistent homology (`autograd` through the bar matching) — v0.2
-- GPU batching of Rips persistence — v0.2 (depends on upstream `ripserplusplus` integration)
-- MLflow / Weights & Biases tracking adapters — v0.1
-- Real-data dataset adapters (MUTAG, ZINC, PROTEINS, etc.) — v0.1
-- FastAPI inference service (`services/`) — v0.1
-- Multi-rank simplicial neural network (full SCN architecture) — v0.2
+| Item | Status |
+|---|---|
+| Differentiable Vietoris-Rips persistent homology with autograd | **delivered** — `topogeoml.nn.diff_ph` (Hofer 2017 / Carrière 2021 critical-edge indexing) |
+| Differentiable cubical persistent homology + topology loss for image segmentation (Clough 2020 style) | **delivered** — `topogeoml.nn.cubical_diff_ph` + `notebooks/drive_unet_topology_loss.py` |
+| Topology-aware divergence callback for PyTorch | **delivered** — `topogeoml.training.ShapeOfLearningCallback`, empirically validated (see §3) |
+| Real-data dataset adapter for TUDataset / MUTAG | **delivered** — `benchmarks/hodge/datasets.py` |
+| Bottleneck distance between persistence diagrams (Kerber-Morozov-Nigmetov 2017 via gudhi) | **delivered** — used in `benchmarks/axes/stability.py` |
+| Bias-corrected accelerated bootstrap (Efron 1987) + non-overlapping block bootstrap (Künsch 1989) | **delivered** — `benchmarks.stats.bootstrap_ci(method=...)` |
+| Benchmark framework with paired Wilcoxon + Benjamini-Hochberg FDR + bootstrap CIs | **delivered** — `benchmarks/` and `benchmarks/hodge/` |
+| Drift-tensor correction layer | **dropped** — was never specced beyond a name |
+| PH metric cascade (Euclidean → Spectral → Fermat with d_int/d_amb selection) | **deferred indefinitely** — not pursued |
+| TopoNetX integration | **deferred indefinitely** — depends on TopoNetX upstream stability |
+| GPU-batched Rips persistence | **deferred indefinitely** — depends on `ripserplusplus` upstream |
+| MLflow / Weights & Biases tracking | **deferred indefinitely** — no demand; bench framework provides JSON provenance |
+| Multi-rank simplicial neural network (full SCN) | **deferred indefinitely** — superseded by need for a positive empirical claim first |
+| FastAPI inference service | **dropped** — premature for a research toolkit |
+| Wasserstein distance between persistence diagrams | **deferred** — bottleneck is the working distance for stability proofs |
 
 ---
 
 ## 5. How to read the version
 
-`v0.0.1` is the deliberate signal: pre-stable. **APIs may change without notice.** Pin exact versions in any downstream project that depends on TopoGeomML, and re-test before upgrading.
+`v0.0.1-alpha` is the deliberate signal: pre-stable. **APIs may change without notice.** Pin exact versions in any downstream project, and re-test before upgrading.
 
-The semantics of the major versions will be:
+The semantics of the upcoming versions are deliberately narrower than the v0.0.1 cut promised:
 
 - `v0.x` — pre-stable, breaking changes expected
-- `v1.0` — stable API, full TopoNetX integration, peer-reviewed publication, GPU-batched differentiable persistence
-- `v1.x` — backward-compatible additions
-- `v2.x` — new domains (TDA on transformers, sheaf-theoretic data fusion) if needed
+- `v0.0.2` — gated on a *positive* real-data empirical claim (paired Wilcoxon p < 0.01 after BH, BCa CI reported)
+- `v1.0` — **conditional**: only minted once at least one such positive empirical claim exists, the API has settled, and a methods paper draft exists
+
+No promises are made about peer-reviewed publication timing, GPU batching, framework status, or scope beyond v0.0.2.
 
 ---
 
-Santiago Maniches (ORCID: [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)) — TOPOLOGICA LLC
+Santiago Maniches (ORCID: [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)).
