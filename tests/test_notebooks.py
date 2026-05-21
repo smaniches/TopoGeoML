@@ -55,7 +55,7 @@ class TestMNISTTopologyScript:
         with sensible param counts."""
         from notebooks.mnist_topology_classification import build_models
 
-        topo, base = build_models(input_dim=2, num_classes=3, n_points=10, seed=0)
+        topo, base = build_models(input_dim=2, num_classes=3, seed=0)
         n_topo = sum(p.numel() for p in topo.parameters())
         n_base = sum(p.numel() for p in base.parameters())
         # Same parameter budget (32 hidden dims + 3->16 vs 2->16) — within 10%.
@@ -67,7 +67,7 @@ class TestMNISTTopologyScript:
         """Topology-aware model forward returns a 3-class logit vector."""
         from notebooks.mnist_topology_classification import build_models
 
-        topo, _ = build_models(input_dim=2, num_classes=3, n_points=10, seed=0)
+        topo, _ = build_models(input_dim=2, num_classes=3, seed=0)
         # 10-point unit circle: should have a finite H_1 bar.
         import numpy as np
 

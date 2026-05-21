@@ -77,16 +77,29 @@ def _device() -> _torch_typing.device:
 # Models
 # ---------------------------------------------------------------------------
 
-def build_models(input_dim: int, num_classes: int, n_points: int, seed: int):
+def build_models(input_dim: int, num_classes: int, seed: int):
     """Construct (topology-aware classifier, baseline classifier).
 
-    Both take a (n_points, 2) point cloud as input. The topology-aware
+    Both take a ``(n_points, 2)`` point cloud as input. The topology-aware
     model adds a 3-feature vector derived from the Rips diagram. The
-    baseline gets a same-length 3-feature vector of pure noise (so the
-    parameter count and capacity are identical).
+    baseline gets a same-length 3-feature vector derived from per-coordinate
+    variance (so the parameter count and capacity are identical).
+
+    ``n_points`` was previously a parameter here but it never affected the
+    constructed model (the architectures are agnostic to point count);
+    removed per Gemini PR #8 review.
     """
     import torch
     from torch import nn
+
+    # Hoist the topology imports out of the forward pass: Python caches
+    # module objects but ``from X import Y`` does a dict lookup on every
+    # forward call, which is wasted work in the training hot path
+    # (caught by Gemini PR #7 + #8 reviews).
+    from topogeoml.nn.diff_ph import (
+        finite_lifetimes,
+        rips_diagram_torch,
+    )
 
     torch.manual_seed(seed)
 
@@ -101,11 +114,6 @@ def build_models(input_dim: int, num_classes: int, n_points: int, seed: int):
             self.head = nn.Linear(32, num_classes)
 
         def forward(self, point_cloud: torch.Tensor) -> torch.Tensor:
-            from topogeoml.nn.diff_ph import (
-                finite_lifetimes,
-                rips_diagram_torch,
-            )
-
             # Per-point summary.
             h_pts = self.point_proj(point_cloud).mean(dim=0)
             # Topology features.
@@ -203,7 +211,7 @@ def train_eval_one_seed(
         n_per_class=n_per_class, seed=seed, n_points=n_points,
     )
     model_topo, model_base = build_models(
-        input_dim=2, num_classes=3, n_points=n_points, seed=seed,
+        input_dim=2, num_classes=3, seed=seed,
     )
     device = _device()
     model_topo = model_topo.to(device)

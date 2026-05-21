@@ -72,9 +72,16 @@ def _persistence_image_one(
     bx, py = np.meshgrid(centers, centers, indexing="xy")  # both (resolution, resolution)
 
     inv_two_sigma_sq = 1.0 / (2.0 * sigma * sigma)
+    # Standard isotropic 2-D Gaussian normalization 1 / (2 π σ²). Without
+    # it the kernel is unnormalised — pixel values depend on σ in a way
+    # that depends on the discretization, and the per-σ scaling no longer
+    # matches a probability density. Caught by Gemini's PR #1 review;
+    # ML downstream models could compensate but the in-house implementation
+    # should still match the standard Adams et al. 2017 formulation.
+    gauss_norm = 1.0 / (2.0 * np.pi * sigma * sigma)
     dx = bx[..., None] - births[None, None, :]  # (R, R, n)
     dy = py[..., None] - pers[None, None, :]  # (R, R, n)
-    gauss = np.exp(-(dx * dx + dy * dy) * inv_two_sigma_sq)
+    gauss = np.exp(-(dx * dx + dy * dy) * inv_two_sigma_sq) * gauss_norm
     img = (gauss * weights[None, None, :]).sum(axis=-1)  # (R, R)
     return np.ascontiguousarray(img, dtype=np.float64).ravel()
 

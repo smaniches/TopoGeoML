@@ -69,8 +69,14 @@ def _build_image() -> _modal_typing.Image:
     )
 
 
-def define_app() -> tuple[_modal_typing.App, Any]:
-    """Define the Modal app + GPU function. Importable from other scripts."""
+def define_app(gpu: str = "a10g") -> tuple[_modal_typing.App, Any]:
+    """Define the Modal app + GPU function. Importable from other scripts.
+
+    ``gpu`` is bound at decorator time (Modal does not yet support
+    dynamic GPU selection at call time), so a separate call to
+    ``define_app(gpu=...)`` is required per-GPU. The CLI threads
+    ``--gpu`` through here.
+    """
     import modal
 
     app = modal.App("topogeoml-diff-ph-bench")
@@ -78,7 +84,7 @@ def define_app() -> tuple[_modal_typing.App, Any]:
 
     @app.function(  # type: ignore[misc]
         image=image,
-        gpu="a10g",
+        gpu=gpu,
         timeout=1800,  # 30 minutes
     )
     def run_bench(  # type: ignore[no-untyped-def]
@@ -101,14 +107,17 @@ def define_app() -> tuple[_modal_typing.App, Any]:
             [_sys.executable, "-m", "pip", "install", "-e", "/repo[bench]", "--quiet"],
             check=True,
         )
-        # Run the bench.
-        _sys.path.insert(0, "/repo")
+        # Run the bench. ``sys.path.insert`` on the parent process does
+        # NOT affect the subprocess; set ``cwd=/repo`` so the subprocess
+        # picks up the local ``benchmarks`` package via the current-dir
+        # entry of its own sys.path (caught by Gemini PR #7 + #8 reviews).
         result = subprocess.run(
             [
-                _sys.executable, "/repo/notebooks/diff_ph_bench_gpu.py",
+                _sys.executable, "notebooks/diff_ph_bench_gpu.py",
                 "--output", "/tmp/result.json",
                 "--markdown", "/tmp/result.md",
             ],
+            cwd="/repo",
             check=False,
             capture_output=True,
             text=True,
@@ -129,6 +138,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--ref", default="main", help="git ref (branch/tag/SHA) to bench")
     parser.add_argument("--repo-url", default="https://github.com/smaniches/TopoGeoML.git")
     parser.add_argument("--output-dir", type=Path, default=Path("modal_outputs"))
+    parser.add_argument(
+        "--gpu",
+        default="a10g",
+        help=(
+            "Modal GPU type (default a10g). Use 'T4' for the cheaper "
+            "option (~$0.40/hr vs ~$1.10/hr for a10g). The bench "
+            "runs end-to-end on either; T4 is ~3x slower wall time."
+        ),
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -138,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
         return 1
 
-    app, run_bench = define_app()
+    app, run_bench = define_app(gpu=args.gpu)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     with app.run():  # type: ignore[attr-defined]

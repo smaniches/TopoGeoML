@@ -71,7 +71,9 @@ def _gudhi_finite_generators(
     from scipy.spatial.distance import pdist
 
     diameter = float(pdist(pts).max())
-    max_edge_length = max(diameter * 1.05, 1e-10)
+    # Vietoris-Rips persistence saturates at the diameter; the previous 5%
+    # headroom was unnecessary (caught by Gemini PR #4 review).
+    max_edge_length = max(diameter, 1e-10)
 
     rips = gudhi.RipsComplex(points=pts, max_edge_length=max_edge_length)
     st = rips.create_simplex_tree(max_dimension=max_dim + 1)
