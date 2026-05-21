@@ -72,7 +72,11 @@ class GudhiPython:
         if pts.shape[0] >= 2:
             from scipy.spatial.distance import pdist
             diameter = float(pdist(pts).max())
-            max_edge_length = max(diameter * 1.05, 1e-10)  # 5% headroom
+            # Vietoris-Rips persistence is invariant for filtration
+            # parameters >= diameter; the 5% headroom that lived here
+            # was therefore arithmetic-noise on top of an already-saturated
+            # parameter (caught by Gemini PR #4 review).
+            max_edge_length = max(diameter, 1e-10)
         else:  # pragma: no cover  -- bench always uses n >= 2.
             max_edge_length = 1.0
 

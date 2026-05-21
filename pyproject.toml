@@ -86,7 +86,7 @@ bench = [
     "torch>=2.0",
     "torch-topological>=0.1.9",
     "torchvision>=0.15",
-    "gudhi>=3.7",
+    "gudhi>=3.9",
     "torch-geometric>=2.4",
 ]
 

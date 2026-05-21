@@ -86,10 +86,17 @@ def _train_one_seed(
     loss_fn = nn.CrossEntropyLoss()
 
     final_train_loss = float("nan")
+    # Single RNG state for the whole training run so consecutive epochs
+    # draw *different* permutations. Previously the RNG was reseeded
+    # inside the epoch loop, producing identical sample order every
+    # epoch — equivalent to running ``len(train_samples) * n_epochs``
+    # SGD steps with a fixed-order curriculum, which is not SGD.
+    # Caught by Gemini's PR #6 review.
+    epoch_rng = np.random.default_rng(seed)
     for _ in range(n_epochs):
         model.train()
         epoch_loss = 0.0
-        perm = np.random.default_rng(seed).permutation(len(train_samples))
+        perm = epoch_rng.permutation(len(train_samples))
         for idx in perm:
             sample = train_samples[int(idx)]
             opt.zero_grad()

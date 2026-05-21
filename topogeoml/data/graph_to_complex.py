@@ -68,11 +68,15 @@ def graph_to_clique_complex(
 
     g = _coerce_to_graph(graph)
 
-    isolated = {v for v in g.nodes() if g.degree(v) == 0}
-
+    # ``networkx.find_cliques`` emits a 1-clique iff the vertex is isolated
+    # (degree 0). The pre-built ``isolated`` set + post-loop filter were
+    # therefore both redundant work; the same decision is made inline by
+    # checking ``len(clique) == 1``. Caught by Gemini PR #1 review.
     facets: list[tuple[int, ...]] = []
     seen: set[tuple[int, ...]] = set()
     for clique in nx.find_cliques(g):
+        if not include_isolated_vertices and len(clique) == 1:
+            continue
         verts = sorted(int(v) for v in clique)
         if len(verts) <= max_dim + 1:
             key = tuple(verts)
@@ -84,9 +88,6 @@ def graph_to_clique_complex(
                 if sub not in seen:
                     facets.append(sub)
                     seen.add(sub)
-
-    if not include_isolated_vertices and isolated:
-        facets = [f for f in facets if not (len(f) == 1 and f[0] in isolated)]
 
     return SimplicialComplex(facets=facets)
 

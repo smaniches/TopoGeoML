@@ -69,6 +69,58 @@ class TestModelsRegistry:
         logits = model.forward_one(x, dummy_L)
         assert logits.shape == (2,)
 
+    def test_hodge_classifier_mp_weights_registered(self) -> None:
+        """Regression for Gemini PR #6 review: the shared Hodge-MP
+        weight/bias must appear in ``model.parameters()`` so the
+        optimizer can actually update them. Previously they were
+        created inside ``forward_one`` and never registered."""
+        from benchmarks.hodge.models import HodgeClassifier
+
+        model = HodgeClassifier.build(input_dim=4, num_classes=2, seed=0)
+        names = {name for name, _ in model.named_parameters()}
+        assert "_mp_weight" in names
+        assert "_mp_bias" in names
+        # Optimizer parameter count should include the MP weight + bias on
+        # top of the in-projection + head.
+        total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        # hidden_dim defaults to 32: proj_in (4*32+32) + mp (32*32+32) + head (32*2+2) = 1218
+        assert total_params == 4 * 32 + 32 + 32 * 32 + 32 + 32 * 2 + 2
+
+    def test_hodge_classifier_mp_weights_change_under_training(self) -> None:
+        """Regression for Gemini PR #6 review: a real gradient step
+        must move the Hodge-MP weights. Previously they were
+        re-initialised on every ``forward_one`` so any step taken on
+        their gradients was discarded on the next call."""
+        from benchmarks.hodge.models import HodgeClassifier
+
+        model = HodgeClassifier.build(input_dim=3, num_classes=2, seed=0)
+        # 3-node triangle Laplacian (already normalised would be denser;
+        # combinatorial L_0 is enough to exercise the propagation).
+        indices = torch.tensor(
+            [[0, 0, 1, 1, 2, 2, 0, 1, 2], [1, 2, 0, 2, 0, 1, 0, 1, 2]],
+            dtype=torch.long,
+        )
+        values = torch.tensor(
+            [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 2.0, 2.0, 2.0],
+            dtype=torch.float64,
+        )
+        L = torch.sparse_coo_tensor(indices, values, size=(3, 3)).coalesce()
+        x = torch.randn(3, 3, dtype=torch.float64)
+        target = torch.tensor([1])
+
+        before = model._mp_weight.detach().clone()
+        opt = torch.optim.SGD(model.parameters(), lr=0.1)
+        opt.zero_grad()
+        loss = torch.nn.functional.cross_entropy(
+            model.forward_one(x, L).unsqueeze(0), target,
+        )
+        loss.backward()
+        opt.step()
+        after = model._mp_weight.detach().clone()
+        # The optimizer should have moved the MP weight by a non-trivial
+        # amount in at least one entry.
+        assert not torch.allclose(before, after)
+
 
 # ---------------------------------------------------------------------------
 # Datasets — MUTAG load + Laplacian conversion

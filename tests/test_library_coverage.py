@@ -648,8 +648,15 @@ class TestSlidingWindowAdditional:
         with pytest.raises(ValueError, match="Unknown pooling"):
             _pool(np.zeros((3, 2)), "not_a_pool")
 
-    def test_short_input_returns_zero_vector_with_specific_config(self) -> None:
-        """Lines 222-223 — n_windows == 0 fallback emits zero vector of the right shape."""
+    def test_short_input_capping_logic(self) -> None:
+        """Lines 211-213 — input shorter than ``window_length`` is capped to ``N``,
+        ensuring at least one window is processed even when ``stride > N - W``.
+
+        Renamed from ``test_short_input_returns_zero_vector_with_specific_config``
+        per Gemini PR #5 review: the `n_windows == 0` branch is actually
+        unreachable (the capping logic on line 213 ensures n_windows >= 1),
+        so this test exercises the capping path, not a zero-vector fallback.
+        """
         from topogeoml.signal import (
             TopologyFeatureConfig,
             sliding_window_topology_features,

@@ -44,6 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     # Import the framework lazily — these imports can be slow on Colab
     # cold-start, but only fire once.
     import torch
+
     from benchmarks.report import render_markdown
     from benchmarks.runner import run, write_result
 

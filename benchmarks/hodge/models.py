@@ -32,11 +32,17 @@ class _HodgeGraphClassifier(nn.Module):
     """HodgeMP layer + sum-pool + linear head.
 
     For each graph we precompute the L_0 Hodge Laplacian (clique
-    complex of the graph), apply one ``HodgeMessagePassing`` layer to
+    complex of the graph), apply one Hodge message-passing step to
     the node features, sum-pool across nodes, and run a linear
-    classifier. One Laplacian per graph is cached in the model's
-    instance dict so we don't pay the construction cost more than once
-    per forward.
+    classifier.
+
+    The Hodge propagation step replicates ``HodgeMessagePassing``
+    inline — ``activation(L @ x @ W + b)`` — but with **shared**
+    learnable ``W`` and ``b`` across graphs. Previously the layer was
+    constructed inside ``forward_one`` per graph, which (a) reset its
+    Xavier-initialised weights on every call and (b) left those weights
+    out of ``model.parameters()`` so the optimizer never saw them.
+    Caught by Gemini's PR #6 review; this rewrite fixes it.
     """
 
     def __init__(
@@ -50,25 +56,35 @@ class _HodgeGraphClassifier(nn.Module):
         self.hidden_dim = hidden_dim
         self.head = nn.Linear(hidden_dim, num_classes)
         self._activation = nn.ReLU()
-        # The HodgeMP layer is constructed lazily per-graph because each
-        # graph has its own Laplacian.
         self._proj_in = nn.Linear(input_dim, hidden_dim)
+        # Shared Hodge-MP parameters. Xavier init for ``W`` matches the
+        # default in ``topogeoml.nn.hodge.HodgeMessagePassing``; ``b``
+        # starts at zero per the original layer's convention.
+        self._mp_weight = nn.Parameter(
+            torch.empty(hidden_dim, hidden_dim, dtype=torch.float64)
+        )
+        self._mp_bias = nn.Parameter(torch.zeros(hidden_dim, dtype=torch.float64))
+        nn.init.xavier_uniform_(self._mp_weight)
+        # Project the head to float64 so the dtype chain stays consistent
+        # with the inline Hodge propagation.
+        self.head = self.head.to(torch.float64)
+        self._proj_in = self._proj_in.to(torch.float64)
 
     def forward_one(
         self, x: torch.Tensor, laplacian: torch.sparse.Tensor
     ) -> torch.Tensor:
         """Forward for a single graph: x is (n_nodes, input_dim), output is
-        (num_classes,) logits."""
-        from topogeoml.nn.hodge import HodgeMessagePassing
+        (num_classes,) logits.
 
+        Inline Hodge propagation step (mirroring
+        ``HodgeMessagePassing.forward``):
+            h ← activation( L_norm @ proj_in(x) @ W_shared + b_shared )
+        with ``W_shared`` and ``b_shared`` defined in ``__init__`` so
+        the optimizer actually updates them.
+        """
         h = self._proj_in(x)
-        layer = HodgeMessagePassing(
-            in_features=self.hidden_dim,
-            out_features=self.hidden_dim,
-            laplacian=laplacian,
-        ).to(torch.float64)
-        h = self._activation(layer(h))
-        # Sum-pool across nodes -> graph embedding.
+        propagated = torch.sparse.mm(laplacian, h)
+        h = self._activation(propagated @ self._mp_weight + self._mp_bias)
         graph_emb = h.sum(dim=0)
         return self.head(graph_emb)
 

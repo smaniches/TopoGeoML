@@ -93,7 +93,7 @@ class TestGudhiBackend:
         gudhi_h1 = gudhi_h1[np.isfinite(gudhi_h1).all(axis=1)]
 
         assert ref_h1.shape == gudhi_h1.shape == (1, 2)
-        assert np.allclose(np.sort(ref_h1, axis=0), np.sort(gudhi_h1, axis=0), atol=1e-6)
+        assert np.allclose(ref_h1[np.lexsort((ref_h1[:, 1], ref_h1[:, 0]))], gudhi_h1[np.lexsort((gudhi_h1[:, 1], gudhi_h1[:, 0]))], atol=1e-6)
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +133,7 @@ class TestHofer2017Backend:
 
         # Both libraries should agree to f64 round-off.
         assert ref_h1.shape == hofer_h1.shape == (1, 2)
-        assert np.allclose(np.sort(ref_h1, axis=0), np.sort(hofer_h1, axis=0), atol=1e-6)
+        assert np.allclose(ref_h1[np.lexsort((ref_h1[:, 1], ref_h1[:, 0]))], hofer_h1[np.lexsort((hofer_h1[:, 1], hofer_h1[:, 0]))], atol=1e-6)
 
     def test_loss_is_differentiable(self) -> None:
         from benchmarks.backends import get_backend
@@ -230,7 +230,7 @@ class TestCrossBackendAgreement:
 
         # Two independent algorithmic paths to the same diagram.
         assert topo_h1.shape == hofer_h1.shape == (1, 2)
-        assert np.allclose(np.sort(topo_h1, axis=0), np.sort(hofer_h1, axis=0), atol=1e-6)
+        assert np.allclose(topo_h1[np.lexsort((topo_h1[:, 1], topo_h1[:, 0]))], hofer_h1[np.lexsort((hofer_h1[:, 1], hofer_h1[:, 0]))], atol=1e-6)
 
     def test_loss_value_agreement(self) -> None:
         from benchmarks.backends import get_backend
