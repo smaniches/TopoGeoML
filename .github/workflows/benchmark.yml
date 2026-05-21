@@ -34,9 +34,16 @@ jobs:
           pip install --index-url https://download.pytorch.org/whl/cpu torch
           pip install -e ".[bench]"
 
-      - name: Run benchmark framework
+      - name: Run benchmark framework (smoke tier)
+        # CI runs the full bench under ``--quick`` (thinned seeds/repeats)
+        # so it completes within the 30-minute timeout. Full-rigor numbers
+        # come from running without ``--quick`` on a longer-budget runner
+        # (Modal, local). The ``config`` block in the JSON records the
+        # smoke-tier so downstream consumers cannot silently confuse the
+        # two regimes.
         run: |
           python -m benchmarks \
+            --quick \
             --output benchmarks/leaderboard/current.json \
             --markdown bench_report.md
 

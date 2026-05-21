@@ -53,12 +53,31 @@ class TestCLI:
         assert "Correctness" in md
         assert "Provenance" in md
 
+    def test_cli_quick_flag_thins_axis_kwargs(self) -> None:
+        """``--quick`` populates the per-axis kwargs dict with shorter
+        seed/repeat lists so the bench fits within CI's 30-minute budget.
+        Regression for the CI-timeout fix that landed alongside the
+        ``--quick`` flag."""
+        from benchmarks.cli import _quick_axis_kwargs
+
+        kwargs = _quick_axis_kwargs()
+        # Every axis is thinned to ≤3 seeds.
+        for axis_name, axis_overrides in kwargs.items():
+            assert "seeds" in axis_overrides, axis_name
+            assert len(axis_overrides["seeds"]) <= 3, axis_name
+        # ``speed`` drops the heaviest n_points and tightens repeat × number.
+        assert kwargs["speed"]["n_points_list"] == [30, 100]
+        assert kwargs["speed"]["repeat"] == 3
+        assert kwargs["speed"]["number"] == 10
+        # ``optimization`` runs fewer steps.
+        assert kwargs["optimization"]["n_steps"] == 60
+
     def test_cli_nonzero_exit_on_failed_cell(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """When a registered axis raises, the runner records it as failed and the CLI exits non-zero."""
         from benchmarks import runner
         from benchmarks.cli import main
 
-        def _boom(backend, dataset):  # type: ignore[no-untyped-def]
+        def _boom(backend, dataset, **_kwargs):  # type: ignore[no-untyped-def]
             raise RuntimeError("synthetic failure for test")
 
         # Override an existing axis so we can drive the CLI through its
