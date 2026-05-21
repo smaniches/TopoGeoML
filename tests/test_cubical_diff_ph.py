@@ -311,3 +311,115 @@ class TestFiniteLifetimesCubical:
         bars = torch.tensor([[0.0, 1.0], [0.5, 2.0]], dtype=torch.float64)
         out = finite_lifetimes_cubical(bars)
         assert torch.allclose(out, torch.tensor([1.0, 1.5], dtype=torch.float64))
+
+
+# ---------------------------------------------------------------------------
+# Essential-aware betti_matching_loss semantics (regression for PR #9 review).
+# ---------------------------------------------------------------------------
+
+class TestBettiMatchingLossEssentialAware:
+    """Essential bars (death = inf) consume target_n_bars budget.
+
+    Standard interpretation: ``target_betti={0: 1}`` means *one connected
+    component*. Lower-star cubical persistence emits one essential H_0 bar
+    per component. The loss must therefore credit the essential bar against
+    the target so that, e.g., a one-component image gives zero H_0 loss.
+    """
+
+    def test_one_essential_at_target_one_gives_zero_loss(self) -> None:
+        from topogeoml.nn.cubical_diff_ph import betti_matching_loss
+
+        # One essential bar (death=inf), no finite bars. Target = 1.
+        # Expected: loss is zero — the essential bar IS the one component.
+        bars = torch.tensor(
+            [[0.0, float("inf")]], dtype=torch.float64,
+        )
+        loss = betti_matching_loss(bars, target_n_bars=1)
+        assert float(loss.item()) == 0.0
+
+    def test_one_essential_plus_one_finite_at_target_one_penalises_finite(
+        self,
+    ) -> None:
+        from topogeoml.nn.cubical_diff_ph import betti_matching_loss
+
+        # 1 essential + 1 finite bar of lifetime 0.4, target = 1.
+        # Essential consumes the budget; the finite bar is excess and is
+        # penalised by its lifetime.
+        bars = torch.tensor(
+            [[0.0, float("inf")], [0.0, 0.4]], dtype=torch.float64,
+        )
+        loss = betti_matching_loss(bars, target_n_bars=1, prominence_threshold=0.0)
+        assert float(loss.item()) == pytest.approx(0.4, abs=1e-9)
+
+    def test_two_essential_at_target_one_keeps_loss_zero(self) -> None:
+        from topogeoml.nn.cubical_diff_ph import betti_matching_loss
+
+        # Two essential bars exceed target_n_bars=1 but they cannot be
+        # shrunk (inf lifetime, no gradient). The loss is zero on them —
+        # the prediction simply has more components than asked for, and
+        # we surface this through the diagnostic count, not through a
+        # gradient term we know is uninformative.
+        bars = torch.tensor(
+            [[0.0, float("inf")], [0.0, float("inf")]], dtype=torch.float64,
+        )
+        loss = betti_matching_loss(bars, target_n_bars=1)
+        assert float(loss.item()) == 0.0
+
+    def test_essential_aware_preserves_old_finite_only_behaviour(self) -> None:
+        """A diagram with only finite bars and no essential bars behaves
+        exactly as before — the new code path is a strict superset."""
+        from topogeoml.nn.cubical_diff_ph import betti_matching_loss
+
+        bars = torch.tensor(
+            [[0.0, 1.0], [0.0, 0.3]], dtype=torch.float64,
+        )
+        loss = betti_matching_loss(bars, target_n_bars=1, prominence_threshold=0.0)
+        assert float(loss.item()) == pytest.approx(0.3, abs=1e-9)
+
+
+# ---------------------------------------------------------------------------
+# Batched CPU-transfer optimisation regression (PR #9 review).
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skipif(not _has_gudhi(), reason="gudhi not installed")
+class TestBatchedTransferEquivalence:
+    """The batched forward must give the same scalar loss as the per-image
+    forward — this is the regression test for the bulk-transfer rewrite."""
+
+    def test_batched_matches_mean_over_singletons(self) -> None:
+        from topogeoml.nn.cubical_diff_ph import CubicalTopologyLoss
+
+        torch.manual_seed(0)
+        pred = torch.rand(3, 7, 7, dtype=torch.float64)
+        loss_module = CubicalTopologyLoss(target_betti={0: 1, 1: 1})
+
+        batched = float(loss_module(pred).item())
+        per_image = [float(loss_module(pred[b]).item()) for b in range(pred.shape[0])]
+        assert batched == pytest.approx(sum(per_image) / len(per_image), abs=1e-12)
+
+    def test_batched_grad_matches_per_image_grad(self) -> None:
+        """Autograd must produce identical gradients for batched vs scalar
+        invocation (sum of singletons, divided by batch size).
+
+        Uses ``target_betti={1: 0}`` so any H_1 bar produced by gudhi on a
+        random image is excess and contributes a real gradient — avoids
+        the no-op zero-loss path.
+        """
+        from topogeoml.nn.cubical_diff_ph import CubicalTopologyLoss
+
+        torch.manual_seed(1)
+        pred_batched = torch.rand(2, 6, 6, dtype=torch.float64, requires_grad=True)
+        loss_module = CubicalTopologyLoss(target_betti={1: 0})
+        loss_b = loss_module(pred_batched)
+        loss_b.backward()
+        grad_batched = pred_batched.grad.detach().clone()
+
+        # Recompute as a manual mean over per-image losses.
+        pred_scalar = pred_batched.detach().clone().requires_grad_(True)
+        manual = torch.stack([
+            loss_module(pred_scalar[b]) for b in range(pred_scalar.shape[0])
+        ]).mean()
+        manual.backward()
+        grad_scalar = pred_scalar.grad.detach().clone()
+
+        assert torch.allclose(grad_batched, grad_scalar, atol=1e-12)

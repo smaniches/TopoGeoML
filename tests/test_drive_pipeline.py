@@ -86,3 +86,19 @@ class TestLossHelpers:
         # No overlap.
         zero = torch.zeros(8, 8)
         assert _iou(zero, target) == 0.0
+
+
+class TestTopoResolutionCli:
+    def test_topo_resolution_default(self) -> None:
+        """Default --topo-resolution is 64 (half of the default 128 image)."""
+        from notebooks.drive_unet_topology_loss import _build_argparser
+
+        ns = _build_argparser().parse_args(["--synthetic"])
+        assert ns.topo_resolution == 64
+
+    def test_topo_resolution_overridable(self) -> None:
+        """The CLI accepts an explicit --topo-resolution override."""
+        from notebooks.drive_unet_topology_loss import _build_argparser
+
+        ns = _build_argparser().parse_args(["--topo-resolution", "128"])
+        assert ns.topo_resolution == 128

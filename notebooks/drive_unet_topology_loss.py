@@ -258,6 +258,7 @@ def _train_one_seed(
     n_epochs: int,
     learning_rate: float,
     topo_weight: float,
+    topo_resolution: int,
 ) -> SeedResult:
     import torch
 
@@ -288,12 +289,19 @@ def _train_one_seed(
             pred = model(x_train)
             dice = _dice_bce_loss(pred, y_train)
             if use_topology and topo_loss is not None:
-                # Topology loss on a downsampled prediction — full resolution
-                # is too expensive for cubical PH inside a training loop.
-                small = torch.nn.functional.interpolate(
-                    pred, size=(16, 16), mode="bilinear", align_corners=False,
-                )
-                topo = topo_loss(small.to(torch.float64)).to(dice.dtype)
+                # Resolution at which the topology loss is computed. For
+                # fine structures (retinal vessels, 1-3 px wide at 128x128)
+                # aggressive downsampling collapses the foreground and
+                # invents fictitious topology, so we keep it tunable and
+                # default to the full prediction resolution above.
+                if topo_resolution < pred.shape[-1]:
+                    topo_input = torch.nn.functional.interpolate(
+                        pred, size=(topo_resolution, topo_resolution),
+                        mode="bilinear", align_corners=False,
+                    )
+                else:
+                    topo_input = pred
+                topo = topo_loss(topo_input.to(torch.float64)).to(dice.dtype)
                 loss = dice + topo_weight * topo
             else:
                 loss = dice
@@ -369,18 +377,37 @@ def _render_markdown(results: list[SeedResult]) -> str:
     return "\n".join(lines)
 
 
-def main(argv: list[str] | None = None) -> int:
+def _build_argparser() -> argparse.ArgumentParser:
+    """Build the CLI parser. Factored out so tests can introspect the
+    argument set without running the training loop."""
     parser = argparse.ArgumentParser(description="DRIVE U-Net + topology loss training")
     parser.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
     parser.add_argument("--n-epochs", type=int, default=50)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
     parser.add_argument("--topo-weight", type=float, default=0.1)
+    parser.add_argument(
+        "--topo-resolution",
+        type=int,
+        default=64,
+        help=(
+            "Resolution at which the cubical topology loss is computed. "
+            "Set to >= --image-size to skip downsampling. The default 64 "
+            "balances per-iteration cost against the loss of fine "
+            "vessel structure that aggressive downsampling causes "
+            "(retinal vessels are 1-3 px wide at 128x128)."
+        ),
+    )
     parser.add_argument("--image-size", type=int, default=128)
     parser.add_argument("--data-root", type=Path, default=None)
     parser.add_argument("--synthetic", action="store_true",
                         help="Use synthetic vessel-like data instead of DRIVE (smoke test)")
     parser.add_argument("--output", type=Path, default=Path("/tmp/drive_topology_results.json"))
     parser.add_argument("--markdown", type=Path, default=None)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = _build_argparser()
     args = parser.parse_args(argv)
 
     import torch
@@ -404,6 +431,7 @@ def main(argv: list[str] | None = None) -> int:
             n_epochs=args.n_epochs,
             learning_rate=args.learning_rate,
             topo_weight=args.topo_weight,
+            topo_resolution=args.topo_resolution,
         )
         dt = time.perf_counter() - t0
         results.append(r)
@@ -421,6 +449,7 @@ def main(argv: list[str] | None = None) -> int:
         "config": {
             "seeds": args.seeds, "n_epochs": args.n_epochs,
             "learning_rate": args.learning_rate, "topo_weight": args.topo_weight,
+            "topo_resolution": args.topo_resolution,
             "image_size": args.image_size, "synthetic": args.synthetic,
         },
         "results": [asdict(r) for r in results],

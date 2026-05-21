@@ -118,6 +118,43 @@ def _gudhi_cubical_vertex_pairs(
     return finite_by_dim, essential_h0
 
 
+def _assemble_bars(
+    flat: torch.Tensor,
+    finite_by_dim: list[NDArray[np.int64]],
+    essential_h0: NDArray[np.int64],
+    max_dim: int,
+    include_essential: bool,
+) -> list[torch.Tensor]:
+    """Reconstruct differentiable bars from precomputed gudhi vertex indices.
+
+    Pure tensor indexing — autograd flows through ``flat[v_b]`` back to the
+    original image. Factored out so callers that already have a CPU view
+    of the image (e.g. a batched loss that wants one bulk transfer) can
+    skip the per-image ``detach().cpu()`` round-trip.
+    """
+    diagrams: list[torch.Tensor] = []
+    for k in range(max_dim + 1):
+        pairs = finite_by_dim[k]
+        if pairs.shape[0] > 0:
+            v_b = torch.from_numpy(pairs[:, 0]).to(flat.device)
+            v_d = torch.from_numpy(pairs[:, 1]).to(flat.device)
+            births = flat[v_b]
+            deaths = flat[v_d]
+            bars = torch.stack([births, deaths], dim=1)
+        else:
+            bars = flat.new_empty((0, 2))
+        diagrams.append(bars)
+
+    if include_essential and essential_h0.size > 0:
+        v_ess = torch.from_numpy(essential_h0).to(flat.device)
+        births = flat[v_ess]
+        deaths = torch.full_like(births, float("inf"))
+        essential_bars = torch.stack([births, deaths], dim=1)
+        diagrams[0] = torch.cat([diagrams[0], essential_bars], dim=0)
+
+    return diagrams
+
+
 def cubical_diagram_torch(
     img: torch.Tensor, max_dim: int = 1, include_essential: bool = True
 ) -> list[torch.Tensor]:
@@ -171,28 +208,9 @@ def cubical_diagram_torch(
     finite_by_dim, essential_h0 = _gudhi_cubical_vertex_pairs(img_np, max_dim)
 
     flat = img.reshape(-1)
-
-    diagrams: list[torch.Tensor] = []
-    for k in range(max_dim + 1):
-        pairs = finite_by_dim[k]
-        if pairs.shape[0] > 0:
-            v_b = torch.from_numpy(pairs[:, 0]).to(img.device)
-            v_d = torch.from_numpy(pairs[:, 1]).to(img.device)
-            births = flat[v_b]
-            deaths = flat[v_d]
-            bars = torch.stack([births, deaths], dim=1)
-        else:
-            bars = img.new_empty((0, 2))
-        diagrams.append(bars)
-
-    if include_essential and essential_h0.size > 0:
-        v_ess = torch.from_numpy(essential_h0).to(img.device)
-        births = flat[v_ess]
-        deaths = torch.full_like(births, float("inf"))
-        essential_bars = torch.stack([births, deaths], dim=1)
-        diagrams[0] = torch.cat([diagrams[0], essential_bars], dim=0)
-
-    return diagrams
+    return _assemble_bars(
+        flat, finite_by_dim, essential_h0, max_dim, include_essential
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -218,22 +236,38 @@ def betti_matching_loss(
     """
     Clough et al. 2020 style Betti-matching loss.
 
-    Sorts finite bars by lifetime descending. The first ``target_n_bars``
-    are *kept* (loss is zero on them) and any excess bars are penalized
-    by their lifetime — so descent shrinks the smallest extra bars
-    toward the diagonal. If there are fewer than ``target_n_bars``
-    significant bars, the loss is zero (the model is asked to grow
-    bars, not shrink).
+    The full diagram is interpreted as the union of essential bars
+    (``death = +inf``) and finite bars. Both contribute toward the
+    target Betti count:
+
+    1. Essential bars cannot be shrunk (infinite lifetime → no
+       gradient), so they always count as preserved features. They
+       consume the first ``n_essential`` slots of the
+       ``target_n_bars`` budget.
+    2. Remaining budget ``max(0, target_n_bars - n_essential)`` is
+       allocated to the longest-lifetime finite bars.
+    3. Finite bars beyond the remaining budget with lifetime greater
+       than ``prominence_threshold`` are *excess*; their lifetimes
+       are summed into the loss. Descent then shrinks each toward
+       the diagonal.
+
+    This convention matches the standard interpretation of
+    ``target_betti``: for H_0 it is the desired number of connected
+    components (every component contributes one essential bar in
+    lower-star cubical persistence); for H_1 it is the desired number
+    of loops (no essential H_1 on a compact 2-D grid, so all bars are
+    finite). The same code path handles both.
 
     Parameters
     ----------
     diagram : torch.Tensor
         ``(n_bars, 2)`` persistence diagram for one homology dimension.
+        Essential bars are encoded with ``death = +inf``.
     target_n_bars : int
-        Expected Betti number for this dimension (e.g. 1 for an image
-        of a single connected loop in H_1).
+        Expected Betti number for this dimension (e.g. 1 for a single
+        connected component in H_0, or 1 for a single loop in H_1).
     prominence_threshold : float
-        Bars with lifetime <= this are not counted as significant.
+        Finite bars with lifetime <= this are not counted as significant.
 
     Returns
     -------
@@ -241,18 +275,22 @@ def betti_matching_loss(
         Scalar loss; minimizing it pushes the network toward the
         target topology.
     """
-    lifetimes = finite_lifetimes_cubical(diagram)
-    if lifetimes.numel() == 0:
+    if diagram.numel() == 0:
         return torch.zeros((), dtype=diagram.dtype, device=diagram.device)
+    finite_mask = torch.isfinite(diagram[:, 1])
+    n_essential = int((~finite_mask).sum().item())
+    n_finite_keep = max(0, target_n_bars - n_essential)
+
+    finite = diagram[finite_mask]
+    if finite.numel() == 0:
+        return torch.zeros((), dtype=diagram.dtype, device=diagram.device)
+    lifetimes = finite[:, 1] - finite[:, 0]
     sorted_lifetimes, _ = lifetimes.sort(descending=True)
     significant = sorted_lifetimes[sorted_lifetimes > prominence_threshold]
-    n_significant = significant.numel()
-    if n_significant <= target_n_bars:
-        # Below or at target: no penalty. The model can still be pushed
-        # toward higher topology via the negative-total-persistence
-        # loss; this one is for *shrinking* excess.
+    if significant.numel() <= n_finite_keep:
+        # Within budget after accounting for essential bars: no penalty.
         return torch.zeros((), dtype=diagram.dtype, device=diagram.device)
-    excess = significant[target_n_bars:]
+    excess = significant[n_finite_keep:]
     return excess.sum()
 
 
@@ -275,9 +313,15 @@ class CubicalTopologyLoss(nn.Module):
     ----------
     target_betti : dict[int, int]
         ``{k: target_beta_k}``. The loss penalizes excess bars in each
-        dimension beyond the target.
+        dimension beyond the target. The standard Betti convention is
+        used: for H_0, ``target_beta_0`` is the number of desired
+        connected components (each contributes one essential bar in
+        lower-star cubical persistence and is counted toward the target);
+        for H_1 it is the number of desired loops.
     prominence_threshold : float
-        Bars with lifetime ``<= prominence_threshold`` are ignored.
+        Finite bars with lifetime ``<= prominence_threshold`` are not
+        counted as significant. Essential bars (death = ∞) are always
+        kept and are not subject to this threshold.
     invert : bool
         If True, invert the prediction (``1 - pred``) before computing
         persistence. Use this when foreground = high intensity (the
@@ -309,33 +353,38 @@ class CubicalTopologyLoss(nn.Module):
         Parameters
         ----------
         pred : torch.Tensor
-            ``(H, W)`` or ``(B, H, W)`` float64 predicted segmentation
-            map. For ``(B, H, W)`` inputs the loss averages over the
-            batch.
+            ``(H, W)`` or ``(B, H, W)`` or ``(B, 1, H, W)`` float64
+            predicted segmentation map. For batched inputs the loss
+            averages over the batch.
 
         Returns
         -------
         torch.Tensor
             Scalar loss.
         """
-        if pred.ndim == 2:
-            return self._forward_single(pred)
-        if pred.ndim == 3:
-            return torch.stack([self._forward_single(pred[b]) for b in range(pred.shape[0])]).mean()
         if pred.ndim == 4 and pred.shape[1] == 1:
-            # (B, 1, H, W) - squeeze channel dim
+            # (B, 1, H, W) -- squeeze the channel dim and recurse.
             return self.forward(pred.squeeze(1))
+        if pred.ndim == 2:
+            return self._forward_single_image(pred)
+        if pred.ndim == 3:
+            return self._forward_batched(pred)
         raise ValueError(
             f"pred must be (H, W) or (B, H, W) or (B, 1, H, W); got shape {tuple(pred.shape)}"
         )
 
-    def _forward_single(self, pred: torch.Tensor) -> torch.Tensor:
-        img = 1.0 - pred if self.invert else pred
-        max_dim = max(self.target_betti) if self.target_betti else 1
-        diagrams = cubical_diagram_torch(
-            img.to(torch.float64), max_dim=max_dim, include_essential=False,
-        )
-        loss = torch.zeros((), dtype=img.dtype, device=img.device)
+    def _img_for_filtration(self, pred: torch.Tensor) -> torch.Tensor:
+        """Apply the invert convention and cast to float64."""
+        pred64 = pred.to(torch.float64)
+        return 1.0 - pred64 if self.invert else pred64
+
+    def _loss_from_diagrams(
+        self,
+        diagrams: list[torch.Tensor],
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> torch.Tensor:
+        loss = torch.zeros((), dtype=dtype, device=device)
         for k, target in self.target_betti.items():
             if k < len(diagrams):
                 loss = loss + betti_matching_loss(
@@ -344,6 +393,44 @@ class CubicalTopologyLoss(nn.Module):
                     prominence_threshold=self.prominence_threshold,
                 )
         return loss
+
+    def _forward_single_image(self, pred: torch.Tensor) -> torch.Tensor:
+        img = self._img_for_filtration(pred)
+        max_dim = max(self.target_betti) if self.target_betti else 1
+        diagrams = cubical_diagram_torch(
+            img, max_dim=max_dim, include_essential=True,
+        )
+        return self._loss_from_diagrams(diagrams, img.device, img.dtype)
+
+    def _forward_batched(self, pred: torch.Tensor) -> torch.Tensor:
+        """Batched path with a single bulk CPU transfer.
+
+        The naive per-image loop incurs *B* blocking GPU→CPU transfers
+        because each ``cubical_diagram_torch`` call detaches its input
+        independently. We instead detach the whole batch once, run
+        gudhi per slice on the CPU view (gudhi is CPU-only by
+        construction), and reassemble the differentiable bars by
+        indexing the original GPU tensor.
+        """
+        img = self._img_for_filtration(pred)
+        # Single bulk transfer of the whole batch.
+        img_cpu = img.detach().cpu().numpy().astype(np.float64, copy=False)
+        max_dim = max(self.target_betti) if self.target_betti else 1
+
+        per_image_losses: list[torch.Tensor] = []
+        for b in range(img.shape[0]):
+            finite_by_dim, essential_h0 = _gudhi_cubical_vertex_pairs(
+                img_cpu[b], max_dim,
+            )
+            flat = img[b].reshape(-1)
+            diagrams = _assemble_bars(
+                flat, finite_by_dim, essential_h0, max_dim,
+                include_essential=True,
+            )
+            per_image_losses.append(
+                self._loss_from_diagrams(diagrams, img.device, img.dtype)
+            )
+        return torch.stack(per_image_losses).mean()
 
 
 def cubical_correctness_vs_gudhi(
