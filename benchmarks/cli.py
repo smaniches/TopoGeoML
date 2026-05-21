@@ -109,18 +109,44 @@ def main(argv: list[str] | None = None) -> int:
     if summary_path:
         Path(summary_path).write_text(md)
 
-    # Return non-zero on *unexpected* failures only. Cells with
-    # ``error_kind="SkippedNonDifferentiable"`` are expected behaviour
-    # (non-differentiable backends like ``gudhi-python`` cannot satisfy
-    # the autograd-dependent axes; the runner emits a clean skip rather
-    # than silently omitting the row). The previous "any non-success →
-    # exit 1" check was a CI-blocking false positive caught when the
-    # first ``benchmark.yml`` workflow run finished under ``--quick``.
+    # Return non-zero on *unexpected* failures only. Two cell categories
+    # are expected behaviour and must not fail the workflow:
+    #
+    #   - ``SkippedNonDifferentiable``: non-differentiable backends like
+    #     ``gudhi-python`` cannot satisfy autograd-required axes, so the
+    #     runner emits a clean skip rather than silently omitting the row.
+    #   - ``UnavailableBackend``: a registered backend whose optional
+    #     dependency is not installed in the current environment. The
+    #     runner records the absence so reports can flag missing
+    #     comparison points, but it is not a *bug* — it is environment
+    #     configuration.
+    #
+    # The previous "any non-success → exit 1" check counted both as
+    # failures and made the CPU ``benchmark.yml`` workflow fail on every
+    # PR that included a non-differentiable backend in the registry.
+    EXPECTED_NON_FAILURES = frozenset({
+        "SkippedNonDifferentiable",
+        "UnavailableBackend",
+    })
     real_failures = [
         c for c in result.cells
-        if not c.success and c.error_kind != "SkippedNonDifferentiable"
+        if not c.success and c.error_kind not in EXPECTED_NON_FAILURES
     ]
-    return 1 if real_failures else 0
+    if real_failures:
+        # Surface the failing cells on stderr so CI logs make the cause
+        # obvious without requiring the JSON artifact to be downloaded.
+        print(
+            f"\n[benchmarks] {len(real_failures)} unexpected cell failure(s):",
+            file=sys.stderr,
+        )
+        for c in real_failures:
+            print(
+                f"  - {c.backend_name} / {c.dataset_name} / {c.axis_name}: "
+                f"{c.error_kind}: {(c.error_message or '')[:200]}",
+                file=sys.stderr,
+            )
+        return 1
+    return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
