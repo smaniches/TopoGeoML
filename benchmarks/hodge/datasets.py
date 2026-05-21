@@ -88,18 +88,72 @@ class MUTAGDataset:
 
     def load(self) -> tuple[list[GraphSample], int, int]:
         """Load and convert MUTAG. Returns (samples, input_dim, num_classes)."""
-        from torch_geometric.datasets import TUDataset
-
-        ds = TUDataset(root=str(_cache_root()), name="MUTAG")
-        samples: list[GraphSample] = []
-        for g in ds:
-            x = g.x.to(torch.float64) if g.x is not None else torch.eye(g.num_nodes, dtype=torch.float64)
-            L = _graph_to_laplacian(g.num_nodes, g.edge_index)
-            samples.append(GraphSample(x=x, laplacian=L, y=int(g.y.item())))
-        return samples, int(ds.num_node_features) if ds.num_node_features > 0 else int(samples[0].x.shape[1]), int(ds.num_classes)
+        return _load_tudataset("MUTAG")
 
 
-REGISTERED: dict[str, Any] = {"mutag": MUTAGDataset()}
+@dataclass(frozen=True)
+class PROTEINSDataset:
+    """PROTEINS: 1113 protein graphs, 2 classes (enzyme vs non-enzyme).
+
+    Nodes are secondary-structure elements (helix/sheet/turn, 3-dim
+    one-hot or 32-dim continuous depending on the PyG release). Average
+    graph size: 39 nodes, 73 edges. Roughly 6x larger than MUTAG by
+    graph count, putting it above the discrimination ceiling that
+    Errica et al. 2020 flagged for MUTAG.
+
+    Citation: Borgwardt et al. 2005, *Bioinformatics* 21; Dobson &
+    Doig 2003, *J. Mol. Biol.* 330; Morris et al. 2020 TUDataset.
+    """
+
+    name: str = "proteins"
+    version: str = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        try:
+            import torch_geometric  # noqa: F401
+        except ImportError:  # pragma: no cover
+            return False
+        return True
+
+    def load(self) -> tuple[list[GraphSample], int, int]:
+        """Load and convert PROTEINS. Returns (samples, input_dim, num_classes)."""
+        return _load_tudataset("PROTEINS")
+
+
+def _load_tudataset(name: str) -> tuple[list[GraphSample], int, int]:
+    """Generic TUDataset → list[GraphSample] adapter.
+
+    Shared between every dataset class so the loader logic is
+    centralised. Handles the case where ``num_node_features == 0`` by
+    falling back to an identity-matrix feature (one-hot per node), and
+    the case where ``num_node_features > 0`` by casting to float64 to
+    match the downstream Hodge propagation dtype.
+    """
+    from torch_geometric.datasets import TUDataset
+
+    ds = TUDataset(root=str(_cache_root()), name=name)
+    samples: list[GraphSample] = []
+    for g in ds:
+        x = (
+            g.x.to(torch.float64)
+            if g.x is not None
+            else torch.eye(g.num_nodes, dtype=torch.float64)
+        )
+        L = _graph_to_laplacian(g.num_nodes, g.edge_index)
+        samples.append(GraphSample(x=x, laplacian=L, y=int(g.y.item())))
+    input_dim = (
+        int(ds.num_node_features)
+        if ds.num_node_features > 0
+        else int(samples[0].x.shape[1])
+    )
+    return samples, input_dim, int(ds.num_classes)
+
+
+REGISTERED: dict[str, Any] = {
+    "mutag": MUTAGDataset(),
+    "proteins": PROTEINSDataset(),
+}
 
 
 def get_dataset(name: str) -> Any:

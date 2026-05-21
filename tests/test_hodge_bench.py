@@ -284,6 +284,29 @@ class TestMUTAGLoader:
 # ---------------------------------------------------------------------------
 
 @pytest.mark.skipif(not _has_pyg(), reason="torch-geometric not installed")
+class TestPROTEINSLoader:
+    def test_proteins_is_available(self) -> None:
+        from benchmarks.hodge.datasets import PROTEINSDataset
+
+        assert PROTEINSDataset.available() is True
+
+    def test_proteins_load_metadata(self) -> None:
+        """PROTEINS: 1113 graphs, 2 classes; sample carries x/laplacian/label."""
+        from benchmarks.hodge.datasets import PROTEINSDataset
+
+        ds = PROTEINSDataset()
+        samples, input_dim, num_classes = ds.load()
+        assert len(samples) == 1113
+        assert num_classes == 2
+        assert input_dim > 0
+        # Sample sanity: x and laplacian shapes line up.
+        s = samples[0]
+        assert s.x.shape[0] == s.laplacian.shape[0]
+        assert s.laplacian.shape[0] == s.laplacian.shape[1]
+        assert s.y in (0, 1)
+
+
+@pytest.mark.skipif(not _has_pyg(), reason="torch-geometric not installed")
 class TestClassificationAxis:
     def test_classification_axis_runs(self) -> None:
         """End-to-end smoke: HodgeClassifier trains for 2 epochs on MUTAG
@@ -318,13 +341,14 @@ class TestRunner:
         """End-to-end smoke through the runner: the two original models
         against MUTAG for 2 seeds, 2 epochs. Should produce 2 reports +
         1 pairwise comparison (in UNDERPOWERED state because n=2 <
-        threshold). Explicit model restriction is required because the
-        registry now contains five models (the original two plus the
-        three hypothesis-001 ablation arms)."""
+        threshold). Explicit model + dataset restriction is required
+        because the registry now contains five models and two datasets
+        (MUTAG plus the hypothesis-002 PROTEINS dataset)."""
         from benchmarks.hodge.runner import run
 
         result = run(
             model_names=["hodge-mp-classifier", "mlp-baseline"],
+            dataset_names=["mutag"],
             seeds=[0, 1], n_epochs=2,
         )
         assert len(result.reports) == 2
@@ -340,14 +364,17 @@ class TestRunner:
         emits 5 reports and C(5,2) = 10 pairwise comparisons."""
         from benchmarks.hodge.runner import run
 
-        result = run(seeds=[0, 1], n_epochs=2)
+        result = run(dataset_names=["mutag"], seeds=[0, 1], n_epochs=2)
         assert len(result.reports) == 5
         assert len(result.pairwise_comparisons) == 10
 
     def test_runner_writes_json_and_markdown(self, tmp_path) -> None:
         from benchmarks.hodge.runner import render_markdown, run, write_result
 
-        result = run(seeds=[0], n_epochs=2)
+        result = run(
+            model_names=["mlp-baseline"], dataset_names=["mutag"],
+            seeds=[0], n_epochs=2,
+        )
         out = tmp_path / "result.json"
         write_result(result, out)
         assert out.exists()
