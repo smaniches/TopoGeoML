@@ -158,6 +158,7 @@ def build_train_test_split(
     """
     import numpy as np
     import torch
+
     from benchmarks.datasets.mnist_topology import MNISTPointCloud
 
     rng = np.random.default_rng(seed)
@@ -254,6 +255,7 @@ def train_eval_one_seed(
 
 def render_markdown(results: list[SeedResult]) -> str:
     import numpy as np
+
     from benchmarks.stats import bootstrap_ci, compare_paired
 
     topo = np.asarray([r.topology_accuracy for r in results])

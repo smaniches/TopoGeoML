@@ -1,0 +1,288 @@
+{
+  "config": {
+    "divergence_threshold": 2.0,
+    "hidden": 64,
+    "learning_rate": 0.01,
+    "markdown": "/tmp/topo_predicts_final.md",
+    "n_seeds": 30,
+    "n_steps": 600,
+    "n_train": 200,
+    "n_val": 300,
+    "output": "/tmp/topo_predicts_final.json",
+    "overfit_ratio": 1.1,
+    "probe_every": 10,
+    "smoke": false
+  },
+  "results": [
+    {
+      "final_step": 599,
+      "final_train_loss": 3.7043235352030024e-05,
+      "final_val_loss": 0.7953537702560425,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 0,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 3.126174851786345e-05,
+      "final_val_loss": 0.45898741483688354,
+      "loss_watchdog_step": 40,
+      "n_topology_snapshots": 60,
+      "seed": 1,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 1.3506036339094862e-05,
+      "final_val_loss": 0.8943405151367188,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 2,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.7892847356270067e-05,
+      "final_val_loss": 0.598167359828949,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 3,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.3809543563402258e-05,
+      "final_val_loss": 0.6035119891166687,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 4,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.3064463675837032e-05,
+      "final_val_loss": 0.402193158864975,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 5,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.532379949116148e-05,
+      "final_val_loss": 0.9025712013244629,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 6,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 4.42819764430169e-05,
+      "final_val_loss": 0.5833418965339661,
+      "loss_watchdog_step": 50,
+      "n_topology_snapshots": 60,
+      "seed": 7,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 3.539297904353589e-05,
+      "final_val_loss": 0.2100774198770523,
+      "loss_watchdog_step": 40,
+      "n_topology_snapshots": 60,
+      "seed": 8,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.5847379220067523e-05,
+      "final_val_loss": 0.5304020047187805,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 9,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 3.5497621865943074e-05,
+      "final_val_loss": 0.7617258429527283,
+      "loss_watchdog_step": 40,
+      "n_topology_snapshots": 60,
+      "seed": 10,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 3.391905192984268e-05,
+      "final_val_loss": 0.5457760095596313,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 11,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 3.4537628380348906e-05,
+      "final_val_loss": 0.4048776924610138,
+      "loss_watchdog_step": 60,
+      "n_topology_snapshots": 60,
+      "seed": 12,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.4046568796620704e-05,
+      "final_val_loss": 0.5988451242446899,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 13,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.8760337954736315e-05,
+      "final_val_loss": 0.6104361414909363,
+      "loss_watchdog_step": 40,
+      "n_topology_snapshots": 60,
+      "seed": 14,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.7873051294591278e-05,
+      "final_val_loss": 0.511950671672821,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 15,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.6844443709705956e-05,
+      "final_val_loss": 0.36725717782974243,
+      "loss_watchdog_step": 50,
+      "n_topology_snapshots": 60,
+      "seed": 16,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 3.602461583795957e-05,
+      "final_val_loss": 0.8759016990661621,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 17,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.8931055567227304e-05,
+      "final_val_loss": 0.4310622215270996,
+      "loss_watchdog_step": 40,
+      "n_topology_snapshots": 60,
+      "seed": 18,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.8837363061029464e-05,
+      "final_val_loss": 0.444436639547348,
+      "loss_watchdog_step": 40,
+      "n_topology_snapshots": 60,
+      "seed": 19,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.417651739961002e-05,
+      "final_val_loss": 0.8837011456489563,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 20,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 3.459678191575222e-05,
+      "final_val_loss": 0.8727827072143555,
+      "loss_watchdog_step": 40,
+      "n_topology_snapshots": 60,
+      "seed": 21,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.791361475829035e-05,
+      "final_val_loss": 0.40403005480766296,
+      "loss_watchdog_step": 50,
+      "n_topology_snapshots": 60,
+      "seed": 22,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 3.0916045943740755e-05,
+      "final_val_loss": 0.6203065514564514,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 23,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.585427682788577e-05,
+      "final_val_loss": 1.0566680431365967,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 24,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.436842260067351e-05,
+      "final_val_loss": 0.618638277053833,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 25,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 3.561732228263281e-05,
+      "final_val_loss": 0.5284522175788879,
+      "loss_watchdog_step": 40,
+      "n_topology_snapshots": 60,
+      "seed": 26,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.291806595167145e-05,
+      "final_val_loss": 0.8966593146324158,
+      "loss_watchdog_step": 30,
+      "n_topology_snapshots": 60,
+      "seed": 27,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 3.085321077378467e-05,
+      "final_val_loss": 0.8132920265197754,
+      "loss_watchdog_step": 40,
+      "n_topology_snapshots": 60,
+      "seed": 28,
+      "topology_watchdog_step": 30
+    },
+    {
+      "final_step": 599,
+      "final_train_loss": 2.6155836167163216e-05,
+      "final_val_loss": 0.38346073031425476,
+      "loss_watchdog_step": 40,
+      "n_topology_snapshots": 60,
+      "seed": 29,
+      "topology_watchdog_step": 30
+    }
+  ]
+}
