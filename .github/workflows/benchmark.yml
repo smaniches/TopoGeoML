@@ -30,8 +30,17 @@ jobs:
       - name: Install package + bench deps
         run: |
           python -m pip install --upgrade pip
-          # CPU-only torch wheel — keeps the install fast and deterministic.
-          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          # CPU-only torch + torchvision from the same wheel index.
+          # The CPU torchvision wheel ships C++ ops (e.g.
+          # ``torchvision::nms``) that are ABI-compatible with the CPU
+          # torch wheel. Installing torch from the CPU index and then
+          # letting ``pip install -e ".[bench]"`` pull the default-PyPI
+          # torchvision (which is CUDA-built) produces a silent ABI
+          # mismatch — torch loads but ``torchvision::nms`` is missing
+          # at runtime, breaking every backend that imports torchvision
+          # (``topogeoml-diff-ph``, ``torch-topological``). Caught on
+          # PR #17's CI after the surfacing fix from PR #16/#17.
+          pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
           pip install -e ".[bench]"
 
       - name: Run benchmark framework (smoke tier)
