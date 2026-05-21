@@ -1,0 +1,55 @@
+name: Benchmark (diff_ph)
+
+# Triggered manually (workflow_dispatch) and automatically on PRs that touch
+# the differentiable-PH layer, the benchmark framework, or this workflow file.
+# The bench is CPU-only on hosted runners; rankings can flip on GPU. The report
+# surfaces this caveat on every run.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "topogeoml/nn/diff_ph.py"
+      - "benchmarks/**"
+      - ".github/workflows/benchmark.yml"
+
+jobs:
+  bench:
+    name: TopoGeoML diff-PH framework (CPU)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package + bench deps
+        run: |
+          python -m pip install --upgrade pip
+          # CPU-only torch wheel — keeps the install fast and deterministic.
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install -e ".[bench]"
+
+      - name: Run benchmark framework
+        run: |
+          python -m benchmarks \
+            --output benchmarks/leaderboard/current.json \
+            --markdown bench_report.md
+
+      - name: Upload leaderboard JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-leaderboard
+          path: benchmarks/leaderboard/current.json
+          retention-days: 90
+
+      - name: Upload markdown report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-report-markdown
+          path: bench_report.md
+          retention-days: 30
