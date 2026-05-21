@@ -140,16 +140,19 @@ class _HodgeGraphClassifier(nn.Module):
 
 
 class HodgeClassifier:
-    """HodgeMP-based graph classifier.
+    """HodgeMP-based graph classifier (combinatorial Laplacian, baseline).
 
     Empirical status (MUTAG, 30 seeds, 20 epochs of Adam(lr=1e-2)):
-    this minimal one-layer architecture **underperforms** the MLP
-    baseline by ~9 percentage points with paired Wilcoxon p_BH = 5.66e-05
-    and rank-biserial r = -0.760. See
-    ``notebooks/results/mutag_hodge_vs_mlp_30seeds.md`` for the full
-    per-seed report. The negative result is published deliberately;
-    deeper architectures and normalised Laplacians are the natural
-    next steps for the Geo subsystem.
+    this combinatorial-L baseline arm **underperforms** the MLP
+    baseline by ~9 percentage points with paired Wilcoxon p_BH =
+    5.66e-04 and rank-biserial r = -0.643 (vs the normalised arm).
+
+    The architectural fix is *symmetric Laplacian normalisation*, not
+    depth or residual — see ``HodgeNormalisedClassifier`` for the
+    matching-MLP arm and ``docs/hypotheses/HYPOTHESIS-001-hodge-mutag.md``
+    for the full ablation. This combinatorial variant is kept in the
+    registry as the *control* of the ablation, not as a working
+    classifier.
     """
 
     name: ClassVar[str] = "hodge-mp-classifier"

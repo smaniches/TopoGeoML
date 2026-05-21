@@ -66,22 +66,25 @@ The directional verdict is unambiguous — topology never fires *later* than los
 
 Reproduce: `python notebooks/topology_predicts_divergence.py --n-seeds 30`.
 
-### 2. Minimal one-layer HodgeMP on MUTAG does NOT beat an MLP baseline (negative)
+### 2. Symmetric-normalised one-layer Hodge MP on MUTAG matches an MLP baseline; the combinatorial variant loses by 9 pp (mixed)
 
-MUTAG mutagenicity benchmark (188 molecular graphs, 2 classes, Debnath 1991 via PyG TUDataset), 30 independent seeds × 20 epochs of Adam(lr=1e-2), 80/20 stratified split per seed. Models with matched hidden dimension (32):
-- **hodge-mp-classifier**: per-node linear projection → 1 round of inline Hodge propagation (`activation(L @ X @ W + b)`) → sum-pool → linear head
-- **mlp-baseline**: same shape, but the middle step ignores the Laplacian (matched-capacity control)
+MUTAG mutagenicity benchmark (188 molecular graphs, 2 classes, Debnath 1991 via PyG TUDataset), 30 independent seeds × 20 epochs of Adam(lr=1e-2), 80/20 stratified split per seed. Five matched-capacity arms (1378-1442 trainable params each) tested as a single literature-grounded ablation; see `docs/hypotheses/HYPOTHESIS-001-hodge-mutag.md` for the falsifiable hypotheses, the four citations behind each architectural choice (Kipf-Welling 2017, Bunch 2020, HL-HGAT 2024, Hodgelet GP 2024), and the resolved outcomes.
 
-Result (full report in `notebooks/results/mutag_hodge_vs_mlp_30seeds.md`):
+Per-arm result (full report in `notebooks/results/mutag_hodge_ablation_30seeds.md`):
 
-| Model | Median accuracy (95% bootstrap CI) |
-|---|---|
-| `hodge-mp-classifier` | 0.697 [0.658, 0.750] |
-| `mlp-baseline` | **0.789 [0.763, 0.816]** |
+| Arm | Median accuracy (95% BCa CI) | Wilcoxon p_BH vs MLP | Verdict |
+|---|---|---|---|
+| `hodge-mp-classifier` (combinatorial L) | 0.697 [0.658, 0.750] | **5.66 × 10⁻⁴** | loses by 9 pp |
+| **`hodge-mp-normalised`** (symm L̃ = D⁻¹/² L D⁻¹/²) | **0.789 [0.763, 0.816]** | **0.714** | **matches MLP** |
+| `hodge-mp-residual` (above + identity skip) | 0.750 [0.724, 0.789] | 0.019 | loses by 4 pp (surprise) |
+| `hodge-mp-deep-residual` (above + 2 stacked layers) | 0.776 [0.737, 0.789] | 0.102 | matches (weak) |
+| `mlp-baseline` | 0.789 [0.763, 0.816] | — | control |
 
-Paired Wilcoxon (BH-corrected): median Δ = **−0.092** (Hodge is *worse* by ~9 pp), **p = 5.66 × 10⁻⁵**, rank-biserial **r = −0.760**.
+**What this licenses the framework to claim.**
 
-**What this means.** The minimal Hodge MP architecture currently shipped — one layer, combinatorial L_0, ReLU, sum-pool — **reliably underperforms** an MLP that ignores topology, on this dataset, with statistical significance. This is a negative finding about the *architecture*, not about Hodge methods in general; the natural follow-up is to test deeper architectures, normalised Laplacians, and richer features. The result also reveals that the original PR #6 numbers (Hodge ≈ MLP at ~70%) were measuring a buggy model whose HodgeMP weights were not registered with the optimizer (fixed in PR #12).
+On MUTAG at 30 seeds × 20 epochs × hidden_dim=32, a one-layer Hodge message-passing classifier using a **symmetrically-normalised Laplacian** is statistically indistinguishable from a no-topology MLP of matched capacity (paired Wilcoxon p_BH = 0.714, median Δ = +0.000, BCa 95% CI on Hodge accuracy: [0.763, 0.816]). The unnormalised combinatorial variant underperforms by 9 pp (p_BH = 5.66 × 10⁻⁴). Symmetric normalisation is *the* architectural choice that closes the gap; **residual connections and stacked layers do not further improve performance** at this scale, and the residual variant actually slightly underperforms MLP (p_BH = 0.019).
+
+This is a **positive equality claim** ("topology with proper normalisation is competitive"), not a "topology helps" claim ("topology beats MLP"). The literature consensus (Errica et al. 2020, arXiv 1810.09155; Yang et al. 2024 Hodgelet GPs at 88.06 ± 7.99) is that MUTAG cannot discriminate between simple architectures at its scale; both confirmation and refutation of the strong "topology helps" claim require a larger dataset.
 
 Reproduce: `python -m benchmarks.hodge --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 20`.
 

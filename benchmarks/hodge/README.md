@@ -15,22 +15,28 @@ Phase 1 ships:
 
 The bench reuses `benchmarks/stats.py` (bootstrap CI, Mann–Whitney / Wilcoxon, BH correction) so the reporting discipline is identical to the diff-PH bench.
 
-## Empirical result (MUTAG, 30 seeds, 20 epochs)
+## Empirical result — full ablation (MUTAG, 30 seeds, 20 epochs)
 
-The current published result for the minimal one-layer Hodge architecture is **negative**: the Hodge classifier *underperforms* the MLP baseline.
+Five matched-capacity (1378-1442 params) arms tested as a single literature-grounded ablation; full hypothesis + four citations in `docs/hypotheses/HYPOTHESIS-001-hodge-mutag.md`.
 
-| Model | Median accuracy (95% bootstrap CI) |
-|---|---|
-| `hodge-mp-classifier` | 0.697 [0.658, 0.750] |
-| `mlp-baseline` | **0.789 [0.763, 0.816]** |
+| Arm | Median accuracy (95% BCa CI) | Wilcoxon p_BH vs MLP | Verdict |
+|---|---|---|---|
+| `hodge-mp-classifier` (combinatorial L) | 0.697 [0.658, 0.750] | **5.66 × 10⁻⁴** | loses by 9 pp |
+| **`hodge-mp-normalised`** (symm L̃ = D⁻¹/² L D⁻¹/²) | **0.789 [0.763, 0.816]** | **0.714** | **matches MLP** |
+| `hodge-mp-residual` (above + identity skip) | 0.750 [0.724, 0.789] | 0.019 | loses by 4 pp (surprise) |
+| `hodge-mp-deep-residual` (above + 2 stacked layers) | 0.776 [0.737, 0.789] | 0.102 | matches (weak) |
+| `mlp-baseline` | 0.789 [0.763, 0.816] | — | control |
 
-Paired Wilcoxon (BH-corrected): median Δ = **−0.092**, **p = 5.66 × 10⁻⁵**, rank-biserial **r = −0.760**.
+**Defensible claim.** On MUTAG at 30 seeds × 20 epochs × hidden_dim=32, a one-layer Hodge MP classifier using a symmetrically-normalised Laplacian is statistically indistinguishable from a no-topology MLP of matched capacity (paired Wilcoxon p_BH = 0.714, median Δ = +0.000, BCa CI on Hodge accuracy: [0.763, 0.816]).
 
-This negative result is **only visible after** fixing the critical bug in `models.py` (PR #12) where the previous `HodgeMessagePassing` layer was instantiated inside `forward_one()` and its weights were neither registered with the optimizer nor preserved across calls. The pre-fix bench reported both models at ~70% — measuring an MLP through a random topology filter, not the Hodge architecture.
+**Findings.**
+- **H1 (normalisation alone fixes it)** — *confirmed*. Symmetric Laplacian normalisation closes the entire 9 pp gap.
+- **H2 (residual helps on top)** — *refuted*. The residual variant actually underperforms MLP at p_BH = 0.019.
+- **H3 (depth helps on top)** — *refuted*. The 2-layer variant is no better than the 1-layer normalised arm.
 
-**Honest interpretation.** This rules out the minimal one-layer Hodge architecture as a useful inductive bias on MUTAG. It does *not* rule out deeper Hodge architectures, normalised Laplacians (the current bench uses combinatorial L_0), richer node features, or attention-weighted propagation. Those are the natural next steps for the Geo subsystem.
+**Honest interpretation.** Symmetric normalisation is the architectural choice that makes a minimal Hodge MP competitive with no-topology baselines on MUTAG. Residual connections and stacked layers — contrary to the literature-inspired prediction — do not further improve performance at this dataset's scale, consistent with Errica et al. 2020's finding that MUTAG cannot discriminate between simple architectures.
 
-Full per-seed report: `notebooks/results/mutag_hodge_vs_mlp_30seeds.md`.
+Full per-seed report: `notebooks/results/mutag_hodge_ablation_30seeds.md`. The prior 2-arm-only result (combinatorial Hodge vs MLP) is preserved at `notebooks/results/mutag_hodge_vs_mlp_30seeds.md` for the audit trail.
 
 ## Architecture
 
