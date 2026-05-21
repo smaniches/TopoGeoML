@@ -4,6 +4,24 @@ Graph-classifier wrappers for the Hodge bench.
 Each model implements the :class:`GraphClassifier` protocol. The runner
 constructs a fresh instance per (seed, dataset) cell, trains it for a
 fixed budget, then measures test accuracy.
+
+Architectural ablation (hypothesis 001, see
+``docs/hypotheses/HYPOTHESIS-001-hodge-mutag.md``)
+--------------------------------------------------
+Four classifiers share a sum-pool + linear-head tail. They differ in the
+middle propagation step:
+
+  - ``hodge-mp-classifier``           combinatorial L_0, 1 layer, no residual
+  - ``hodge-mp-normalised``           symmetric L̃ = D^-1/2 L D^-1/2, 1 layer, no residual
+  - ``hodge-mp-residual``             symmetric L̃, 1 layer, **+ residual**
+  - ``hodge-mp-deep-residual``        symmetric L̃, **2 layers**, residual on each
+  - ``mlp-baseline``                  no Laplacian; matched-capacity control
+
+The ablation tests three predictions: (H1) normalisation alone helps,
+(H2) residual helps on top of normalisation, (H3) depth helps on top
+of both. All four arms use ``hidden_dim=32``, the same Adam(lr=1e-2)
+optimiser, and the same 20-epoch budget so the comparison isolates
+the architectural change.
 """
 
 from __future__ import annotations
@@ -12,6 +30,38 @@ from typing import ClassVar, Protocol, runtime_checkable
 
 import torch
 from torch import nn
+
+
+def _symmetric_normalize_sparse(
+    laplacian: torch.sparse.Tensor, epsilon: float = 1e-6,
+) -> torch.sparse.Tensor:
+    """Symmetric normalisation L̃ = D^{-1/2} L D^{-1/2}.
+
+    For a graph combinatorial Laplacian ``L = D - A``, the diagonal of
+    ``L`` is exactly the degree, so we read ``D`` off the diagonal and
+    form ``D^{-1/2}`` with an ``epsilon`` floor to avoid division by zero
+    on isolated nodes (degree 0).
+
+    Returns the result as a coalesced sparse COO tensor with the same
+    dtype as the input. The operation is differentiable but the
+    Laplacian is treated as a buffer (no gradient flows back through
+    the degree computation), matching the convention in
+    ``topogeoml.nn.hodge.normalize_hodge_laplacian``.
+    """
+    L = laplacian.coalesce()
+    indices = L.indices()
+    values = L.values()
+    n = L.shape[0]
+    # Read the diagonal: for entries (i, i), values[i] is the degree.
+    diag = torch.zeros(n, dtype=values.dtype, device=values.device)
+    diag_mask = indices[0] == indices[1]
+    diag.index_add_(0, indices[0][diag_mask], values[diag_mask])
+    d_inv_sqrt = 1.0 / torch.sqrt(diag + epsilon)
+    # Scale each off-diagonal value by D^{-1/2}_i * D^{-1/2}_j.
+    scaled_values = values * d_inv_sqrt[indices[0]] * d_inv_sqrt[indices[1]]
+    return torch.sparse_coo_tensor(
+        indices, scaled_values, L.shape,
+    ).coalesce()
 
 
 @runtime_checkable
@@ -119,6 +169,214 @@ class HodgeClassifier:
         return _HodgeGraphClassifier(input_dim, num_classes)
 
 
+class _HodgeNormalisedGraphClassifier(nn.Module):
+    """Hypothesis 001, arm H1: symmetric-normalised Laplacian + 1 Hodge step.
+
+    The combinatorial Laplacian ``L = D - A`` makes propagation magnitude
+    scale with node degree; high-degree nodes dominate the forward pass
+    and the MUTAG mutagenicity signal (small functional groups like
+    -NO_2 attached to aromatic rings) gets buried. Kipf & Welling 2017
+    Lemma 1: the symmetrically-normalised ``L̃ = D^{-1/2} L D^{-1/2}``
+    has eigenvalues bounded to [0, 2], balancing propagation across
+    degrees. This arm changes only that one variable.
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        num_classes: int,
+        hidden_dim: int = 32,
+    ) -> None:
+        super().__init__()
+        self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
+        self._proj_in = nn.Linear(input_dim, hidden_dim).to(torch.float64)
+        self._mp_weight = nn.Parameter(
+            torch.empty(hidden_dim, hidden_dim, dtype=torch.float64)
+        )
+        self._mp_bias = nn.Parameter(torch.zeros(hidden_dim, dtype=torch.float64))
+        nn.init.xavier_uniform_(self._mp_weight)
+        self._activation = nn.ReLU()
+        self.head = nn.Linear(hidden_dim, num_classes).to(torch.float64)
+
+    def forward_one(
+        self, x: torch.Tensor, laplacian: torch.sparse.Tensor
+    ) -> torch.Tensor:
+        l_norm = _symmetric_normalize_sparse(laplacian)
+        h = self._proj_in(x)
+        propagated = torch.sparse.mm(l_norm, h)
+        h = self._activation(propagated @ self._mp_weight + self._mp_bias)
+        return self.head(h.sum(dim=0))
+
+
+class HodgeNormalisedClassifier:
+    """Hodge classifier with symmetric-normalised Laplacian.
+
+    Architectural ablation arm H1 of hypothesis 001. See
+    ``docs/hypotheses/HYPOTHESIS-001-hodge-mutag.md``.
+    """
+
+    name: ClassVar[str] = "hodge-mp-normalised"
+    version: ClassVar[str] = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        try:
+            import topogeoml.nn.hodge  # noqa: F401
+        except ImportError:  # pragma: no cover
+            return False
+        return True
+
+    @staticmethod
+    def build(input_dim: int, num_classes: int, seed: int) -> nn.Module:
+        torch.manual_seed(seed)
+        return _HodgeNormalisedGraphClassifier(input_dim, num_classes)
+
+
+class _HodgeResidualGraphClassifier(nn.Module):
+    """Hypothesis 001, arm H2: H1 + residual connection.
+
+    A random-init ``W`` early in training would otherwise destroy the
+    per-node features the projection layer just learned. The residual
+    ``out = activation(L̃ @ proj(x) @ W + b) + proj(x)`` preserves the
+    projection through the Hodge step, letting the model learn what to
+    *add* to the per-node features rather than what to *replace* them
+    with. Standard ResNet-style identity skip (He et al. 2016 §3.1).
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        num_classes: int,
+        hidden_dim: int = 32,
+    ) -> None:
+        super().__init__()
+        self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
+        self._proj_in = nn.Linear(input_dim, hidden_dim).to(torch.float64)
+        self._mp_weight = nn.Parameter(
+            torch.empty(hidden_dim, hidden_dim, dtype=torch.float64)
+        )
+        self._mp_bias = nn.Parameter(torch.zeros(hidden_dim, dtype=torch.float64))
+        nn.init.xavier_uniform_(self._mp_weight)
+        self._activation = nn.ReLU()
+        self.head = nn.Linear(hidden_dim, num_classes).to(torch.float64)
+
+    def forward_one(
+        self, x: torch.Tensor, laplacian: torch.sparse.Tensor
+    ) -> torch.Tensor:
+        l_norm = _symmetric_normalize_sparse(laplacian)
+        proj = self._proj_in(x)
+        propagated = torch.sparse.mm(l_norm, proj)
+        h = self._activation(propagated @ self._mp_weight + self._mp_bias) + proj
+        return self.head(h.sum(dim=0))
+
+
+class HodgeResidualClassifier:
+    """Hodge classifier with symmetric-normalised Laplacian + residual.
+
+    Architectural ablation arm H2 of hypothesis 001.
+    """
+
+    name: ClassVar[str] = "hodge-mp-residual"
+    version: ClassVar[str] = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        try:
+            import topogeoml.nn.hodge  # noqa: F401
+        except ImportError:  # pragma: no cover
+            return False
+        return True
+
+    @staticmethod
+    def build(input_dim: int, num_classes: int, seed: int) -> nn.Module:
+        torch.manual_seed(seed)
+        return _HodgeResidualGraphClassifier(input_dim, num_classes)
+
+
+class _HodgeDeepResidualGraphClassifier(nn.Module):
+    """Hypothesis 001, arm H3: H2 with 2 stacked Hodge propagation steps.
+
+    Aromatic rings in MUTAG span 5-6 hops in molecular graph distance.
+    A single Hodge propagation step is a 1-hop neighbourhood operator;
+    two stacked steps reach 2-hop, which is the minimum to detect a
+    benzene ring's *adjacency* structure (one edge of the ring) — still
+    short of the full 5-6 hops, but a step in the right direction. Each
+    step has its own learnable weights to avoid the degenerate ``W^2``
+    composition.
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        num_classes: int,
+        hidden_dim: int = 32,
+    ) -> None:
+        super().__init__()
+        self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
+        self._proj_in = nn.Linear(input_dim, hidden_dim).to(torch.float64)
+        self._mp_weight_1 = nn.Parameter(
+            torch.empty(hidden_dim, hidden_dim, dtype=torch.float64)
+        )
+        self._mp_bias_1 = nn.Parameter(torch.zeros(hidden_dim, dtype=torch.float64))
+        self._mp_weight_2 = nn.Parameter(
+            torch.empty(hidden_dim, hidden_dim, dtype=torch.float64)
+        )
+        self._mp_bias_2 = nn.Parameter(torch.zeros(hidden_dim, dtype=torch.float64))
+        nn.init.xavier_uniform_(self._mp_weight_1)
+        nn.init.xavier_uniform_(self._mp_weight_2)
+        self._activation = nn.ReLU()
+        self.head = nn.Linear(hidden_dim, num_classes).to(torch.float64)
+
+    def forward_one(
+        self, x: torch.Tensor, laplacian: torch.sparse.Tensor
+    ) -> torch.Tensor:
+        l_norm = _symmetric_normalize_sparse(laplacian)
+        h0 = self._proj_in(x)
+        # Layer 1 with residual.
+        h1 = self._activation(
+            torch.sparse.mm(l_norm, h0) @ self._mp_weight_1 + self._mp_bias_1
+        ) + h0
+        # Layer 2 with residual.
+        h2 = self._activation(
+            torch.sparse.mm(l_norm, h1) @ self._mp_weight_2 + self._mp_bias_2
+        ) + h1
+        return self.head(h2.sum(dim=0))
+
+
+class HodgeDeepResidualClassifier:
+    """Hodge classifier with symmetric L̃, 2 stacked layers, residuals.
+
+    Architectural ablation arm H3 of hypothesis 001.
+    """
+
+    name: ClassVar[str] = "hodge-mp-deep-residual"
+    version: ClassVar[str] = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        try:
+            import topogeoml.nn.hodge  # noqa: F401
+        except ImportError:  # pragma: no cover
+            return False
+        return True
+
+    @staticmethod
+    def build(input_dim: int, num_classes: int, seed: int) -> nn.Module:
+        torch.manual_seed(seed)
+        # ``hidden_dim=24`` makes the 2-layer arm's total parameter count
+        # comparable to the 1-layer arms (1442 vs 1378 — within 5%), so
+        # the comparison isolates the depth+residual effect rather than
+        # capacity. The MLP baseline also runs at ``hidden_dim=32``;
+        # see ``docs/hypotheses/HYPOTHESIS-001-hodge-mutag.md`` for the
+        # capacity-matching argument.
+        return _HodgeDeepResidualGraphClassifier(
+            input_dim, num_classes, hidden_dim=24,
+        )
+
+
 class _MLPGraphClassifier(nn.Module):
     """No-topology baseline: feature-MLP applied per-node, then sum-pool.
 
@@ -165,6 +423,9 @@ class MLPBaseline:
 
 REGISTERED: dict[str, type[GraphClassifier]] = {
     HodgeClassifier.name: HodgeClassifier,
+    HodgeNormalisedClassifier.name: HodgeNormalisedClassifier,
+    HodgeResidualClassifier.name: HodgeResidualClassifier,
+    HodgeDeepResidualClassifier.name: HodgeDeepResidualClassifier,
     MLPBaseline.name: MLPBaseline,
 }
 
