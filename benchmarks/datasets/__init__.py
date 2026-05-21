@@ -61,6 +61,6 @@ def all_dataset_names() -> Iterator[str]:
     return iter(_REGISTRY)
 
 
-from benchmarks.datasets import synthetic as _synthetic  # noqa: E402, F401
+from benchmarks.datasets import mnist_topology as _mnist  # noqa: E402, F401
 
 __all__ = ["Dataset", "all_dataset_names", "get_dataset", "register_dataset"]

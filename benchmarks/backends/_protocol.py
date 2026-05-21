@@ -47,7 +47,7 @@ class PHBackend(Protocol):
     @staticmethod
     def available() -> bool:
         """Return True iff the wrapped library is importable in this env."""
-        ...
+        ...  # pragma: no cover  -- Protocol stub; concrete backends implement.
 
     @staticmethod
     def compute_diagram(X: torch.Tensor, max_dim: int) -> list[torch.Tensor]:
@@ -72,7 +72,7 @@ class PHBackend(Protocol):
             Infinite-death bars are allowed; the correctness axis filters
             them with an explicit ``isfinite`` mask before reduction.
         """
-        ...
+        ...  # pragma: no cover  -- Protocol stub.
 
     @staticmethod
     def loss_longest_h1(X: torch.Tensor) -> torch.Tensor:
@@ -83,4 +83,4 @@ class PHBackend(Protocol):
         loops. If no finite H_1 bar exists, returns a 0-valued tensor that
         still depends on X (so autograd doesn't break on the empty case).
         """
-        ...
+        ...  # pragma: no cover  -- Protocol stub.

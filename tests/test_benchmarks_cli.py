@@ -33,7 +33,7 @@ class TestCLI:
         out_md = tmp_path / "report.md"
         rc = main([
             "--backends", "topogeoml-diff-ph",
-            "--datasets", "gaussian_blob",
+            "--datasets", "mnist_mock_digit_1",
             "--axes", "correctness",
             "--output", str(out_json),
             "--markdown", str(out_md),
@@ -69,7 +69,7 @@ class TestCLI:
         out_json = tmp_path / "result.json"
         rc = main([
             "--backends", "topogeoml-diff-ph",
-            "--datasets", "gaussian_blob",
+            "--datasets", "mnist_mock_digit_1",
             "--axes", "correctness",
             "--output", str(out_json),
         ])

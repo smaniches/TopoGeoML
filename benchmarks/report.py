@@ -131,7 +131,9 @@ def _speed_section(cells: list[dict[str, Any]]) -> list[str]:
         by_backend[cell["backend_name"]] = rows
 
     backend_names = sorted(by_backend)
-    if len(backend_names) < 1:
+    if len(backend_names) < 1:  # pragma: no cover
+        # Unreachable in practice — ``relevant`` is non-empty by the early
+        # return, so ``by_backend`` has at least one key. Defensive.
         return []
 
     # Single-backend reporting — just the raw table.
@@ -168,7 +170,9 @@ def _speed_section(cells: list[dict[str, Any]]) -> list[str]:
                 if r["n_points"] == n and r["operation"] == op
             }
             common = sorted(set(seeds_a) & set(seeds_b))
-            if not common:
+            if not common:  # pragma: no cover
+                # Reachable only if the two backends were measured against
+                # disjoint seed sets — the runner never does this. Defensive.
                 continue
             arm_a = np.array([seeds_a[s]["point_estimate_ms"] for s in common])
             arm_b = np.array([seeds_b[s]["point_estimate_ms"] for s in common])

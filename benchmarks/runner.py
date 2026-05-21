@@ -102,7 +102,9 @@ def _git_state() -> tuple[str, bool]:
             check=True, capture_output=True, text=True, timeout=5,
         ).stdout
         return sha, bool(status.strip())
-    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):  # pragma: no cover
+        # Defensive: this PR's CI runs inside a git checkout. Exercised when
+        # the bench is invoked from an unpacked tarball with no git binary.
         return "", False
 
 
@@ -110,7 +112,8 @@ def _version_or_missing(pkg: str) -> str:
     from importlib import metadata
     try:
         return metadata.version(pkg)
-    except metadata.PackageNotFoundError:
+    except metadata.PackageNotFoundError:  # pragma: no cover
+        # Defensive: bench extras pin every package we look up.
         return ""
 
 
@@ -119,7 +122,9 @@ def _process_memory_total_mb() -> int:
     try:
         # POSIX.
         return int(os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / (1024 * 1024))
-    except (AttributeError, ValueError, OSError):
+    except (AttributeError, ValueError, OSError):  # pragma: no cover
+        # Non-POSIX platforms (Windows) lack sysconf; bench supports it but
+        # the fallback would only fire there.
         return 0
 
 

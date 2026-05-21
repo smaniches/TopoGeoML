@@ -204,7 +204,7 @@ class TestAxesEndToEnd:
         from benchmarks.backends import get_backend
         from benchmarks.datasets import get_dataset
 
-        dataset = get_dataset("noisy_circle")
+        dataset = get_dataset("mnist_mock_digit_0")
         for name in ("topogeoml-diff-ph", "torch-topological"):
             backend = get_backend(name)
             report = measure_correctness(backend, dataset, n_points=20, seeds=[0, 1])
@@ -223,7 +223,7 @@ class TestAxesEndToEnd:
         from benchmarks.backends import get_backend
         from benchmarks.datasets import get_dataset
 
-        dataset = get_dataset("noisy_circle")
+        dataset = get_dataset("mnist_mock_digit_0")
         for name in ("topogeoml-diff-ph", "torch-topological"):
             backend = get_backend(name)
             report = measure_stability(
@@ -243,7 +243,7 @@ class TestAxesEndToEnd:
         from benchmarks.backends import get_backend
         from benchmarks.datasets import get_dataset
 
-        dataset = get_dataset("noisy_circle")
+        dataset = get_dataset("mnist_mock_digit_0")
         backend = get_backend("topogeoml-diff-ph")
         report = measure_optimization(
             backend, dataset,
@@ -263,7 +263,7 @@ class TestRunner:
 
         result = run(
             backend_names=["topogeoml-diff-ph"],
-            dataset_names=["gaussian_blob"],
+            dataset_names=["mnist_mock_digit_1"],
             axis_names=["correctness"],
         )
         out = tmp_path / "result.json"

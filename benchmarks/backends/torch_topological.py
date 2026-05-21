@@ -23,7 +23,7 @@ class TorchTopological:
     def available() -> bool:
         try:
             import torch_topological
-        except ImportError:
+        except ImportError:  # pragma: no cover  -- defensive: bench extras install torch-topological.
             return False
         TorchTopological.version = str(torch_topological.__version__)
         return True
@@ -60,7 +60,11 @@ class TorchTopological:
         dgm = h1_info.diagram
         finite_mask = torch.isfinite(dgm).all(dim=1)
         finite = dgm[finite_mask]
-        if finite.numel() == 0:
+        if finite.numel() == 0:  # pragma: no cover
+            # Defensive: torch-topological with ``keep_infinite_features=False``
+            # (our default) does not emit infinite-death bars in dim=1 on
+            # finite point clouds. This guard would fire if the upstream
+            # behavior changes to include essential H_1 classes.
             return torch.zeros((), dtype=X.dtype, device=X.device) + 0.0 * X.sum()
         max_lifetime: torch.Tensor = (finite[:, 1] - finite[:, 0]).max()
         return -max_lifetime

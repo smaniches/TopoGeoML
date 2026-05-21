@@ -64,5 +64,5 @@ def main(argv: list[str] | None = None) -> int:
     return 1 if failed_cells else 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     sys.exit(main())
