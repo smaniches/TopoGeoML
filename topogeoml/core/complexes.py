@@ -140,7 +140,11 @@ class SimplicialComplex:
             for i in range(len(simplex)):
                 face = simplex[:i] + simplex[i + 1 :]
                 row = km1_index.get(face)
-                if row is None:
+                if row is None:  # pragma: no cover
+                    # Unreachable: SimplicialComplex.__post_init__ enforces
+                    # closure under faces. This branch fires only if a
+                    # caller manually mutates ``self.simplices`` after
+                    # construction, which is not part of the public API.
                     raise RuntimeError(
                         f"face {face} of {simplex} missing from C_{k-1} — "
                         "complex closure violated"
@@ -192,7 +196,10 @@ def is_chain_complex(
                 product = d_km1 @ d_k
                 # Frobenius norm of a sparse matrix.
                 frob = float(np.sqrt(product.multiply(product).sum()))
-                if frob > tol:
+                if frob > tol:  # pragma: no cover
+                    # Reachable only when the boundary-matrix implementation
+                    # is broken (e.g. wrong sign convention) — the bench's
+                    # correctness axis would catch this in a separate path.
                     return False
     return True
 

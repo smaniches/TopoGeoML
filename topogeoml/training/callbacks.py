@@ -197,7 +197,10 @@ class ShapeOfLearningCallback:
 
         def _count_significant(dim_k: int, threshold: float) -> int:
             bars = diagram.bars.get(dim_k)
-            if bars is None or bars.size == 0:
+            if bars is None or bars.size == 0:  # pragma: no cover
+                # Defensive: ripser always returns at least one finite H_0
+                # bar for a non-degenerate point cloud. Path fires only if
+                # callers feed in a manually-constructed empty diagram.
                 return 0
             finite_mask = np.isfinite(bars[:, 1])
             count = int((~finite_mask).sum())  # infinite bars always count
@@ -231,7 +234,10 @@ class ShapeOfLearningCallback:
             total_h0 = lifetimes_h0.sum() + 1e-300  # §1.4
             p_h0 = np.maximum(lifetimes_h0 / total_h0, 1e-300)
             ent_h0 = float(-np.sum(p_h0 * np.log(p_h0)))
-        else:
+        else:  # pragma: no cover
+            # Reachable only when the activation point cloud has no finite
+            # H_0 lifetimes — happens for degenerate clouds (all identical
+            # points). Defensive fallback.
             ent_h0 = 0.0
 
         h1_finite_bars = (

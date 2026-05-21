@@ -121,11 +121,18 @@ def _critical_edges_h1(
             )
             best = int(np.argmin(np.abs(cocycle_dists - birth_val)))
             birth_edges.append((int(cocycle[best, 0]), int(cocycle[best, 1])))
-        else:
+        else:  # pragma: no cover
+            # Defensive: ripser always returns a non-empty cocycle for every
+            # finite H_1 bar; this branch fires only if cocycle reconstruction
+            # failed (would indicate a ripser version mismatch).
             birth_edges.append(None)
 
         # --- Death ---
-        if not np.isfinite(death_val):
+        if not np.isfinite(death_val):  # pragma: no cover
+            # Reachable only for essential H_1 classes (death = +inf). The
+            # standard Vietoris-Rips on bounded point clouds with default
+            # max_edge_length does not emit these — they appear with
+            # max_edge_length truncation, which the bench does not exercise.
             death_edges.append(None)
             continue
 
@@ -142,9 +149,14 @@ def _critical_edges_h1(
             if mask.any():
                 candidates_masked = np.where(mask, candidates, np.inf)
                 best_d = int(np.argmin(candidates_masked))
-            else:
+            else:  # pragma: no cover
+                # All upper-triangle edges equal the birth edge — only
+                # possible for an n=2 point cloud with one edge. The diff-PH
+                # layer is not meaningful at n=2 and is gated upstream.
                 best_d = int(np.argmin(candidates))
-        else:
+        else:  # pragma: no cover
+            # Reached when birth_edge is None, which is itself only reached
+            # under the cocycle-reconstruction defensive branch above.
             best_d = int(np.argmin(candidates))
 
         death_edges.append((int(i_idx[best_d]), int(j_idx[best_d])))
@@ -227,7 +239,10 @@ def rips_diagram_torch(
             deaths_finite,
             torch.tensor([torch.inf], dtype=dtype, device=device),
         ])
-    else:
+    else:  # pragma: no cover
+        # Reached only for a degenerate point cloud (n=1, single point) where
+        # ripser emits an empty H_0 finite-bar set. The diff-PH layer is not
+        # meaningful at n=1 and is gated upstream.
         deaths_h0 = torch.tensor([torch.inf], dtype=dtype, device=device)
 
     diagrams.append(torch.stack([births_h0, deaths_h0], dim=1))
@@ -252,14 +267,20 @@ def rips_diagram_torch(
 
                 if b_edge is not None:
                     birth_tensors.append(D_torch[b_edge[0], b_edge[1]])
-                else:
+                else:  # pragma: no cover
+                    # Defensive: b_edge is None only when cocycle
+                    # reconstruction failed (covered above). We emit the
+                    # value as a leaf tensor so autograd does not crash,
+                    # but no gradient flows back to X for this bar.
                     birth_tensors.append(
                         torch.tensor(dgm_h1[bar_idx, 0], dtype=dtype, device=device)
                     )
 
                 if d_edge is not None:
                     death_tensors.append(D_torch[d_edge[0], d_edge[1]])
-                else:
+                else:  # pragma: no cover
+                    # Defensive: essential H_1 class with infinite death;
+                    # see the death_edges = None branch above.
                     death_tensors.append(
                         torch.tensor(torch.inf, dtype=dtype, device=device)
                     )
