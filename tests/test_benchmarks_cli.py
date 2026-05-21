@@ -86,6 +86,69 @@ class TestCLI:
         ]
         assert len(skipped) >= 1, "expected at least one SkippedNonDifferentiable cell"
 
+    def test_cli_returns_zero_when_backend_is_unavailable(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Regression: ``UnavailableBackend`` cells are expected when an
+        optional dependency is not installed (e.g. CI image lacks one
+        of the optional bench backends). The runner records the absence
+        so reports flag missing comparison points, but it is not a
+        *bug* — the CLI must not return exit code 1 just because a
+        backend is missing in the runtime environment.
+
+        Forces a backend to be unavailable by monkey-patching its
+        ``available()`` method so the test runs deterministically
+        regardless of which backends are actually installed in the
+        test environment.
+        """
+        from benchmarks.backends import get_backend
+        from benchmarks.cli import main
+
+        backend_cls = get_backend("topogeoml-diff-ph")
+        monkeypatch.setattr(backend_cls, "available", staticmethod(lambda: False))
+
+        out_json = tmp_path / "result.json"
+        rc = main([
+            "--backends", "topogeoml-diff-ph",
+            "--datasets", "mnist_mock_digit_1",
+            "--axes", "correctness",
+            "--output", str(out_json),
+        ])
+        assert rc == 0
+        payload = json.loads(out_json.read_text())
+        unavailable = [
+            c for c in payload["cells"]
+            if c["error_kind"] == "UnavailableBackend"
+        ]
+        assert len(unavailable) >= 1, "expected at least one UnavailableBackend cell"
+
+    def test_cli_surfaces_real_failure_messages_on_stderr(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """When a real (non-skip, non-unavailable) failure occurs, the
+        CLI prints which cells failed on stderr so CI logs make the
+        cause obvious without requiring the JSON artifact."""
+        from benchmarks import runner
+        from benchmarks.cli import main
+
+        def _boom(backend, dataset, **_kwargs):  # type: ignore[no-untyped-def]
+            raise RuntimeError("intentional failure to verify stderr surfacing")
+
+        monkeypatch.setitem(runner.AXES, "correctness", _boom)
+
+        out_json = tmp_path / "result.json"
+        rc = main([
+            "--backends", "topogeoml-diff-ph",
+            "--datasets", "mnist_mock_digit_1",
+            "--axes", "correctness",
+            "--output", str(out_json),
+        ])
+        assert rc == 1
+        captured = capsys.readouterr()
+        assert "unexpected cell failure" in captured.err
+        assert "intentional failure" in captured.err
+
     def test_cli_quick_flag_thins_axis_kwargs(self) -> None:
         """``--quick`` populates the per-axis kwargs dict with shorter
         seed/repeat lists so the bench fits within CI's 30-minute budget.
