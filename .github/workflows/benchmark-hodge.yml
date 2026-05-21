@@ -37,10 +37,16 @@ jobs:
           path: ~/.cache/topogeoml/benchmarks/hodge
           key: tudataset-mutag-${{ runner.os }}
 
-      - name: Run Hodge bench
+      - name: Run Hodge bench (smoke tier)
+        # CI runs the smoke tier (3 seeds × 10 epochs) so the run fits
+        # comfortably under the 30-minute timeout. Full-rigor numbers
+        # require ``--seeds 0 1 2 3 4 5 6 7 8 9 --n-epochs 30`` (locally
+        # or on a longer-budget runner). The smoke tier is sufficient
+        # to validate that the pipeline runs end-to-end and to produce
+        # an underpowered-but-directional accuracy comparison.
         run: |
           python -m benchmarks.hodge \
-            --seeds 0 1 2 3 4 \
+            --seeds 0 1 2 \
             --n-epochs 10 \
             --output benchmarks/hodge/leaderboard/current.json \
             --markdown bench_hodge_report.md

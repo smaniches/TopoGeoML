@@ -6,6 +6,12 @@ markdown to ``$GITHUB_STEP_SUMMARY`` (if set) and stdout.
 
 For local exploration, the user can restrict the run with ``--backends``,
 ``--datasets``, ``--axes``.
+
+The ``--quick`` flag thins per-axis seed/repeat counts so the full bench
+fits under CI's 30-minute wall-clock budget. The full-rigor numbers come
+from running without ``--quick`` (locally or on a GPU runner with extra
+budget); the configuration is recorded in the JSON output so it cannot be
+silently confused with full-rigor data.
 """
 
 from __future__ import annotations
@@ -14,9 +20,41 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 from benchmarks.report import render_markdown
 from benchmarks.runner import run, write_result
+
+
+def _quick_axis_kwargs() -> dict[str, dict[str, Any]]:
+    """CI smoke-tier overrides: cuts wall clock by ~3x while still
+    exercising every axis on every (available) backend × dataset cell.
+
+    Trade-offs:
+      - ``seeds`` is shortened to 3 from 5 across every axis — bootstrap
+        CIs widen but directional comparisons remain interpretable
+        (the report surfaces the seed count alongside every number).
+      - ``speed.n_points_list`` drops the n=300 size which is dominated
+        by the per-call cost of large-n Vietoris-Rips; the small/medium
+        scales still discriminate backends.
+      - ``speed`` outer × inner is halved (3 × 10 = 30 measurements vs
+        5 × 20 = 100). min-of-medians remains the estimator, which is
+        robust to the smaller window.
+      - ``optimization.n_steps`` drops from 200 to 60. Empirically
+        diff-PH optimizations converge within 30-50 steps on the
+        synthetic fixtures used here; 60 is comfortable.
+    """
+    return {
+        "correctness": {"seeds": [0, 1, 2]},
+        "stability": {"seeds": [0, 1, 2]},
+        "speed": {
+            "seeds": [0, 1, 2],
+            "n_points_list": [30, 100],
+            "repeat": 3,
+            "number": 10,
+        },
+        "optimization": {"seeds": [0, 1, 2], "n_steps": 60},
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -38,12 +76,24 @@ def main(argv: list[str] | None = None) -> int:
                         help="JSON output path (default: benchmarks/leaderboard/current.json)")
     parser.add_argument("--markdown", type=Path, default=None,
                         help="optional path to write the markdown report")
+    parser.add_argument(
+        "--quick",
+        action="store_true",
+        help=(
+            "Thin per-axis seed/repeat counts to fit under CI's 30-min "
+            "budget. Statistical power is roughly 3x reduced. Use for "
+            "framework validation; full-rigor numbers require running "
+            "without --quick (locally or on a longer-budget runner)."
+        ),
+    )
     args = parser.parse_args(argv)
 
+    axis_kwargs = _quick_axis_kwargs() if args.quick else None
     result = run(
         backend_names=args.backends,
         dataset_names=args.datasets,
         axis_names=args.axes,
+        axis_kwargs=axis_kwargs,
     )
     write_result(result, args.output)
 

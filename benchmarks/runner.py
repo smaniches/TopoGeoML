@@ -152,27 +152,27 @@ def _provenance() -> Provenance:
 # Axis dispatch table
 # ---------------------------------------------------------------------------
 
-AxisFn = Callable[[type[PHBackend], Dataset], Any]
+AxisFn = Callable[..., Any]
 
 
-def _axis_correctness(backend: type[PHBackend], dataset: Dataset) -> dict[str, Any]:
+def _axis_correctness(backend: type[PHBackend], dataset: Dataset, **kwargs: Any) -> dict[str, Any]:
     from benchmarks.axes.correctness import measure_correctness
-    return measure_correctness(backend, dataset).as_dict()
+    return measure_correctness(backend, dataset, **kwargs).as_dict()
 
 
-def _axis_stability(backend: type[PHBackend], dataset: Dataset) -> dict[str, Any]:
+def _axis_stability(backend: type[PHBackend], dataset: Dataset, **kwargs: Any) -> dict[str, Any]:
     from benchmarks.axes.stability import measure_stability
-    return measure_stability(backend, dataset).as_dict()
+    return measure_stability(backend, dataset, **kwargs).as_dict()
 
 
-def _axis_speed(backend: type[PHBackend], dataset: Dataset) -> dict[str, Any]:
+def _axis_speed(backend: type[PHBackend], dataset: Dataset, **kwargs: Any) -> dict[str, Any]:
     from benchmarks.axes.speed import measure_speed
-    return measure_speed(backend, dataset).as_dict()
+    return measure_speed(backend, dataset, **kwargs).as_dict()
 
 
-def _axis_optimization(backend: type[PHBackend], dataset: Dataset) -> dict[str, Any]:
+def _axis_optimization(backend: type[PHBackend], dataset: Dataset, **kwargs: Any) -> dict[str, Any]:
     from benchmarks.axes.optimization import measure_optimization
-    return measure_optimization(backend, dataset).as_dict()
+    return measure_optimization(backend, dataset, **kwargs).as_dict()
 
 
 AXES: dict[str, AxisFn] = {
@@ -198,6 +198,7 @@ def run(
     backend_names: list[str] | None = None,
     dataset_names: list[str] | None = None,
     axis_names: list[str] | None = None,
+    axis_kwargs: dict[str, dict[str, Any]] | None = None,
 ) -> RunResult:
     """Execute every (backend × dataset × axis) cell that's available.
 
@@ -206,6 +207,12 @@ def run(
     backend_names, dataset_names, axis_names
         Optional explicit selection. When ``None``, includes every
         available backend, every registered dataset, and every axis.
+    axis_kwargs
+        Optional per-axis keyword overrides forwarded to each
+        ``measure_*`` function. Use this to thin the bench for CI
+        budgets — e.g. ``{"speed": {"n_points_list": [30, 100],
+        "repeat": 3, "number": 10}}``. Defaults to ``{}`` (each axis
+        uses its statistical-rigor defaults).
     """
     # Default selections.
     if backend_names is None:
@@ -282,7 +289,8 @@ def run(
                         continue
 
                     try:
-                        payload = axis_fn(backend_cls, dataset)
+                        kwargs = (axis_kwargs or {}).get(axis_name, {})
+                        payload = axis_fn(backend_cls, dataset, **kwargs)
                         run_result.cells.append(CellResult(
                             backend_name=backend_name,
                             dataset_name=dataset_name,
