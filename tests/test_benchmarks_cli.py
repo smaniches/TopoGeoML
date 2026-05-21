@@ -53,6 +53,39 @@ class TestCLI:
         assert "Correctness" in md
         assert "Provenance" in md
 
+    def test_cli_returns_zero_when_only_skipped_non_differentiable_cells_fail(
+        self, tmp_path: Path,
+    ) -> None:
+        """Regression: ``SkippedNonDifferentiable`` cells are expected
+        behaviour for non-differentiable backends (gudhi-python) on
+        autograd-required axes (stability, speed, optimization). The
+        CLI must return exit code 0 in this case, otherwise CI fails
+        on every workflow run that includes such a backend.
+
+        Caught when the first ``benchmark.yml`` workflow finished under
+        ``--quick`` and the previous "any non-success → exit 1" check
+        wrongly counted the 18 expected skips as failures.
+        """
+        from benchmarks.cli import main
+
+        # gudhi-python is non-differentiable; running it on stability
+        # (which requires autograd through loss_longest_h1) produces a
+        # ``SkippedNonDifferentiable`` cell. No real failures.
+        out_json = tmp_path / "result.json"
+        rc = main([
+            "--backends", "gudhi-python",
+            "--datasets", "mnist_mock_digit_1",
+            "--axes", "stability",
+            "--output", str(out_json),
+        ])
+        assert rc == 0
+        payload = json.loads(out_json.read_text())
+        skipped = [
+            c for c in payload["cells"]
+            if c["error_kind"] == "SkippedNonDifferentiable"
+        ]
+        assert len(skipped) >= 1, "expected at least one SkippedNonDifferentiable cell"
+
     def test_cli_quick_flag_thins_axis_kwargs(self) -> None:
         """``--quick`` populates the per-axis kwargs dict with shorter
         seed/repeat lists so the bench fits within CI's 30-minute budget.
