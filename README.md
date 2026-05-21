@@ -1,26 +1,29 @@
-# TopoGeomML
+# TopoGeoML
 
-**Topology-aware geometric machine learning.**
+**A rigorous research toolkit for topology-aware machine learning.**
 
-A Python-first research and engineering stack connecting persistent homology, higher-order topological domains, and geometric deep learning into reproducible ML pipelines.
+Differentiable persistent homology layers, Hodge message passing, and a benchmark framework with statistically defensible reporting — positioned as *complementary* to PyTorch / TensorFlow, not a replacement.
 
 ```text
                             ┌─────────────────────────┐
-  point cloud / graph ─────►│  filtration / lift      │
+  point cloud / image ─────►│  filtration / lift      │
                             └────────────┬────────────┘
                                          │
                               ┌──────────┴──────────┐
                               │                     │
                 ┌─────────────▼──────┐    ┌─────────▼──────────┐
                 │ persistence diagram│    │ simplicial complex │
+                │ (Rips, cubical)    │    │ (clique complex)   │
                 └─────────┬──────────┘    └──────────┬─────────┘
-                          │                          │
+                          │ autograd                  │
                 ┌─────────▼─────────┐      ┌─────────▼─────────┐
-                │   vectorization   │      │  Hodge Laplacian  │
+                │   topology loss   │      │  Hodge Laplacian  │
+                │   (nn.Module)     │      │  message passing  │
                 └─────────┬─────────┘      └─────────┬─────────┘
                           │                          │
                           ▼                          ▼
-                 features for sklearn         message passing in PyTorch
+                  PyTorch training              PyTorch training
+                       loop                          loop
 ```
 
 [![CI](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml)
@@ -28,61 +31,111 @@ A Python-first research and engineering stack connecting persistent homology, hi
 [![Version](https://img.shields.io/badge/version-0.0.1--alpha-orange)](#status)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-## Status
+---
 
-**v0.0.1 — pre-stable.** The eleven items of the v0.0.1 scope lock are all implemented and tested. APIs may change without notice; pin exact versions in downstream projects.
+## Status (honest)
 
-See [`LIMITATIONS.md`](LIMITATIONS.md) for an honest accounting of what this version **does not** do.
+**Pre-stable research artefact.** The library is internally consistent (476 tests, 100% coverage on the library and benchmark framework), the mathematical layers are correctly implemented, and the statistical machinery is rigorous. **What it does NOT yet have**: a "topology helps on a real benchmark" claim that survives BH-corrected significance testing — the only such claim attempted so far on a real dataset is a *negative* result (see [`Empirical evidence`](#empirical-evidence) below).
 
-For architecture, strategic positioning, and the design intent behind v0.0.1 + the v0.1+ roadmap, see [`docs/architecture/`](docs/architecture/README.md) — in particular [`00-positioning.md`](docs/architecture/00-positioning.md) (why this is not a TDA utility package) and [`SCOPE_LOCK_v0.0.1.md`](docs/architecture/SCOPE_LOCK_v0.0.1.md) (what ships now and why).
+This is a research toolkit, sized at ~7K LOC, positioned for researchers who need correct + citable topology-aware layers. It is **not** a production training framework. APIs will change without notice until v1.0.
 
-## What's in v0.0.1
+See [`LIMITATIONS.md`](LIMITATIONS.md) for the full list of what does *not* work yet.
 
-| # | Item | Status | Where |
-| --- | --- | --- | --- |
-| 1 | Topology feature pipeline for point clouds | [done] | `topogeoml.pipelines.TopologyFeaturePipeline` |
-| 2 | Diagram statistics and Betti curve vectorizers | [done] | `topogeoml.core.PersistenceImageVectorizer`, `BettiCurveVectorizer` |
-| 3 | Synthetic point cloud classification benchmark | [done] | `examples/circles_vs_lines.py` + `examples/run_experiment.py` |
-| 4 | Cubical mask topology diagnostic | [done] | `topogeoml.core.cubical_mask_diagnostic` |
-| 5 | Graph to clique complex lift | [done] | `topogeoml.data.graph_to_clique_complex` |
-| 6 | Boundary operator validation | [done] | `topogeoml.core.is_chain_complex` |
-| 7 | Hodge Laplacian utility | [done] | `topogeoml.core.hodge_laplacian`, `betti_numbers` |
-| 8 | Minimal Hodge message passing layer | [done] | `topogeoml.nn.hodge.HodgeMessagePassing` (requires torch) |
-| 9 | Embedding topology audit prototype | [done] | `topogeoml.audit_embedding` |
-| 10 | YAML experiment configs and JSON outputs | [done] | `topogeoml.experiments.load_experiment_config` / `write_results` |
-| 11 | Documentation with explicit limitations | [done] | [`LIMITATIONS.md`](LIMITATIONS.md) |
+---
+
+## Empirical evidence
+
+Every claim in the rest of this README is backed by an in-repo experiment or a literature citation. Two empirical experiments have been run so far; both are reproducible from the scripts in `notebooks/`.
+
+### 1. Topology divergence score detects overfitting no later than a val-loss watchdog (positive)
+
+A controlled overfitting regime on 200 examples of `sklearn.load_digits` (8×8 handwritten digits), 64-hidden MLP, Adam(lr=1e-2), 600 steps, 30 independent seeds. Two watchdogs run at the same 10-step probe cadence:
+- **loss watchdog** — fires when val_loss > 1.10 × running_min
+- **topology watchdog** — `ShapeOfLearningCallback.divergence_score` ≥ 2.0
+
+Result (full report in `notebooks/results/topology_predicts_divergence_30seeds.md`):
+
+| Statistic | Value |
+|---|---|
+| Direction count (topology earlier / tie / loss earlier) | **14 / 16 / 0** |
+| Rank-biserial r | **+1.000** |
+| Paired Wilcoxon p_raw | **5.77 × 10⁻⁴** |
+| BCa 95% CI on median advantage | [+0.0, +10.0] steps |
+
+The directional verdict is unambiguous — topology never fires *later* than loss. The magnitude is lower-bounded by the topology watchdog's baseline-window floor (every topology firing landed at step 30, the earliest possible step).
+
+Reproduce: `python notebooks/topology_predicts_divergence.py --n-seeds 30`.
+
+### 2. Minimal one-layer HodgeMP on MUTAG does NOT beat an MLP baseline (negative)
+
+MUTAG mutagenicity benchmark (188 molecular graphs, 2 classes, Debnath 1991 via PyG TUDataset), 30 independent seeds × 20 epochs of Adam(lr=1e-2), 80/20 stratified split per seed. Models with matched hidden dimension (32):
+- **hodge-mp-classifier**: per-node linear projection → 1 round of inline Hodge propagation (`activation(L @ X @ W + b)`) → sum-pool → linear head
+- **mlp-baseline**: same shape, but the middle step ignores the Laplacian (matched-capacity control)
+
+Result (full report in `notebooks/results/mutag_hodge_vs_mlp_30seeds.md`):
+
+| Model | Median accuracy (95% bootstrap CI) |
+|---|---|
+| `hodge-mp-classifier` | 0.697 [0.658, 0.750] |
+| `mlp-baseline` | **0.789 [0.763, 0.816]** |
+
+Paired Wilcoxon (BH-corrected): median Δ = **−0.092** (Hodge is *worse* by ~9 pp), **p = 5.66 × 10⁻⁵**, rank-biserial **r = −0.760**.
+
+**What this means.** The minimal Hodge MP architecture currently shipped — one layer, combinatorial L_0, ReLU, sum-pool — **reliably underperforms** an MLP that ignores topology, on this dataset, with statistical significance. This is a negative finding about the *architecture*, not about Hodge methods in general; the natural follow-up is to test deeper architectures, normalised Laplacians, and richer features. The result also reveals that the original PR #6 numbers (Hodge ≈ MLP at ~70%) were measuring a buggy model whose HodgeMP weights were not registered with the optimizer (fixed in PR #12).
+
+Reproduce: `python -m benchmarks.hodge --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 20`.
+
+---
+
+## What's actually in the box
+
+| Subsystem | Module | Status | Notes |
+|---|---|---|---|
+| Persistent-homology core | `topogeoml.core.{diagrams,filtrations,vectorizers,complexes,cubical}` | done | Rips diagrams, persistence images, Betti curves, simplicial complexes |
+| Graph → clique complex | `topogeoml.data.graph_to_clique_complex` | done | Bron-Kerbosch via networkx |
+| Topology feature pipeline | `topogeoml.pipelines.TopologyFeaturePipeline` | done | sklearn-compatible |
+| Hodge Laplacian + MP layer | `topogeoml.nn.hodge` | done | One round of `activation(L @ X @ W + b)`; minimal SCN building block |
+| **Differentiable PH (Rips)** | `topogeoml.nn.diff_ph` | done | autograd through critical-edge indexing (Hofer 2017, Carrière 2021) |
+| **Differentiable PH (cubical)** | `topogeoml.nn.cubical_diff_ph` | done | autograd through critical-pixel indexing; `CubicalTopologyLoss(nn.Module)` for image-segmentation training (Clough 2020-style) |
+| Topology-divergence callback | `topogeoml.training.ShapeOfLearningCallback` | done | empirically validated — see evidence section above |
+| Signal analysis | `topogeoml.signal.{delay_embedding,sliding_window}` | done | Takens embedding + windowed topology features |
+| Embedding audit | `topogeoml.audits.audit_embedding` | prototype | heuristic significance threshold; calibrated noise floor pending |
+| **Benchmark framework** | `benchmarks/` | done | 4 backends × 4 axes (correctness/stability/speed/optimization), 100% coverage |
+| **Hodge subsystem benchmark** | `benchmarks/hodge/` | done | MUTAG classification with paired Wilcoxon + BH |
+| **Statistical machinery** | `benchmarks.stats` | done | BCa + block + percentile bootstrap; Wilcoxon, Mann-Whitney, BH-FDR; 100% coverage |
+
+---
 
 ## Installation
 
 ```bash
-# Core: feature pipeline, vectorizers, complexes, audits, configs.
+# Core: complexes, persistence, vectorizers, audits, configs (no torch).
 pip install topogeoml
 
-# With PyTorch (enables the Hodge MP layer)
+# With PyTorch (enables nn.diff_ph, nn.cubical_diff_ph, nn.hodge).
 pip install "topogeoml[torch]"
 
-# With GUDHI + giotto-tda (additional TDA backends)
+# Plus GUDHI for the cubical PH backend.
 pip install "topogeoml[tda]"
 
-# With TopoNetX (higher-order domains — v0.1)
-pip install "topogeoml[higher-order]"
-
-# Everything
-pip install "topogeoml[all]"
+# Plus torch-geometric for the Hodge benchmark on TUDataset.
+pip install "topogeoml[bench]"
 ```
 
 From source:
 
 ```bash
-git clone https://github.com/topologica-llc/topogeoml.git
-cd topogeoml
+git clone https://github.com/smaniches/TopoGeoML.git
+cd TopoGeoML
 pip install -e ".[dev]"
 pytest
 ```
 
+---
+
 ## Quick start
 
-**Feature pipeline (item 1):**
+### Topology feature pipeline (sklearn-compatible)
 
 ```python
 import numpy as np
@@ -111,38 +164,26 @@ clf.fit(X, np.array(y))
 print(clf.score(X, y))  # 1.0
 ```
 
-**Cubical mask diagnostic (item 4):**
+### Differentiable cubical topology loss (for image segmentation)
 
 ```python
-import numpy as np
-from topogeoml import cubical_mask_diagnostic
+import torch
+from topogeoml.nn.cubical_diff_ph import CubicalTopologyLoss
 
-mask = np.zeros((20, 20), dtype=bool)
-mask[3:17, 3:17] = True
-mask[7:13, 7:13] = False  # one hole
-d = cubical_mask_diagnostic(mask)
-print(d.betti_0, d.betti_1, d.euler_characteristic)  # 1 1 0
+# Penalise predictions whose foreground has more than one connected component.
+topo_loss = CubicalTopologyLoss(target_betti={0: 1}, invert=True)
+
+pred = torch.rand(4, 1, 64, 64, dtype=torch.float64, requires_grad=True)  # (B, 1, H, W)
+loss = topo_loss(pred)
+loss.backward()  # gradients flow through the persistent-homology computation
 ```
 
-**Graph → clique complex → Hodge Laplacian (items 5, 6, 7):**
+See `notebooks/drive_unet_topology_loss.py` for the DRIVE retinal-vessel segmentation pipeline (Dice + BCE + λ·CubicalTopologyLoss vs Dice + BCE baseline).
+
+### Hodge message passing layer
 
 ```python
 import networkx as nx
-from topogeoml import (
-    graph_to_clique_complex, is_chain_complex, hodge_laplacian, betti_numbers,
-)
-
-G = nx.cycle_graph(4)               # C_4 — one connected loop
-sc = graph_to_clique_complex(G, max_dim=2)
-assert is_chain_complex(sc)         # boundary identity ∂² = 0
-L0 = hodge_laplacian(sc, 0)         # standard graph Laplacian
-b = betti_numbers(sc, max_dim=1)
-print(b)  # {0: 1, 1: 1}            # one component, one loop
-```
-
-**Hodge MP layer (item 8):**
-
-```python
 import torch
 from topogeoml import graph_to_clique_complex
 from topogeoml.nn.hodge import build_hodge_layer_from_complex
@@ -154,112 +195,85 @@ out = layer(x)
 print(out.shape)  # torch.Size([5, 8])
 ```
 
-**Embedding audit (item 9):**
+### Benchmark CLI
+
+```bash
+# Full-rigor run (~hours on CPU; preferred on GPU / Modal):
+python -m benchmarks
+
+# CI smoke tier (thinned seeds/repeats; ~10-15 min on CPU):
+python -m benchmarks --quick
+```
+
+The benchmark writes a JSON leaderboard + Markdown report with bootstrap CIs and BH-corrected paired Wilcoxon for every cross-backend comparison.
+
+### Statistical machinery (usable standalone)
 
 ```python
 import numpy as np
-from topogeoml import audit_embedding
+from benchmarks.stats import bootstrap_ci, BootstrapMethod, compare_paired
 
-emb = np.random.default_rng(42).standard_normal((500, 16))
-audit = audit_embedding(emb, max_points=200)
-print(audit.summary())
+x = np.random.lognormal(size=120)
+ci = bootstrap_ci(x, statistic="median", method=BootstrapMethod.BCA)
+print(f"BCa 95% CI: [{ci.ci_low:.3f}, {ci.ci_high:.3f}]")
 ```
 
-**YAML experiment (item 10):**
+Three interval methods are supported: percentile (Efron 1979), BCa (Efron 1987), and block (Künsch 1989). See `benchmarks/stats.py` for the citations behind every procedure.
 
-```bash
-python examples/run_experiment.py examples/configs/synthetic_shapes.yaml
-# Writes examples/outputs/synthetic_shapes_v001.json with config echo,
-# CV scores, timings, environment snapshot, and UTC timestamp.
-```
-
-## Architecture
-
-```text
-topogeoml/
-├── core/                       # Mathematical objects (no torch)
-│   ├── diagrams.py             [done] PersistenceDiagram + DiagramProvenance
-│   ├── filtrations.py          [done] RipsFiltration (via ripser)
-│   ├── vectorizers.py          [done] PersistenceImage, BettiCurve
-│   ├── complexes.py            [done] SimplicialComplex, ∂_k, L_k, betti_numbers
-│   ├── cubical.py              [done] Binary-mask topology diagnostic
-│   └── distances.py            [v0.1] v0.1: bottleneck, Wasserstein
-├── data/
-│   └── graph_to_complex.py     [done] Graph → clique complex
-├── pipelines/
-│   └── feature_pipeline.py     [done] TopologyFeaturePipeline (sklearn-compatible)
-├── audits/
-│   └── embedding_audit.py      [done] Embedding topology audit (prototype)
-├── experiments/
-│   └── configs.py              [done] YAML loader + JSON writer
-├── nn/                         # Requires torch
-│   └── hodge.py                [done] HodgeMessagePassing layer
-├── services/                   [v0.1] v0.1: FastAPI descriptor service
-└── tests/                      [done] 104 tests
-```
-
-## Mathematical object contracts
-
-Every public type carries a strict contract:
-
-- **`PersistenceDiagram`** — frozen dataclass; `bars[k]` is a contiguous `float64` `(n,2)` array; `DiagramProvenance` is mandatory.
-- **`RipsFiltration`** — stateless; `compute(X)` is pure, coerces to `float64`.
-- **Vectorizers** — deterministic fixed-length output (`output_dim` known before transform).
-- **`SimplicialComplex`** — auto-closes under faces; lexicographic ordering of k-simplices guarantees deterministic boundary-matrix column indices.
-- **`is_chain_complex`** — verifies ∂_{k-1} ∘ ∂_k = 0 within numerical tolerance, in all dimensions.
-- **`hodge_laplacian`** — returns symmetric PSD sparse matrix; `dim ker L_k = β_k` (discrete Hodge theorem).
-- **`TopologyFeaturePipeline`** — sklearn-compatible `BaseEstimator + TransformerMixin`; captures `fit_provenance_` per verification gate.
-- **`HodgeMessagePassing`** — `nn.Module`; sparse Laplacian as buffer; gradient flows back through `torch.sparse.mm`.
-- **`audit_embedding`** — returns `EmbeddingTopologyAudit` with full provenance dict.
-- **`load_experiment_config` / `write_results`** — YAML in, JSON out; environment snapshot, UTC timestamp, and full config echo are mandatory output fields.
+---
 
 ## Standards
 
-The package complies with the `elite-code-standards` failure-prevention rules:
+The package enforces the following floor:
 
 - Explicit `float64` dtype on every numerical array
 - No Python sample loops for numerical computation (construction loops permitted)
 - `random_state=42` / `np.random.default_rng(42)` for reproducible RNG
-- Provenance dict on every fit
-- Verification gate before any quantitative claim: interpolator check, correction audit, derivative inheritance, validation provenance
+- Provenance dict on every fit + every benchmark cell
+- 100% coverage on the library (`topogeoml/`) and the benchmark framework (`benchmarks/`)
+- ruff clean across all source directories
+- Every empirical claim in any docstring or README must point to either a literature citation or an in-repo experiment (negative results count and are shipped)
+
+---
 
 ## Testing
 
 ```bash
-pytest                          # all tests
+pytest                          # 476 tests
 pytest -m "not slow"            # skip slow tests
-pytest -m "not torch"           # skip layer tests if torch is unavailable
-pytest --cov=topogeoml          # with coverage
+pytest --cov=topogeoml --cov=benchmarks  # with coverage
 ```
 
-Current coverage: 118 tests across diagrams, filtrations, vectorizers, complexes, cubical, graph lift, embedding audit, configs, signal (Takens + sliding-window), and the end-to-end pipeline; 3 additional torch-gated tests (Hodge MP layer, differentiable PH, ShapeOfLearning callback) skip cleanly when torch is not installed. Topology recovery is verified on shapes with known Betti numbers (S¹, D², S², two circles, tetrahedron boundary, K_4 boundary).
+Coverage is 100% on `topogeoml/` and `benchmarks/`. Torch-gated tests skip cleanly when torch is not installed.
 
-## Limitations
+---
 
-This is v0.0.1 — pre-stable. The deliberate cuts in scope, known failure modes, and unvalidated claims are listed in [`LIMITATIONS.md`](LIMITATIONS.md). Read it before relying on this package for anything load-bearing.
+## Roadmap (only what's planned, not what's hoped)
 
-## Roadmap
+**v0.0.1 (current).** Library subsystems above, benchmark framework with BCa/block bootstrap, two empirical experiments (one positive, one negative — see [Empirical evidence](#empirical-evidence)).
 
-**v0.0.1 (current)** — 11-item scope lock, all delivered.
+**v0.0.2 (next).** A real-data benchmark with a positive empirical claim (target: DRIVE retinal-vessel segmentation using `CubicalTopologyLoss`, or a deeper Hodge architecture on a TUDataset where the minimal one-layer model failed). The bar is paired Wilcoxon p < 0.01 after BH correction, with BCa CIs reported. If no positive result is found at v0.0.2, the README will say so and the work continues.
 
-**v0.1** — Differentiable persistence (PyTorch autograd), PH metric cascade (Euclidean → Spectral → Fermat with d_int/d_amb selection), cubical filtration on real-valued images, drift-tensor correction layer (TOPOLOGICA proprietary), benchmark harness on one topology-shaped Kaggle competition, bottleneck/Wasserstein diagram distances.
+**v0.1 and later.** Not planned in detail yet — it depends on whether v0.0.2 produces a positive empirical claim and which direction is most promising from that signal. No promises about GPU-batched persistence, distributed training, simplicial neural network architectures, or replacing PyTorch / TensorFlow.
 
-**v0.2** — TopoNetX integration for cell and combinatorial complexes, GPU-batched Rips, topology losses for segmentation, full simplicial neural network architecture, MLflow/W&B adapters.
-
-**v1.0** — Stable API, peer-reviewed publication, GPU-batched differentiable persistence.
+---
 
 ## Citation
 
 ```bibtex
 @software{maniches_topogeoml_2026,
   author       = {Maniches, Santiago},
-  title        = {TopoGeomML: topology-aware geometric machine learning},
+  title        = {TopoGeoML: a research toolkit for topology-aware machine learning},
   year         = {2026},
-  version      = {0.0.1},
-  url          = {https://github.com/topologica-llc/topogeoml},
+  version      = {0.0.1-alpha},
+  url          = {https://github.com/smaniches/TopoGeoML},
   orcid        = {0009-0005-6480-1987}
 }
 ```
+
+No DOI is minted at this version. The empirical record is too thin to lock in permanently.
+
+---
 
 ## License
 
@@ -267,4 +281,4 @@ MIT. See [LICENSE](LICENSE).
 
 ---
 
-Santiago Maniches (ORCID: [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)) — [TOPOLOGICA LLC](https://topologica.ai)
+Santiago Maniches (ORCID: [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)).

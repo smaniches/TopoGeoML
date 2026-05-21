@@ -90,7 +90,17 @@ class _HodgeGraphClassifier(nn.Module):
 
 
 class HodgeClassifier:
-    """HodgeMP-based graph classifier."""
+    """HodgeMP-based graph classifier.
+
+    Empirical status (MUTAG, 30 seeds, 20 epochs of Adam(lr=1e-2)):
+    this minimal one-layer architecture **underperforms** the MLP
+    baseline by ~9 percentage points with paired Wilcoxon p_BH = 5.66e-05
+    and rank-biserial r = -0.760. See
+    ``notebooks/results/mutag_hodge_vs_mlp_30seeds.md`` for the full
+    per-seed report. The negative result is published deliberately;
+    deeper architectures and normalised Laplacians are the natural
+    next steps for the Geo subsystem.
+    """
 
     name: ClassVar[str] = "hodge-mp-classifier"
     version: ClassVar[str] = "1.0.0"
