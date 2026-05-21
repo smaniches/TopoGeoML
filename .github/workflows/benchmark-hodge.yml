@@ -1,0 +1,60 @@
+name: Benchmark (Hodge subsystem)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "topogeoml/nn/hodge.py"
+      - "topogeoml/core/complexes.py"
+      - "topogeoml/data/graph_to_complex.py"
+      - "benchmarks/hodge/**"
+      - ".github/workflows/benchmark-hodge.yml"
+
+jobs:
+  bench:
+    name: HodgeMP vs MLP baseline on MUTAG (CPU)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package + bench deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install -e ".[bench]"
+
+      - name: Cache TUDataset downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/topogeoml/benchmarks/hodge
+          key: tudataset-mutag-${{ runner.os }}
+
+      - name: Run Hodge bench
+        run: |
+          python -m benchmarks.hodge \
+            --seeds 0 1 2 3 4 \
+            --n-epochs 10 \
+            --output benchmarks/hodge/leaderboard/current.json \
+            --markdown bench_hodge_report.md
+
+      - name: Upload leaderboard JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: hodge-bench-leaderboard
+          path: benchmarks/hodge/leaderboard/current.json
+          retention-days: 90
+
+      - name: Upload markdown report
+        uses: actions/upload-artifact@v4
+        with:
+          name: hodge-bench-report-markdown
+          path: bench_hodge_report.md
+          retention-days: 30
