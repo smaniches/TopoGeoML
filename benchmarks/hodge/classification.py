@@ -195,12 +195,15 @@ def _project_features(
 def _constant_features(samples: list[GraphSample]) -> tuple[list[GraphSample], int]:
     """Replace each graph's node features with a constant 1-vector.
 
-    Used by hypothesis 006 to isolate graph-topology signal: with
-    constant features, the MLP baseline cannot use any node-level
-    information and its accuracy floor is the class prior; the Hodge
-    model can still exploit the Laplacian, so any Hodge accuracy
-    above the class prior measures pure topology-signal extraction.
-    Returns (new_samples, new_input_dim=1).
+    Used by hypothesis 006 to isolate feature-independent graph-structural
+    signal: with constant features, the MLP baseline cannot use any
+    node-level information beyond what graph-size leaks through the
+    sum-pool, and the Hodge arm can still exploit the Laplacian. Any
+    Hodge accuracy above the class prior under this ablation reflects
+    classification signal that lives in the graph structure rather than
+    in node-feature content. The diagnostic does NOT isolate homology
+    specifically — it isolates feature-independent graph-structural
+    predictive signal. Returns (new_samples, new_input_dim=1).
     """
     constant_samples = [
         GraphSample(

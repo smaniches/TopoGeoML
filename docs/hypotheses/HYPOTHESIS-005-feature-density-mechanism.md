@@ -1,6 +1,6 @@
 # Hypothesis 005: Is feature density the mechanism behind the residual-scale effect? Cross-dataset feature-projection study
 
-**Status.** Resolved 2026-05-22. **H18 REFUTED, H19 REFUTED — feature density is NOT the mechanism either.** The striking sub-finding: NCI1-7d MLP collapses to chance (0.500) while Hodge-residual still gets 0.58 — the graph topology carries classification signal that survives feature-space corruption. See §6.
+**Status.** Resolved 2026-05-22. **H18 REFUTED, H19 REFUTED — feature density is NOT the mechanism either.** Observed pattern (under the H005-A configuration): NCI1-7d MLP-baseline median is 0.500 (at class prior) while Hodge-residual median is 0.58 — feature-independent graph-structural predictive signal survives the projection. The constant-feature ablation (H006) is the appropriate test of whether this generalises; it does not isolate homology specifically. See §6.
 **Falsification target.** Whether the residual-vs-MLP effect tracks input *feature dimensionality / sparsity* rather than dataset identity.
 **Prior result motivating this hypothesis.** Hypothesis 004 preliminary (n=188, 1113, 2000 NCI1 subsamples already in): the residual variant *does not* lose at MUTAG-sized NCI1 subsamples. Sample size is not the mechanism. The remaining explanations are dataset-specific feature properties — most plausibly *feature density* (NCI1's 37-dim atom-type one-hot vs MUTAG's 7-dim atom one-hot vs PROTEINS' 3-dim secondary-structure one-hot).
 

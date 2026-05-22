@@ -26,6 +26,13 @@ Claim discipline (per the PR scope contract):
   configuration.
 * Fail-loud on missing input JSONs — silent skipping would let a
   partial run masquerade as a final result.
+* Terminology: the constant-feature ablation isolates
+  ``feature-independent graph-structural signal'' — that is, predictive
+  signal carried by the graph (degree, connectivity, Laplacian spectrum,
+  etc.) rather than by node-feature content.  The diagnostic does NOT
+  isolate homology specifically; degree distribution alone could explain
+  an above-prior Hodge result.  Use ``graph-structural signal'' in
+  resolver-emitted text rather than ``topology-sensitive signal''.
 """
 
 from __future__ import annotations
@@ -254,9 +261,11 @@ def render_markdown(summaries: list[DatasetSummary]) -> str:
         "Evidence is consistent with an architecture × data-topology interaction "
         "under the tested configuration (3 TUDataset graph-classification datasets, "
         "30 seeds, 10 epochs, matched-capacity Hodge-residual vs MLP baseline, "
-        "stratified 80/20 split, constant-feature ablation isolating graph topology "
-        "from node features).  The resolver makes no claim of generality beyond "
-        "this scope."
+        "stratified 80/20 split, constant-feature ablation isolating feature-"
+        "independent graph-structural signal from node-feature content).  The "
+        "test does NOT isolate homology specifically — graph degree, clustering, "
+        "and other structural properties are conflated.  The resolver makes no "
+        "claim of generality beyond this scope."
     )
     return "\n".join(lines)
 

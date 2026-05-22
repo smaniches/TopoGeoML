@@ -761,6 +761,10 @@ class TestH006Resolver:
         # Scoped-claim language must appear verbatim.
         assert "architecture × data-topology interaction" in md
         assert "under the tested configuration" in md
+        # Terminology correction: the test isolates feature-independent
+        # graph-structural signal, NOT homology specifically.
+        assert "graph-structural signal" in md
+        assert "does NOT isolate homology" in md
 
     def test_benjamini_hochberg_basic(self) -> None:
         from benchmarks.hodge.h006_analysis import _benjamini_hochberg
