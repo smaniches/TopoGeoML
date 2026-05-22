@@ -390,6 +390,147 @@ class TestRunner:
         assert len(result.reports) == 5
         assert len(result.pairwise_comparisons) == 10
 
+    def test_max_graphs_caps_dataset_per_seed(self) -> None:
+        """Hypothesis 004 mechanism test: ``max_graphs=N`` subsamples
+        the dataset to N graphs (deterministically per seed) before
+        the stratified train/test split. Two different seeds should
+        produce different subsets — the subsampling is per-seed, not
+        global — but each seed's training pipeline sees ≤ N graphs."""
+        from benchmarks.hodge.classification import run_classification
+        from benchmarks.hodge.datasets import MUTAGDataset
+        from benchmarks.hodge.models import MLPBaseline
+
+        # MUTAG has 188 graphs; cap at 100 → each seed sees 100.
+        report = run_classification(
+            model_cls=MLPBaseline,
+            dataset=MUTAGDataset(),
+            seeds=[0, 1],
+            n_epochs=2,
+            max_graphs=100,
+        )
+        for cell in report.cells:
+            assert cell.n_train + cell.n_test == 100, (
+                f"cap not applied: seed={cell.seed} got "
+                f"n_train={cell.n_train} + n_test={cell.n_test} = "
+                f"{cell.n_train + cell.n_test} != 100"
+            )
+
+    def test_feature_projection_changes_input_dim(self) -> None:
+        """Hypothesis 005 mechanism test: ``feature_projection_dim=K``
+        applies a per-seed deterministic Gaussian projection to all
+        node features, changing each graph's feature dimension to K.
+        The projection matrix is the same across graphs in a seed
+        (it's a global linear transform), and the model is built with
+        the projected input_dim, not the original."""
+        from benchmarks.hodge.classification import run_classification
+        from benchmarks.hodge.datasets import MUTAGDataset
+        from benchmarks.hodge.models import MLPBaseline
+
+        # MUTAG has 7-dim features by default; project to 37-dim.
+        report = run_classification(
+            model_cls=MLPBaseline,
+            dataset=MUTAGDataset(),
+            seeds=[0, 1],
+            n_epochs=2,
+            feature_projection_dim=37,
+        )
+        # Two seeds × MUTAG dataset → two cells, both run cleanly to
+        # completion with the projected features.
+        assert len(report.cells) == 2
+        for cell in report.cells:
+            assert 0.0 <= cell.test_accuracy <= 1.0
+
+    def test_feature_projection_preserves_norm_in_expectation(self) -> None:
+        """Johnson-Lindenstrauss norm preservation: a Gaussian projection
+        with scale = 1/sqrt(target_dim) keeps ``E[|x @ P|^2] = |x|^2``
+        regardless of dim change. The previous (Gemini-flagged on PR #21)
+        scaling 1/sqrt(src_dim) shrunk the norm by target_dim/src_dim on
+        dim-reduction and inflated it on dim-expansion — a confounder
+        for hypothesis 005.
+
+        Verifies expectation by averaging over many seeds at both
+        directions (37→7 dim-reduction and 7→37 dim-expansion). With
+        the correct scaling, the average ratio ``|x @ P|^2 / |x|^2``
+        sits within ±10% of 1 across both directions; with the prior
+        bad scaling the ratios are ~0.19 (37→7) and ~5.3 (7→37).
+        """
+        from benchmarks.hodge.classification import _project_features
+        from benchmarks.hodge.datasets import GraphSample
+
+        # Synthetic sample: a single graph with one 37-dim feature vector
+        # whose squared norm we control.
+        x = torch.ones(1, 37, dtype=torch.float64)  # |x|^2 = 37
+        dummy_L = torch.sparse_coo_tensor(
+            indices=torch.zeros(2, 0, dtype=torch.long),
+            values=torch.zeros(0, dtype=torch.float64),
+            size=(1, 1),
+        )
+        sample = GraphSample(x=x, laplacian=dummy_L, y=0)
+        n_seeds = 200
+
+        # Direction 37 -> 7
+        ratios_down = []
+        for seed in range(n_seeds):
+            projected, _ = _project_features([sample], target_dim=7, seed=seed)
+            ratios_down.append(
+                (projected[0].x.norm().item() ** 2) / (x.norm().item() ** 2)
+            )
+        mean_down = sum(ratios_down) / len(ratios_down)
+        assert 0.90 <= mean_down <= 1.10, (
+            f"37->7 mean norm ratio {mean_down:.4f} not within ±10% of 1"
+        )
+
+        # Direction 7 -> 37
+        x_small = torch.ones(1, 7, dtype=torch.float64)
+        sample_small = GraphSample(x=x_small, laplacian=dummy_L, y=0)
+        ratios_up = []
+        for seed in range(n_seeds):
+            projected, _ = _project_features([sample_small], target_dim=37, seed=seed)
+            ratios_up.append(
+                (projected[0].x.norm().item() ** 2) / (x_small.norm().item() ** 2)
+            )
+        mean_up = sum(ratios_up) / len(ratios_up)
+        assert 0.90 <= mean_up <= 1.10, (
+            f"7->37 mean norm ratio {mean_up:.4f} not within ±10% of 1"
+        )
+
+    def test_feature_projection_is_deterministic_per_seed(self) -> None:
+        """Per-seed projection determinism: running the same seed
+        twice with the same projection_dim must produce identical
+        per-cell accuracies. Hypothesis 005 relies on this — the
+        projection cannot be a confound."""
+        from benchmarks.hodge.classification import run_classification
+        from benchmarks.hodge.datasets import MUTAGDataset
+        from benchmarks.hodge.models import MLPBaseline
+
+        a = run_classification(
+            model_cls=MLPBaseline, dataset=MUTAGDataset(),
+            seeds=[7], n_epochs=2, feature_projection_dim=20,
+        )
+        b = run_classification(
+            model_cls=MLPBaseline, dataset=MUTAGDataset(),
+            seeds=[7], n_epochs=2, feature_projection_dim=20,
+        )
+        assert a.cells[0].test_accuracy == b.cells[0].test_accuracy
+
+    def test_max_graphs_noop_when_dataset_smaller(self) -> None:
+        """If ``max_graphs >= len(samples)``, the subsampling is a
+        no-op — the full dataset goes through the existing pipeline."""
+        from benchmarks.hodge.classification import run_classification
+        from benchmarks.hodge.datasets import MUTAGDataset
+        from benchmarks.hodge.models import MLPBaseline
+
+        # MUTAG has 188 graphs; cap at 500 → no subsampling.
+        report = run_classification(
+            model_cls=MLPBaseline,
+            dataset=MUTAGDataset(),
+            seeds=[0],
+            n_epochs=2,
+            max_graphs=500,
+        )
+        cell = report.cells[0]
+        assert cell.n_train + cell.n_test == 188
+
     def test_runner_writes_json_and_markdown(self, tmp_path) -> None:
         from benchmarks.hodge.runner import render_markdown, run, write_result
 

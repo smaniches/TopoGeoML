@@ -50,6 +50,8 @@ def run(
     seeds: list[int] | None = None,
     n_epochs: int = 20,
     learning_rate: float = 1e-2,
+    max_graphs: int | None = None,
+    feature_projection_dim: int | None = None,
 ) -> HodgeRunResult:
     """Run the classification axis on every (model × dataset × seed) cell.
 
@@ -87,6 +89,8 @@ def run(
                 seeds=seeds,
                 n_epochs=n_epochs,
                 learning_rate=learning_rate,
+                max_graphs=max_graphs,
+                feature_projection_dim=feature_projection_dim,
             )
             result.reports.append(report)
             per_dataset_reports.setdefault(dataset_name, []).append(report)
