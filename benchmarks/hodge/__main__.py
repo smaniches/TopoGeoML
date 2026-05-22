@@ -44,6 +44,18 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover
             "MUTAG size)."
         ),
     )
+    parser.add_argument(
+        "--constant-features",
+        action="store_true",
+        help=(
+            "Replace each graph's node features with a constant 1-vector "
+            "of shape (n_nodes, 1). The MLP baseline then sees no "
+            "node-level information and falls to the class prior; the "
+            "Hodge model can still use the Laplacian. Used by hypothesis "
+            "006 to measure the pure-topology classification signal in "
+            "a dataset."
+        ),
+    )
     args = parser.parse_args(argv)
 
     result = run(
@@ -51,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover
         seeds=args.seeds, n_epochs=args.n_epochs, learning_rate=args.lr,
         max_graphs=args.max_graphs,
         feature_projection_dim=args.feature_projection_dim,
+        constant_features=args.constant_features,
     )
     write_result(result, args.output)
     md = render_markdown(result)

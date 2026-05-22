@@ -1,0 +1,594 @@
+{
+  "pairwise_comparisons": [
+    {
+      "arm_a_name": "hodge-mp-residual",
+      "arm_b_name": "mlp-baseline",
+      "dataset": "proteins",
+      "effect_size": 0.5714285714285714,
+      "effect_size_name": "rank-biserial",
+      "kind": "significant",
+      "median_a": 0.6838565022421524,
+      "median_b": 0.5964125560538116,
+      "median_diff": 0.08744394618834084,
+      "median_ratio": 1.1466165413533835,
+      "n_a": 30,
+      "n_b": 30,
+      "p_value_bh_adjusted": 0.0005832954069653515,
+      "p_value_raw": 0.0005832954069653515,
+      "test_name": "wilcoxon-signed-rank",
+      "test_statistic": 52.0
+    }
+  ],
+  "platform_string": "Linux-6.18.5-x86_64-with-glibc2.39",
+  "python_version": "3.11.15",
+  "reports": [
+    {
+      "accuracy_ci95_high": 0.7040358744394619,
+      "accuracy_ci95_low": 0.647982062780269,
+      "accuracy_median": 0.6838565022421524,
+      "cells": [
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.7454713799633871,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 0,
+          "test_accuracy": 0.7085201793721974
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.7942012315567232,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 1,
+          "test_accuracy": 0.6502242152466368
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.9800803792459244,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 2,
+          "test_accuracy": 0.7174887892376681
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.617263534358782,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 3,
+          "test_accuracy": 0.695067264573991
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6939556664553491,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 4,
+          "test_accuracy": 0.5605381165919282
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6812460439410266,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 5,
+          "test_accuracy": 0.6591928251121076
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.7244262908869468,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 6,
+          "test_accuracy": 0.6412556053811659
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.9100182252663538,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 7,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.666555252851021,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 8,
+          "test_accuracy": 0.6278026905829597
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.7917599216225792,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 9,
+          "test_accuracy": 0.40358744394618834
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 1.0052762594843325,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 10,
+          "test_accuracy": 0.6816143497757847
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6286443779175415,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 11,
+          "test_accuracy": 0.5650224215246636
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 2.064546160458468,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 12,
+          "test_accuracy": 0.7040358744394619
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.7949407752824856,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 13,
+          "test_accuracy": 0.7668161434977578
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.7802927741529917,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 14,
+          "test_accuracy": 0.695067264573991
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.689390269611411,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 15,
+          "test_accuracy": 0.5874439461883408
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6828722871295627,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 16,
+          "test_accuracy": 0.695067264573991
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6666445552072756,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 17,
+          "test_accuracy": 0.6636771300448431
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.763483585088109,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 18,
+          "test_accuracy": 0.7354260089686099
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6300098715240268,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 19,
+          "test_accuracy": 0.7309417040358744
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.7653687547792112,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 20,
+          "test_accuracy": 0.7488789237668162
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.7588521006080108,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 21,
+          "test_accuracy": 0.6860986547085202
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.8153056293147559,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 22,
+          "test_accuracy": 0.5246636771300448
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6789441736320176,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 23,
+          "test_accuracy": 0.7130044843049327
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.9119881099008713,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 24,
+          "test_accuracy": 0.6636771300448431
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.786556935805683,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 25,
+          "test_accuracy": 0.7040358744394619
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.7983169650036102,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 26,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 1.2408968257899953,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 27,
+          "test_accuracy": 0.7219730941704036
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6292554102275834,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 28,
+          "test_accuracy": 0.6457399103139013
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6467693666340357,
+          "model_name": "hodge-mp-residual",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 29,
+          "test_accuracy": 0.7354260089686099
+        }
+      ],
+      "dataset_name": "proteins",
+      "dataset_version": "1.0.0",
+      "learning_rate": 0.01,
+      "model_name": "hodge-mp-residual",
+      "model_version": "1.0.0",
+      "n_epochs": 10
+    },
+    {
+      "accuracy_ci95_high": 0.5964125560538116,
+      "accuracy_ci95_low": 0.5964125560538116,
+      "accuracy_median": 0.5964125560538116,
+      "cells": [
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6761436367390351,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 0,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6792412428493119,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 1,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6766958990087311,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 2,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6780262449437857,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 3,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6788693831367381,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 4,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6781068161483463,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 5,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6786538902733543,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 6,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6773879643039215,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 7,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6768836773251748,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 8,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6785331912656577,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 9,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6778863251119388,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 10,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.676140318102166,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 11,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6784904091625192,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 12,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6770480596089622,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 13,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6771053341106589,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 14,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6777726438717507,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 15,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6776114926901248,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 16,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6779411942486834,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 17,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6793212892280858,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 18,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6300493003930648,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 19,
+          "test_accuracy": 0.7533632286995515
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6757058996814059,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 20,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6786981364298392,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 21,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6782130514275155,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 22,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6780740144285677,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 23,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6763168212476652,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 24,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.618103256034244,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 25,
+          "test_accuracy": 0.6547085201793722
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6792339074138518,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 26,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.67858617813229,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 27,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6773776778220535,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 28,
+          "test_accuracy": 0.5964125560538116
+        },
+        {
+          "dataset_name": "proteins",
+          "final_train_loss": 0.6778970874820227,
+          "model_name": "mlp-baseline",
+          "n_test": 223,
+          "n_train": 890,
+          "seed": 29,
+          "test_accuracy": 0.5964125560538116
+        }
+      ],
+      "dataset_name": "proteins",
+      "dataset_version": "1.0.0",
+      "learning_rate": 0.01,
+      "model_name": "mlp-baseline",
+      "model_version": "1.0.0",
+      "n_epochs": 10
+    }
+  ],
+  "schema_version": "hodge-1.0.0",
+  "timestamp_utc": "2026-05-22T01:14:45Z"
+}

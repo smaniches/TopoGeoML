@@ -192,6 +192,30 @@ def _project_features(
     return projected, target_dim
 
 
+def _constant_features(samples: list[GraphSample]) -> tuple[list[GraphSample], int]:
+    """Replace each graph's node features with a constant 1-vector.
+
+    Used by hypothesis 006 to isolate feature-independent graph-structural
+    signal: with constant features, the MLP baseline cannot use any
+    node-level information beyond what graph-size leaks through the
+    sum-pool, and the Hodge arm can still exploit the Laplacian. Any
+    Hodge accuracy above the class prior under this ablation reflects
+    classification signal that lives in the graph structure rather than
+    in node-feature content. The diagnostic does NOT isolate homology
+    specifically — it isolates feature-independent graph-structural
+    predictive signal. Returns (new_samples, new_input_dim=1).
+    """
+    constant_samples = [
+        GraphSample(
+            x=torch.ones((s.x.shape[0], 1), dtype=torch.float64),
+            laplacian=s.laplacian,
+            y=s.y,
+        )
+        for s in samples
+    ]
+    return constant_samples, 1
+
+
 def run_classification(
     *,
     model_cls: Any,
@@ -202,6 +226,7 @@ def run_classification(
     test_fraction: float = 0.2,
     max_graphs: int | None = None,
     feature_projection_dim: int | None = None,
+    constant_features: bool = False,
 ) -> ClassificationReport:
     """Run the classification axis for one (model, dataset) pair.
 
@@ -250,6 +275,11 @@ def run_classification(
             seed_samples, effective_input_dim = _project_features(
                 seed_samples, target_dim=feature_projection_dim, seed=seed,
             )
+        elif constant_features:
+            # Hypothesis 006: replace features with a constant 1-vector.
+            # The Hodge model can still use the Laplacian; the MLP
+            # baseline cannot do anything beyond the class prior.
+            seed_samples, effective_input_dim = _constant_features(seed_samples)
         else:
             effective_input_dim = input_dim
         train_samples, test_samples = _stratified_split(
