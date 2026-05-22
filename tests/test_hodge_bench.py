@@ -494,6 +494,43 @@ class TestRunner:
             f"7->37 mean norm ratio {mean_up:.4f} not within ±10% of 1"
         )
 
+    def test_constant_features_replaces_features_with_ones(self) -> None:
+        """Hypothesis 006: ``constant_features=True`` replaces each
+        graph's node features with a 1-dim constant 1-vector. The MLP
+        then has no per-node signal; the Hodge model can still use
+        the Laplacian. This isolates pure-topology classification."""
+        from benchmarks.hodge.classification import (
+            _constant_features,
+            run_classification,
+        )
+        from benchmarks.hodge.datasets import GraphSample, MUTAGDataset
+        from benchmarks.hodge.models import MLPBaseline
+
+        # Unit test of the helper.
+        dummy_L = torch.sparse_coo_tensor(
+            indices=torch.zeros(2, 0, dtype=torch.long),
+            values=torch.zeros(0, dtype=torch.float64),
+            size=(3, 3),
+        )
+        sample = GraphSample(
+            x=torch.randn(3, 7, dtype=torch.float64),
+            laplacian=dummy_L, y=0,
+        )
+        out, new_dim = _constant_features([sample])
+        assert new_dim == 1
+        assert out[0].x.shape == (3, 1)
+        assert torch.allclose(out[0].x, torch.ones((3, 1), dtype=torch.float64))
+
+        # End-to-end through run_classification on a real dataset.
+        report = run_classification(
+            model_cls=MLPBaseline,
+            dataset=MUTAGDataset(),
+            seeds=[0],
+            n_epochs=2,
+            constant_features=True,
+        )
+        assert len(report.cells) == 1
+
     def test_feature_projection_is_deterministic_per_seed(self) -> None:
         """Per-seed projection determinism: running the same seed
         twice with the same projection_dim must produce identical
@@ -545,3 +582,192 @@ class TestRunner:
         md = render_markdown(result)
         assert "TopoGeoML Hodge subsystem benchmark" in md
         assert "Per-(model × dataset) test accuracy" in md
+
+
+class TestH006Resolver:
+    """Hypothesis 006 — constant-feature ablation resolver.
+
+    The resolver consumes one ``--constant-features`` JSON per dataset
+    plus the corresponding full-feature ablation JSON, and emits the
+    verdicts for sub-hypotheses H22-H25.  These tests use synthetic
+    fixtures so they run without the ~75-minute background bench.
+    """
+
+    @staticmethod
+    def _write_fake(
+        tmp_path,
+        ds: str,
+        hodge_accs: list[float],
+        mlp_accs: list[float],
+        suffix: str,
+    ):
+        import json
+
+        cells = lambda name, accs: [  # noqa: E731
+            {
+                "model_name": name, "dataset_name": ds, "seed": i,
+                "test_accuracy": a, "n_train": 100, "n_test": 25,
+                "final_train_loss": 0.5,
+            }
+            for i, a in enumerate(accs)
+        ]
+        reports = []
+        for name, accs in (("hodge-mp-residual", hodge_accs), ("mlp-baseline", mlp_accs)):
+            reports.append({
+                "model_name": name, "model_version": "1.0.0",
+                "dataset_name": ds, "dataset_version": "tu-r1",
+                "n_epochs": 10, "learning_rate": 1e-2, "cells": cells(name, accs),
+                "accuracy_median": float(sum(accs) / len(accs)),
+                "accuracy_ci95_low": 0.0, "accuracy_ci95_high": 1.0,
+            })
+        payload = {"schema_version": "hodge-1.0.0", "reports": reports}
+        path = tmp_path / f"{ds}_{suffix}.json"
+        path.write_text(json.dumps(payload))
+        return path
+
+    def test_resolve_runs_on_synthetic_fixtures(self, tmp_path) -> None:
+        from benchmarks.hodge.h006_analysis import resolve
+
+        # NCI1: Hodge well above prior (~0.50). MUTAG: Hodge close to prior
+        # (~0.66). PROTEINS: Hodge slightly above prior (~0.60).
+        constant = {
+            "nci1": self._write_fake(tmp_path, "nci1",
+                hodge_accs=[0.60] * 30, mlp_accs=[0.50] * 30, suffix="constant"),
+            "mutag": self._write_fake(tmp_path, "mutag",
+                hodge_accs=[0.66] * 30, mlp_accs=[0.66] * 30, suffix="constant"),
+            "proteins": self._write_fake(tmp_path, "proteins",
+                hodge_accs=[0.62] * 30, mlp_accs=[0.60] * 30, suffix="constant"),
+        }
+        full = {
+            "nci1": self._write_fake(tmp_path, "nci1",
+                hodge_accs=[0.61] * 30, mlp_accs=[0.52] * 30, suffix="full"),
+            "mutag": self._write_fake(tmp_path, "mutag",
+                hodge_accs=[0.75] * 30, mlp_accs=[0.79] * 30, suffix="full"),
+            "proteins": self._write_fake(tmp_path, "proteins",
+                hodge_accs=[0.69] * 30, mlp_accs=[0.67] * 30, suffix="full"),
+        }
+        summaries = resolve(constant_paths=constant, full_paths=full)
+        assert len(summaries) == 3
+        ds_to_summary = {s.dataset: s for s in summaries}
+        # NCI1: hodge median 0.60, prior ~0.50 → significantly above.
+        assert ds_to_summary["nci1"].hodge_above_prior_significant is True
+        # MUTAG: hodge median 0.66, prior 0.6649 → not significantly above
+        # (median essentially equals prior, so the one-sided test fails).
+        assert ds_to_summary["mutag"].hodge_above_prior_significant is False
+        # Provenance: source paths carried through.
+        assert ds_to_summary["nci1"].constant_feature_source == constant["nci1"]
+        assert ds_to_summary["nci1"].full_feature_source == full["nci1"]
+
+    def test_resolve_fails_loud_on_missing_constant_json(self, tmp_path) -> None:
+        from benchmarks.hodge.h006_analysis import resolve
+
+        constant = {ds: tmp_path / f"{ds}_constant.json"
+                    for ds in ("mutag", "proteins", "nci1")}
+        full = {ds: tmp_path / f"{ds}_full.json"
+                for ds in ("mutag", "proteins", "nci1")}
+        with pytest.raises(FileNotFoundError, match="constant-feature result"):
+            resolve(constant_paths=constant, full_paths=full)
+
+    def test_resolve_fails_loud_on_missing_full_json(self, tmp_path) -> None:
+        from benchmarks.hodge.h006_analysis import resolve
+
+        constant = {
+            "nci1": self._write_fake(tmp_path, "nci1",
+                hodge_accs=[0.6] * 5, mlp_accs=[0.5] * 5, suffix="constant"),
+            "mutag": self._write_fake(tmp_path, "mutag",
+                hodge_accs=[0.66] * 5, mlp_accs=[0.66] * 5, suffix="constant"),
+            "proteins": self._write_fake(tmp_path, "proteins",
+                hodge_accs=[0.62] * 5, mlp_accs=[0.60] * 5, suffix="constant"),
+        }
+        full = {ds: tmp_path / f"{ds}_full.json"
+                for ds in ("mutag", "proteins", "nci1")}
+        with pytest.raises(FileNotFoundError, match="full-feature result"):
+            resolve(constant_paths=constant, full_paths=full)
+
+    def test_resolve_rejects_wrong_dataset_set(self, tmp_path) -> None:
+        from benchmarks.hodge.h006_analysis import resolve
+
+        constant = {"mutag": tmp_path / "x.json"}
+        full = {"mutag": tmp_path / "y.json", "proteins": tmp_path / "z.json",
+                "nci1": tmp_path / "w.json"}
+        with pytest.raises(ValueError, match="exactly"):
+            resolve(constant_paths=constant, full_paths=full)
+
+    def test_resolve_rejects_missing_arm(self, tmp_path) -> None:
+        """If a JSON is missing one of the required arms (residual or MLP),
+        the resolver must fail explicitly rather than silently inferring."""
+        import json
+
+        from benchmarks.hodge.h006_analysis import resolve
+
+        bad_payload = {
+            "schema_version": "hodge-1.0.0",
+            "reports": [{
+                "model_name": "hodge-mp-residual", "model_version": "1.0.0",
+                "dataset_name": "nci1", "dataset_version": "tu-r1",
+                "n_epochs": 10, "learning_rate": 1e-2,
+                "cells": [{"model_name": "hodge-mp-residual", "dataset_name": "nci1",
+                           "seed": 0, "test_accuracy": 0.6, "n_train": 1,
+                           "n_test": 1, "final_train_loss": 0.0}],
+                "accuracy_median": 0.6,
+                "accuracy_ci95_low": 0.0, "accuracy_ci95_high": 1.0,
+            }],
+        }
+        bad = tmp_path / "nci1_constant.json"
+        bad.write_text(json.dumps(bad_payload))
+        constant = {
+            "nci1": bad,
+            "mutag": self._write_fake(tmp_path, "mutag",
+                hodge_accs=[0.66] * 5, mlp_accs=[0.66] * 5, suffix="constant"),
+            "proteins": self._write_fake(tmp_path, "proteins",
+                hodge_accs=[0.62] * 5, mlp_accs=[0.60] * 5, suffix="constant"),
+        }
+        full = {
+            "nci1": self._write_fake(tmp_path, "nci1",
+                hodge_accs=[0.61] * 5, mlp_accs=[0.52] * 5, suffix="full"),
+            "mutag": self._write_fake(tmp_path, "mutag",
+                hodge_accs=[0.75] * 5, mlp_accs=[0.79] * 5, suffix="full"),
+            "proteins": self._write_fake(tmp_path, "proteins",
+                hodge_accs=[0.69] * 5, mlp_accs=[0.67] * 5, suffix="full"),
+        }
+        with pytest.raises(KeyError, match="mlp-baseline"):
+            resolve(constant_paths=constant, full_paths=full)
+
+    def test_render_markdown_has_required_sections(self, tmp_path) -> None:
+        from benchmarks.hodge.h006_analysis import render_markdown, resolve
+
+        constant = {
+            "nci1": self._write_fake(tmp_path, "nci1",
+                hodge_accs=[0.60] * 30, mlp_accs=[0.50] * 30, suffix="constant"),
+            "mutag": self._write_fake(tmp_path, "mutag",
+                hodge_accs=[0.66] * 30, mlp_accs=[0.66] * 30, suffix="constant"),
+            "proteins": self._write_fake(tmp_path, "proteins",
+                hodge_accs=[0.62] * 30, mlp_accs=[0.60] * 30, suffix="constant"),
+        }
+        full = {
+            "nci1": self._write_fake(tmp_path, "nci1",
+                hodge_accs=[0.61] * 30, mlp_accs=[0.52] * 30, suffix="full"),
+            "mutag": self._write_fake(tmp_path, "mutag",
+                hodge_accs=[0.75] * 30, mlp_accs=[0.79] * 30, suffix="full"),
+            "proteins": self._write_fake(tmp_path, "proteins",
+                hodge_accs=[0.69] * 30, mlp_accs=[0.67] * 30, suffix="full"),
+        }
+        md = render_markdown(resolve(constant_paths=constant, full_paths=full))
+        # Required output sections per the PR scope contract.
+        assert "## H006 reproducible summary (per-dataset)" in md
+        assert "## H006 statistical table" in md
+        assert "## H25 Spearman correlation" in md
+        assert "## Scoped interpretation" in md
+        # Scoped-claim language must appear verbatim.
+        assert "architecture × data-topology interaction" in md
+        assert "under the tested configuration" in md
+
+    def test_benjamini_hochberg_basic(self) -> None:
+        from benchmarks.hodge.h006_analysis import _benjamini_hochberg
+
+        # Three p-values; BH at α=0.05 keeps monotonicity.
+        adj, rej = _benjamini_hochberg([0.01, 0.04, 0.20], alpha=0.05)
+        # adj_3 = 0.20 * 3/3 = 0.20; adj_2 = min(0.04*3/2, 0.20)=0.06;
+        # adj_1 = min(0.01*3/1, 0.06)=0.03.
+        assert adj == pytest.approx([0.03, 0.06, 0.20])
+        assert rej == [True, False, False]
