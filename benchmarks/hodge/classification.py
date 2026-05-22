@@ -149,6 +149,42 @@ def _stratified_split(
     return [samples[i] for i in train_idx], [samples[i] for i in test_idx]
 
 
+def _project_features(
+    samples: list[GraphSample],
+    target_dim: int,
+    seed: int,
+) -> tuple[list[GraphSample], int]:
+    """Apply a per-seed deterministic linear projection to all node features.
+
+    Used by hypothesis 005 to isolate the feature-dim mechanism behind the
+    residual-scale effect: projecting NCI1's 37-dim features down to 7-dim
+    (matching MUTAG) — or expanding MUTAG's 7-dim up to 37-dim (matching
+    NCI1) — leaves the graph topology, sample size, and label distribution
+    intact while varying only the input feature dimensionality.
+
+    The projection matrix is the same Gaussian draw across all graphs for
+    a given seed, so the operation is a *global* linear transform of the
+    feature space — not per-graph noise.
+
+    Returns the (new samples, new input_dim) tuple.
+    """
+    if not samples:
+        return samples, target_dim
+    src_dim = samples[0].x.shape[1]
+    rng = np.random.default_rng(seed)
+    # Gaussian projection scaled by 1/sqrt(src_dim) so the post-projection
+    # feature norms are O(1) regardless of dim change (Johnson-Lindenstrauss
+    # scaling for dim-reduction; same scale works for dim-expansion).
+    P = torch.from_numpy(
+        rng.normal(loc=0.0, scale=1.0 / max(1.0, src_dim**0.5), size=(src_dim, target_dim))
+    ).to(torch.float64)
+    projected = [
+        GraphSample(x=s.x @ P, laplacian=s.laplacian, y=s.y)
+        for s in samples
+    ]
+    return projected, target_dim
+
+
 def run_classification(
     *,
     model_cls: Any,
@@ -158,6 +194,7 @@ def run_classification(
     learning_rate: float = 1e-2,
     test_fraction: float = 0.2,
     max_graphs: int | None = None,
+    feature_projection_dim: int | None = None,
 ) -> ClassificationReport:
     """Run the classification axis for one (model, dataset) pair.
 
@@ -171,6 +208,16 @@ def run_classification(
         running NCI1 at ``max_graphs=188`` produces a MUTAG-sized
         subset with NCI1's native feature distribution intact, so the
         only variable that changes vs full NCI1 is sample count.
+    feature_projection_dim
+        Optional target dimensionality for a per-seed deterministic
+        Gaussian projection applied to all node features. Used by
+        hypothesis 005 to isolate the feature-dim mechanism: setting
+        this to 7 on NCI1 produces NCI1-7d (matching MUTAG's feature
+        dim while preserving NCI1's sample size and graph statistics);
+        setting it to 37 on MUTAG produces MUTAG-37d (matching NCI1's
+        feature space). The projection matrix is the same across all
+        graphs in a given seed but varies across seeds so the
+        projection itself is not a confound.
     """
     from benchmarks.stats import bootstrap_ci
 
@@ -189,10 +236,19 @@ def run_classification(
             seed_samples = [samples[int(i)] for i in indices]
         else:
             seed_samples = samples
+        # Per-seed deterministic feature projection (hypothesis 005).
+        # Applied AFTER subsampling so the projection doesn't waste
+        # work on subsampled-away graphs.
+        if feature_projection_dim is not None and feature_projection_dim > 0:
+            seed_samples, effective_input_dim = _project_features(
+                seed_samples, target_dim=feature_projection_dim, seed=seed,
+            )
+        else:
+            effective_input_dim = input_dim
         train_samples, test_samples = _stratified_split(
             seed_samples, test_fraction=test_fraction, seed=seed,
         )
-        model = model_cls.build(input_dim, num_classes, seed=seed)
+        model = model_cls.build(effective_input_dim, num_classes, seed=seed)
         cell = _train_one_seed(
             model, train_samples, test_samples,
             n_epochs=n_epochs, learning_rate=learning_rate, seed=seed,

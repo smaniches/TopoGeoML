@@ -1,6 +1,6 @@
 # Hypothesis 004: Is sample size the mechanism behind the residual-scale effect? NCI1 subsampling study
 
-**Status.** Preregistered 2026-05-21. Test in progress (this branch). The 30-seed × 4-subsample-size run lands the resolved outcome in §6.
+**Status.** Resolved 2026-05-22. **H13 refuted, H14 refuted, H15 confirmed (reproducibility holds), H16 confirmed (monotone Δ in n), H17 N/A (Δ never crosses zero in the tested range).** Sample size is decisively NOT the mechanism. See §6 for the full outcome.
 **Falsification target.** Whether the residual-vs-MLP effect on NCI1 *survives subsampling to MUTAG-size and PROTEINS-size* — a direct mechanism test that controls for everything except sample count.
 **Prior result that motivates this hypothesis.** Hypothesis 003 (PR #19): `hodge-mp-residual` strictly beats MLP on NCI1 at p_BH = 4.83 × 10⁻³ (+8.6 pp). The same architecture *loses* on MUTAG (p_BH = 0.019) and *matches* on PROTEINS (p_BH = 0.339). Two mechanisms remain in play:
   - **(a) Feature density / distribution.** NCI1 has 37-dim atom features (vs MUTAG's 7-dim, PROTEINS' 3-dim).
@@ -67,9 +67,56 @@ For each sample size, run 30 independent seeds × 10 epochs × hidden_dim=32 × 
 
 Background-runnable. The shorter run sizes finish quickly; the full-NCI1 control takes the bulk.
 
-## 6. Resolved outcome (filled in when the multi-size run completes)
+## 6. Resolved outcome (2026-05-22, 30 seeds × 10 epochs × 4 sample sizes, wall time ~2h)
 
-*Pending — preregistered before any execution.*
+Per-size reports in `notebooks/results/h004_nci1_n{188,1113,2000,4110}_30seeds.md`.
+
+| n_graphs | hodge-mp-residual (median, BCa 95%) | mlp-baseline (median, BCa 95%) | median Δ | paired Wilcoxon p_BH | Verdict vs MLP |
+|---|---|---|---|---|---|
+| 188 (MUTAG-size) | 0.579 [0.533, 0.613] | 0.560 [0.520, 0.595] | **+0.019** | 0.897 | matches |
+| 1113 (PROTEINS-size) | 0.601 [0.589, 0.629] | 0.549 [0.526, 0.590] | **+0.052** | **0.045** | **WINS** |
+| 2000 | 0.595 [0.576, 0.613] | 0.536 [0.515, 0.600] | +0.059 | 0.053 | matches (border) |
+| **4110 (full, control)** | **0.609 [0.581, 0.625]** | **0.523 [0.513, 0.566]** | **+0.086** | **3.38 × 10⁻³** | **WINS** ✅ |
+
+### Headline finding
+
+> **Sample size is NOT the mechanism behind the residual-scale effect.** Subsampling NCI1 to MUTAG's 188 graphs *does not* reproduce MUTAG's residual-defeat (which had Δ = −0.04 with p_BH = 0.019). NCI1-at-MUTAG-size shows Δ = +0.019 with p_BH = 0.897. Subsampling to PROTEINS' 1113 graphs *does not* reproduce PROTEINS' residual-equality either (NCI1-at-PROTEINS-size already strictly wins at p_BH = 0.045). The MUTAG and PROTEINS residual underperformances are caused by *dataset-specific properties of the data distribution*, not by data quantity. The leading remaining mechanism candidates are feature dimensionality and feature semantics (hypothesis 005).
+
+### Sub-hypotheses, resolved
+
+- **H13** (residual loses at NCI1[n=188]): **REFUTED.** Δ = +0.019 (positive, not negative); p_BH = 0.897. Sample-size mechanism rejected.
+- **H14** (residual matches at NCI1[n=1113]): **REFUTED.** Δ = +0.052, p_BH = 0.045 → strictly wins. The PROTEINS equality is NOT replicated by sample-size matching.
+- **H15** (reproducibility control at n=4110): **CONFIRMED.** Δ = +0.086, p_BH = 3.38 × 10⁻³ — matches PR #19's +0.086, p_BH = 4.83 × 10⁻³ to within stochastic noise. (The minor p-value difference comes from the BH-FDR family size: 4 comparisons here vs 10 there.) The hypothesis 003 headline result reproduces robustly under independent BH correction.
+- **H16** (monotone trend Δ vs n_graphs): **CONFIRMED.** Δ values: 0.019 → 0.052 → 0.059 → 0.086, monotone non-decreasing. The residual advantage *grows* with sample size, even though it's already positive at the smallest size.
+- **H17** (crossover at Δ = 0 between 188 and 4110): **N/A.** Δ never crosses zero in the tested range; the residual advantage is always non-negative for NCI1, even at MUTAG-size subsamples.
+
+### Cross-experiment interpretation
+
+The residual-vs-MLP gap **is monotone in sample size on NCI1** (H16 confirmed), but the *direction* (advantage to Hodge) is fixed for all NCI1-derived data. Meanwhile, MUTAG and PROTEINS — at THEIR native sample sizes — produce *negative* (MUTAG: Δ = −0.04) or *near-zero* (PROTEINS: Δ ≈ 0) results.
+
+Subsampling NCI1 to match MUTAG's and PROTEINS's sample sizes does not reproduce those signs. **Conclusion: the dataset-specific factor that flips the residual's sign between MUTAG and NCI1 is in the data distribution, not in n.**
+
+Concretely, the candidates that remain in play after this experiment:
+
+1. **Feature dimensionality** (NCI1: 37, MUTAG: 7, PROTEINS: 3) — tested directly by hypothesis 005 via random projection
+2. **Feature semantics** (atom type vs. secondary-structure type) — hard to isolate without dataset-specific transforms
+3. **Graph topology** (NCI1 avg 30 nodes, MUTAG 18, PROTEINS 39) — orthogonal to features
+4. **Label class balance / task difficulty** — possible confounder but priors suggest minor
+
+The monotone-Δ-in-n pattern within NCI1 is also informative: more training data lets the architecture *exploit the topology more*, even when the residual is already net-positive. This suggests the Hodge inductive bias is non-trivial — it just needs the right data substrate to express it.
+
+### What this licenses the framework to claim (refined)
+
+The hypothesis 003 NCI1 positive claim **survives independent statistical replication** (H15). The architecture truly does outperform MLP on NCI1 at p_BH < 0.005. *But*: the cross-dataset behaviour (MUTAG defeat, PROTEINS equality) is not explained by sample size, so the framework should not claim "Hodge with residual helps once n ≥ X". Rather, it should claim "Hodge with residual helps on NCI1 across all sample sizes tested (n ≥ 188); whether it helps on MUTAG/PROTEINS is a separate dataset-specific question pending hypothesis 005."
+
+### What hypothesis 005 does next
+
+The feature-projection infrastructure (`feature_projection_dim` parameter in `run_classification`) is already implemented on this branch. The next experimental cell is:
+
+- NCI1-7d (project 37 → 7, match MUTAG's dim) × hodge-mp-residual + mlp-baseline × 30 seeds × 10 epochs
+- MUTAG-37d (project 7 → 37, match NCI1's dim) × same arms × seeds × epochs
+
+Wall-time estimate: ~65 min.
 
 ---
 

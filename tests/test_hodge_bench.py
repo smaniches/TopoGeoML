@@ -415,6 +415,50 @@ class TestRunner:
                 f"{cell.n_train + cell.n_test} != 100"
             )
 
+    def test_feature_projection_changes_input_dim(self) -> None:
+        """Hypothesis 005 mechanism test: ``feature_projection_dim=K``
+        applies a per-seed deterministic Gaussian projection to all
+        node features, changing each graph's feature dimension to K.
+        The projection matrix is the same across graphs in a seed
+        (it's a global linear transform), and the model is built with
+        the projected input_dim, not the original."""
+        from benchmarks.hodge.classification import run_classification
+        from benchmarks.hodge.datasets import MUTAGDataset
+        from benchmarks.hodge.models import MLPBaseline
+
+        # MUTAG has 7-dim features by default; project to 37-dim.
+        report = run_classification(
+            model_cls=MLPBaseline,
+            dataset=MUTAGDataset(),
+            seeds=[0, 1],
+            n_epochs=2,
+            feature_projection_dim=37,
+        )
+        # Two seeds × MUTAG dataset → two cells, both run cleanly to
+        # completion with the projected features.
+        assert len(report.cells) == 2
+        for cell in report.cells:
+            assert 0.0 <= cell.test_accuracy <= 1.0
+
+    def test_feature_projection_is_deterministic_per_seed(self) -> None:
+        """Per-seed projection determinism: running the same seed
+        twice with the same projection_dim must produce identical
+        per-cell accuracies. Hypothesis 005 relies on this — the
+        projection cannot be a confound."""
+        from benchmarks.hodge.classification import run_classification
+        from benchmarks.hodge.datasets import MUTAGDataset
+        from benchmarks.hodge.models import MLPBaseline
+
+        a = run_classification(
+            model_cls=MLPBaseline, dataset=MUTAGDataset(),
+            seeds=[7], n_epochs=2, feature_projection_dim=20,
+        )
+        b = run_classification(
+            model_cls=MLPBaseline, dataset=MUTAGDataset(),
+            seeds=[7], n_epochs=2, feature_projection_dim=20,
+        )
+        assert a.cells[0].test_accuracy == b.cells[0].test_accuracy
+
     def test_max_graphs_noop_when_dataset_smaller(self) -> None:
         """If ``max_graphs >= len(samples)``, the subsampling is a
         no-op — the full dataset goes through the existing pipeline."""
