@@ -775,3 +775,201 @@ class TestH006Resolver:
         # adj_1 = min(0.01*3/1, 0.06)=0.03.
         assert adj == pytest.approx([0.03, 0.06, 0.20])
         assert rej == [True, False, False]
+
+
+class TestH007Analysis:
+    """Hypothesis 007 — graph-structural-signal decomposition.
+
+    The analysis module computes five graph-structural proxies (size,
+    degree, WL, cycle, spectral), measures per-class separability via
+    rank-biserial r, and correlates across datasets.  These tests use
+    synthetic networkx graphs so they run without a TUDataset download.
+    """
+
+    @staticmethod
+    def _two_class_graphs():
+        """Two-class toy: class 0 = path graphs of 4 nodes, class 1 = K_4.
+        Different size, degree, cycle, spectrum — useful as a worked example.
+        """
+        import networkx as nx
+
+        graphs = []
+        labels = []
+        for _ in range(20):
+            graphs.append((nx.path_graph(4), 0))
+            labels.append(0)
+        for _ in range(20):
+            graphs.append((nx.complete_graph(4), 1))
+            labels.append(1)
+        return graphs, labels
+
+    def test_size_features_returns_1d_scalar(self) -> None:
+        import networkx as nx
+
+        from benchmarks.hodge.h007_analysis import compute_size_features
+
+        feat = compute_size_features(nx.path_graph(7))
+        assert feat.shape == (1,)
+        assert feat[0] == 7.0
+
+    def test_degree_features_returns_5d_vector(self) -> None:
+        import networkx as nx
+
+        from benchmarks.hodge.h007_analysis import compute_degree_features
+
+        # K_4: every node has degree 3.  mean=3, max=3, std=0, n_iso=0,
+        # density=1.0 (4 nodes, 6 edges).
+        feat = compute_degree_features(nx.complete_graph(4))
+        assert feat.shape == (5,)
+        assert feat[0] == 3.0
+        assert feat[1] == 3.0
+        assert feat[2] == 0.0
+        assert feat[3] == 0.0
+        assert feat[4] == 1.0
+
+    def test_wl_features_returns_normalised_32d_vector(self) -> None:
+        import networkx as nx
+
+        from benchmarks.hodge.h007_analysis import compute_wl_features
+
+        feat = compute_wl_features(nx.complete_graph(4))
+        assert feat.shape == (32,)
+        # The histogram is normalised so it sums to 1 (or is all-zeros).
+        assert feat.sum() == pytest.approx(1.0, abs=1e-6)
+
+    def test_cycle_features_returns_4d_vector(self) -> None:
+        import networkx as nx
+
+        from benchmarks.hodge.h007_analysis import compute_cycle_features
+
+        # K_4: cycle basis size = 3 (= edges - nodes + 1 = 6-4+1), each
+        # basis cycle has length 3 (triangles).  triangles count = 4.
+        feat = compute_cycle_features(nx.complete_graph(4))
+        assert feat.shape == (4,)
+        assert feat[0] == 3.0  # n_cycles_basis = β₁ = 3
+        assert feat[1] == 3.0  # mean cycle length
+        assert feat[2] == 4.0  # n_triangles (4 in K_4)
+        assert feat[3] == 0.0  # n_4cycles in basis (0, all are 3-cycles)
+
+    def test_cycle_features_path_graph_has_no_cycles(self) -> None:
+        import networkx as nx
+
+        from benchmarks.hodge.h007_analysis import compute_cycle_features
+
+        feat = compute_cycle_features(nx.path_graph(7))
+        # A tree has β₁ = 0; no cycles.
+        assert feat[0] == 0.0
+        assert feat[1] == 0.0
+        assert feat[2] == 0.0
+        assert feat[3] == 0.0
+
+    def test_spectral_features_returns_top_k_eigenvalues(self) -> None:
+        from benchmarks.hodge.h007_analysis import compute_spectral_features
+
+        # Synthetic K_3 Laplacian: L = D - A = diag(2,2,2) - J + I.
+        # Eigenvalues of K_n Laplacian are {0, n, n, ..., n} so K_3 → {0, 3, 3}.
+        # Normalised: L̃ = D^{-1/2} L D^{-1/2}, eigenvalues for K_n are
+        # {0, n/(n-1), n/(n-1), ..., n/(n-1)} so K_3 → {0, 1.5, 1.5}.
+        indices = torch.tensor([
+            [0, 0, 1, 1, 2, 2],
+            [1, 2, 0, 2, 0, 1],
+        ], dtype=torch.long)
+        values = torch.tensor([-1.0, -1.0, -1.0, -1.0, -1.0, -1.0], dtype=torch.float64)
+        diag_indices = torch.tensor([[0, 1, 2], [0, 1, 2]], dtype=torch.long)
+        diag_values = torch.tensor([2.0, 2.0, 2.0], dtype=torch.float64)
+        all_indices = torch.cat([indices, diag_indices], dim=1)
+        all_values = torch.cat([values, diag_values])
+        L = torch.sparse_coo_tensor(all_indices, all_values, size=(3, 3))
+        feat = compute_spectral_features(L, k=5)
+        assert feat.shape == (5,)
+        # Top eigenvalues (descending): {1.5, 1.5, 0, 0, 0} (padded).
+        assert feat[0] == pytest.approx(1.5, abs=1e-6)
+        assert feat[1] == pytest.approx(1.5, abs=1e-6)
+        assert feat[2] == pytest.approx(0.0, abs=1e-6)
+
+    def test_class_separability_perfect_separation(self) -> None:
+        from benchmarks.hodge.h007_analysis import class_separability
+
+        # Class 0: feature value 0.  Class 1: feature value 10.  Perfect.
+        features = np.asarray([[0.0]] * 10 + [[10.0]] * 10)
+        labels = np.asarray([0] * 10 + [1] * 10)
+        per_comp, best = class_separability(features, labels)
+        assert per_comp[best] == pytest.approx(1.0, abs=1e-6)
+
+    def test_class_separability_no_separation(self) -> None:
+        from benchmarks.hodge.h007_analysis import class_separability
+
+        # Identical distributions → separability should be 0.
+        features = np.asarray([[1.0]] * 10 + [[1.0]] * 10)
+        labels = np.asarray([0] * 10 + [1] * 10)
+        per_comp, _ = class_separability(features, labels)
+        assert per_comp[0] == pytest.approx(0.0, abs=1e-6)
+
+    def test_class_separability_rejects_non_binary(self) -> None:
+        from benchmarks.hodge.h007_analysis import class_separability
+
+        features = np.asarray([[1.0], [2.0], [3.0]])
+        labels = np.asarray([0, 1, 2])
+        with pytest.raises(ValueError, match="2 classes"):
+            class_separability(features, labels)
+
+    def test_render_markdown_required_sections(self) -> None:
+        from benchmarks.hodge.h007_analysis import render_markdown
+
+        synthetic = {
+            "schema_version": "h007-1.0.0",
+            "h006_const_feature_gap": {"mutag": 0.1, "proteins": 0.09, "nci1": 0.07},
+            "h006_full_feature_gain": {"mutag": -0.04, "proteins": 0.01, "nci1": 0.09},
+            "per_dataset_proxy_results": [
+                {"proxy_name": "size", "dataset_name": "mutag", "feature_dim": 1,
+                 "n_samples": 188, "class_distribution": {"0": 63, "1": 125},
+                 "per_component_separability": [0.234], "max_separability": 0.234,
+                 "best_component_idx": 0},
+            ],
+            "correlation_table": [
+                {"proxy_name": "size", "separability_by_dataset": {"mutag": 0.234},
+                 "spearman_rho_vs_const_gap": 0.5,
+                 "spearman_rho_vs_full_gain": -0.5},
+            ],
+        }
+        md = render_markdown(synthetic)
+        # Required output sections per the PR scope contract.
+        assert "H007 structural-signal decomposition" in md
+        assert "## Per-(dataset × proxy) class separability" in md
+        assert "## Cross-dataset correlation" in md
+        assert "## Scoped interpretation" in md
+        # Scoped-claim language must appear.
+        assert "graph-structural proxy" in md
+        assert "descriptive" in md.lower()
+        # Cycle-basis is the only topological invariant — must be flagged.
+        assert "β₁" in md or "topological invariant" in md
+
+    def test_run_h007_analysis_schema(self) -> None:
+        """Smoke test the top-level entry on MUTAG only — fastest dataset."""
+        from benchmarks.hodge.h007_analysis import (
+            PROXY_NAMES,
+            run_h007_analysis,
+        )
+
+        # Skip if torch_geometric unavailable.
+        try:
+            import torch_geometric  # noqa: F401
+        except ImportError:
+            pytest.skip("torch_geometric not installed")
+
+        result = run_h007_analysis(dataset_names=("mutag",))
+        assert result["schema_version"] == "h007-1.0.0"
+        assert "h006_const_feature_gap" in result
+        assert "h006_full_feature_gain" in result
+        assert "per_dataset_proxy_results" in result
+        assert "correlation_table" in result
+        # One row per (proxy, dataset) — 5 proxies × 1 dataset = 5 rows.
+        assert len(result["per_dataset_proxy_results"]) == len(PROXY_NAMES)
+        # Correlation table has 5 rows (one per proxy) even on 1 dataset.
+        # With n=1 dataset, ρ is NaN — that's expected and reported.
+        assert len(result["correlation_table"]) == len(PROXY_NAMES)
+        for row in result["per_dataset_proxy_results"]:
+            assert row["dataset_name"] == "mutag"
+            assert row["proxy_name"] in PROXY_NAMES
+            assert 0.0 <= row["max_separability"] <= 1.0
+            assert row["feature_dim"] == len(row["per_component_separability"])

@@ -1,0 +1,418 @@
+{
+  "correlation_table": [
+    {
+      "proxy_name": "size",
+      "separability_by_dataset": {
+        "mutag": 0.7634285714285715,
+        "nci1": 0.36830150738061684,
+        "proteins": 0.5225573990279873
+      },
+      "spearman_rho_vs_const_gap": 1.0,
+      "spearman_rho_vs_full_gain": -1.0
+    },
+    {
+      "proxy_name": "degree",
+      "separability_by_dataset": {
+        "mutag": 0.7721904761904762,
+        "nci1": 0.365796191873069,
+        "proteins": 0.5000636835930954
+      },
+      "spearman_rho_vs_const_gap": 1.0,
+      "spearman_rho_vs_full_gain": -1.0
+    },
+    {
+      "proxy_name": "wl",
+      "separability_by_dataset": {
+        "mutag": 0.6721269841269841,
+        "nci1": 0.18079332307369533,
+        "proteins": 0.20672364672364663
+      },
+      "spearman_rho_vs_const_gap": 1.0,
+      "spearman_rho_vs_full_gain": -1.0
+    },
+    {
+      "proxy_name": "cycle",
+      "separability_by_dataset": {
+        "mutag": 0.8082539682539682,
+        "nci1": 0.29771270377296255,
+        "proteins": 0.5484900284900285
+      },
+      "spearman_rho_vs_const_gap": 1.0,
+      "spearman_rho_vs_full_gain": -1.0
+    },
+    {
+      "proxy_name": "spectral",
+      "separability_by_dataset": {
+        "mutag": 0.7431111111111111,
+        "nci1": 0.31764937943713756,
+        "proteins": 0.4656008044243338
+      },
+      "spearman_rho_vs_const_gap": 1.0,
+      "spearman_rho_vs_full_gain": -1.0
+    }
+  ],
+  "h006_const_feature_gap": {
+    "mutag": 0.0983,
+    "nci1": 0.0707,
+    "proteins": 0.0882
+  },
+  "h006_full_feature_gain": {
+    "mutag": -0.0395,
+    "nci1": 0.0864,
+    "proteins": 0.0112
+  },
+  "per_dataset_proxy_results": [
+    {
+      "best_component_idx": 0,
+      "class_distribution": {
+        "0": 63,
+        "1": 125
+      },
+      "dataset_name": "mutag",
+      "feature_dim": 1,
+      "max_separability": 0.7634285714285715,
+      "n_samples": 188,
+      "per_component_separability": [
+        0.7634285714285715
+      ],
+      "proxy_name": "size"
+    },
+    {
+      "best_component_idx": 0,
+      "class_distribution": {
+        "0": 63,
+        "1": 125
+      },
+      "dataset_name": "mutag",
+      "feature_dim": 5,
+      "max_separability": 0.7721904761904762,
+      "n_samples": 188,
+      "per_component_separability": [
+        0.7721904761904762,
+        0.008000000000000007,
+        0.31593650793650796,
+        0.0,
+        0.7318095238095239
+      ],
+      "proxy_name": "degree"
+    },
+    {
+      "best_component_idx": 24,
+      "class_distribution": {
+        "0": 63,
+        "1": 125
+      },
+      "dataset_name": "mutag",
+      "feature_dim": 32,
+      "max_separability": 0.6721269841269841,
+      "n_samples": 188,
+      "per_component_separability": [
+        0.0,
+        0.0,
+        0.0,
+        0.015111111111111075,
+        0.11301587301587301,
+        0.0,
+        0.37815873015873014,
+        0.04076190476190478,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.618031746031746,
+        0.5017142857142858,
+        0.2185396825396826,
+        0.0,
+        0.05968253968253978,
+        0.09612698412698417,
+        0.0,
+        0.008000000000000007,
+        0.0,
+        0.008000000000000007,
+        0.6721269841269841,
+        0.3828571428571428,
+        0.0,
+        0.04761904761904767,
+        0.0,
+        0.0,
+        0.0,
+        0.008000000000000007
+      ],
+      "proxy_name": "wl"
+    },
+    {
+      "best_component_idx": 0,
+      "class_distribution": {
+        "0": 63,
+        "1": 125
+      },
+      "dataset_name": "mutag",
+      "feature_dim": 4,
+      "max_separability": 0.8082539682539682,
+      "n_samples": 188,
+      "per_component_separability": [
+        0.8082539682539682,
+        0.26209523809523805,
+        0.0,
+        0.0
+      ],
+      "proxy_name": "cycle"
+    },
+    {
+      "best_component_idx": 3,
+      "class_distribution": {
+        "0": 63,
+        "1": 125
+      },
+      "dataset_name": "mutag",
+      "feature_dim": 5,
+      "max_separability": 0.7431111111111111,
+      "n_samples": 188,
+      "per_component_separability": [
+        0.1900952380952381,
+        0.5314285714285714,
+        0.6114285714285714,
+        0.7431111111111111,
+        0.7263492063492063
+      ],
+      "proxy_name": "spectral"
+    },
+    {
+      "best_component_idx": 0,
+      "class_distribution": {
+        "0": 663,
+        "1": 450
+      },
+      "dataset_name": "proteins",
+      "feature_dim": 1,
+      "max_separability": 0.5225573990279873,
+      "n_samples": 1113,
+      "per_component_separability": [
+        0.5225573990279873
+      ],
+      "proxy_name": "size"
+    },
+    {
+      "best_component_idx": 4,
+      "class_distribution": {
+        "0": 663,
+        "1": 450
+      },
+      "dataset_name": "proteins",
+      "feature_dim": 5,
+      "max_separability": 0.5000636835930954,
+      "n_samples": 1113,
+      "per_component_separability": [
+        0.18056980056980065,
+        0.28267471091000496,
+        0.1086408580526228,
+        0.0036500754147813508,
+        0.5000636835930954
+      ],
+      "proxy_name": "degree"
+    },
+    {
+      "best_component_idx": 11,
+      "class_distribution": {
+        "0": 663,
+        "1": 450
+      },
+      "dataset_name": "proteins",
+      "feature_dim": 32,
+      "max_separability": 0.20672364672364663,
+      "n_samples": 1113,
+      "per_component_separability": [
+        0.13557566616390138,
+        0.1677392324451148,
+        0.20628791687615222,
+        0.08122004357298485,
+        0.1579420144126027,
+        0.03535109770403877,
+        0.14813809284397528,
+        0.15247192894251715,
+        0.08728339198927437,
+        0.09155354449472086,
+        0.16022456845986266,
+        0.20672364672364663,
+        0.2039550863080275,
+        0.17574325456678408,
+        0.19561253561253555,
+        0.12510139098374395,
+        0.01996648231942344,
+        0.14817161052455163,
+        0.13389307859896094,
+        0.1934774593598123,
+        0.11807608513490875,
+        0.13727501256913022,
+        0.17074241662476952,
+        0.14515166750460873,
+        0.19885034355622588,
+        0.11810625104742756,
+        0.1863817663817664,
+        0.09824032176973363,
+        0.13468074409250885,
+        0.144581866934808,
+        0.17222389810625094,
+        0.19590413943355123
+      ],
+      "proxy_name": "wl"
+    },
+    {
+      "best_component_idx": 0,
+      "class_distribution": {
+        "0": 663,
+        "1": 450
+      },
+      "dataset_name": "proteins",
+      "feature_dim": 4,
+      "max_separability": 0.5484900284900285,
+      "n_samples": 1113,
+      "per_component_separability": [
+        0.5484900284900285,
+        0.2179855873973522,
+        0.5403888050946875,
+        0.32877492877492887
+      ],
+      "proxy_name": "cycle"
+    },
+    {
+      "best_component_idx": 4,
+      "class_distribution": {
+        "0": 663,
+        "1": 450
+      },
+      "dataset_name": "proteins",
+      "feature_dim": 5,
+      "max_separability": 0.4656008044243338,
+      "n_samples": 1113,
+      "per_component_separability": [
+        0.2780023462376404,
+        0.3637774426009721,
+        0.4208077761018938,
+        0.434563432210491,
+        0.4656008044243338
+      ],
+      "proxy_name": "spectral"
+    },
+    {
+      "best_component_idx": 0,
+      "class_distribution": {
+        "0": 2053,
+        "1": 2057
+      },
+      "dataset_name": "nci1",
+      "feature_dim": 1,
+      "max_separability": 0.36830150738061684,
+      "n_samples": 4110,
+      "per_component_separability": [
+        0.36830150738061684
+      ],
+      "proxy_name": "size"
+    },
+    {
+      "best_component_idx": 4,
+      "class_distribution": {
+        "0": 2053,
+        "1": 2057
+      },
+      "dataset_name": "nci1",
+      "feature_dim": 5,
+      "max_separability": 0.365796191873069,
+      "n_samples": 4110,
+      "per_component_separability": [
+        0.09706179533561399,
+        0.027005548871293805,
+        0.13299507627359652,
+        0.0732212792690351,
+        0.365796191873069
+      ],
+      "proxy_name": "degree"
+    },
+    {
+      "best_component_idx": 24,
+      "class_distribution": {
+        "0": 2053,
+        "1": 2057
+      },
+      "dataset_name": "nci1",
+      "feature_dim": 32,
+      "max_separability": 0.18079332307369533,
+      "n_samples": 4110,
+      "per_component_separability": [
+        0.06487464779360552,
+        0.0022254210907310945,
+        0.02262148353039206,
+        0.16880024986851838,
+        0.1395223940397171,
+        0.0539388745639674,
+        0.1782555663350951,
+        0.06522700218634947,
+        0.0,
+        0.03275309310562269,
+        0.05227845184762281,
+        0.0,
+        0.029778445335696846,
+        0.0,
+        0.17295509541629084,
+        0.05399333794456618,
+        0.049858383370577575,
+        0.05031800694337063,
+        0.12194043079586869,
+        0.13087455638984513,
+        0.014560903201760067,
+        0.003631286702102554,
+        0.042570472654528624,
+        0.01242001874961074,
+        0.18079332307369533,
+        0.03278174557976388,
+        0.0672554079176968,
+        0.07077634707476,
+        0.004852687211358897,
+        0.0,
+        0.0059258526064635,
+        0.06713843004806275
+      ],
+      "proxy_name": "wl"
+    },
+    {
+      "best_component_idx": 0,
+      "class_distribution": {
+        "0": 2053,
+        "1": 2057
+      },
+      "dataset_name": "nci1",
+      "feature_dim": 4,
+      "max_separability": 0.29771270377296255,
+      "n_samples": 4110,
+      "per_component_separability": [
+        0.29771270377296255,
+        0.1757793768963024,
+        0.02968230562907459,
+        0.009579398255419536
+      ],
+      "proxy_name": "cycle"
+    },
+    {
+      "best_component_idx": 4,
+      "class_distribution": {
+        "0": 2053,
+        "1": 2057
+      },
+      "dataset_name": "nci1",
+      "feature_dim": 5,
+      "max_separability": 0.31764937943713756,
+      "n_samples": 4110,
+      "per_component_separability": [
+        0.07228095716313032,
+        0.23885696992745242,
+        0.2421027506138378,
+        0.2887979955581561,
+        0.31764937943713756
+      ],
+      "proxy_name": "spectral"
+    }
+  ],
+  "schema_version": "h007-1.0.0"
+}
