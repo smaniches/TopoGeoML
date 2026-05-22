@@ -76,9 +76,48 @@ python -m benchmarks.hodge.h006_analysis \
 
 (The resolver fails loud if any of the six expected JSONs is missing.)
 
-## 6. Resolved outcome
+## 6. Resolved outcome (2026-05-22, 30 seeds × 10 epochs × constant-feature ablation, all three datasets)
 
-*Pending — preregistration written before any execution.*
+The constant-feature run completed on MUTAG, PROTEINS, and NCI1. The resolver
+(`benchmarks/hodge/h006_analysis.py`) consumes the six artifact JSONs (three
+constant-feature outputs from this PR + three full-feature outputs from the
+prior H001/H002/H003 30-seed runs) and emits the verdicts below. **All gaps,
+p-values, and verdicts in this section are read directly from the per-seed
+JSON artifacts now committed to `notebooks/results/h006_{ds}_constant_30seeds.json`;
+nothing is hand-derived.**
+
+### Artifact-backed dataset-by-dataset summary
+
+| Dataset | Feature mode | Hodge score | Prior score | Gap | p_BH | Source artifact | Verdict (preregistered tag) |
+|---|---|---|---|---|---|---|---|
+| mutag | constant | 0.763 | 0.6649 | +0.0983 | 4.53e-06 | `notebooks/results/h006_mutag_constant_30seeds.json` | H23: **rejects** preregistered prediction (signal is present) |
+| mutag | full | 0.750 | 0.789 (MLP, not prior) | -0.0395 | — | `notebooks/results/mutag_hodge_ablation_30seeds.json` | anchor for H25 correlation |
+| proteins | constant | 0.684 | 0.5957 | +0.0882 | 1.41e-04 | `notebooks/results/h006_proteins_constant_30seeds.json` | H24: significant Hodge>prior; in-between predicate not satisfied |
+| proteins | full | 0.686 | 0.675 (MLP, not prior) | +0.0112 | — | `notebooks/results/proteins_hodge_ablation_30seeds.json` | anchor for H25 correlation |
+| nci1 | constant | 0.571 | 0.5005 | +0.0707 | 1.93e-05 | `notebooks/results/h006_nci1_constant_30seeds.json` | H22: **supports** (Hodge significantly above prior) |
+| nci1 | full | 0.609 | 0.523 (MLP, not prior) | +0.0864 | — | `notebooks/results/nci1_hodge_ablation_30seeds.json` | anchor for H25 correlation |
+
+### Preregistered sub-hypotheses, resolved
+
+- **H22** (NCI1 constant-feature Hodge significantly above class prior): **SUPPORTED.** Observed gap +0.071 at p_BH = 1.93e-05.
+- **H23** (MUTAG constant-feature Hodge NOT significantly above class prior): **REFUTED.** Observed gap +0.098 at p_BH = 4.53e-06. MUTAG does carry feature-independent graph-structural signal at this configuration, contrary to the preregistered prediction.
+- **H24** (PROTEINS constant-feature Hodge between H23 and H22 levels): **REFUTED.** PROTEINS shows signal of similar magnitude to MUTAG and NCI1; the "in-between" predicate fails because the lower bound (no MUTAG signal) doesn't hold. PROTEINS observed gap +0.088 at p_BH = 1.41e-04.
+- **H25** (Spearman ρ on constant-feature `Hodge − prior` gap vs full-feature `Hodge − MLP` gap, predicted > 0): **REFUTED.** Observed ρ = -1.0000 across the three datasets. The constant-feature gap ordering is MUTAG (+0.098) > PROTEINS (+0.088) > NCI1 (+0.071), while the full-feature Hodge−MLP gap ordering is NCI1 (+0.086) > PROTEINS (+0.011) > MUTAG (-0.040). With n=3 the Spearman significance test is uninformative, but the rank-ordering is exactly *inverted* — the constant-feature signal does **not** predict the full-feature gain on this sample. (Spearman ρ is reported descriptively, not as a p-value claim.)
+
+### Scoped final claim (artifact-backed)
+
+> *Under constant-feature control at the tested configuration (matched-capacity 1378-param arms, 30 seeds × 10 epochs × stratified 80/20 split, `hodge-mp-residual` vs `mlp-baseline`), the Hodge MP arm retains feature-independent graph-structural predictive signal on MUTAG (+0.098 over class prior, p_BH = 4.53e-06), PROTEINS (+0.088, p_BH = 1.41e-04), and NCI1 (+0.071, p_BH = 1.93e-05), suggesting that the model is exploiting graph-structural information under this configuration. The constant-feature gap is **not** monotone with the full-feature Hodge-vs-MLP gap across these three datasets (observed Spearman ρ = -1.0000), so the preregistered "topology-signal predicts full-feature gain" hypothesis (H25) is refuted on this sample. Evidence is consistent with an architecture × data-topology interaction under the tested configuration; no causal mechanism claim is asserted.*
+
+The diagnostic isolates **feature-independent graph-structural signal**, not homology specifically — degree distribution, clustering coefficient, connectivity, and Laplacian spectrum are all conflated under this test. Whether homology specifically (as distinct from other graph-structural properties) drives the effect is a separate question not answered by H006.
+
+### What this resolves and what it leaves open
+
+H006 resolves: the Hodge MP arm reads feature-independent graph-structural signal at this configuration on three TUDataset benchmarks. The mechanism is not specific to NCI1.
+
+H006 leaves open:
+1. **The mechanism question is harder than predicted.** The constant-feature gap is anti-correlated with the full-feature gap (H25 refuted), so the simple "topology-signal predicts gain" story doesn't hold on this sample. Future work would need to identify what *interaction* between graph structure and node features explains why MUTAG (which has the strongest constant-feature gap) shows no Hodge advantage under full features, while NCI1 (with the weakest constant-feature gap) shows the largest.
+2. **Whether homology specifically drives the signal.** A Weisfeiler-Lehman kernel + linear SVM would partially disentangle homology from degree/clustering, but is out of scope here.
+3. **Generality beyond three datasets.** With n=3, the rank-order observation has limited statistical force; H25's refutation is a sample observation, not a population claim.
 
 ---
 
