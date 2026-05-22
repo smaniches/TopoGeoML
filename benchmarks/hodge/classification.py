@@ -172,11 +172,18 @@ def _project_features(
         return samples, target_dim
     src_dim = samples[0].x.shape[1]
     rng = np.random.default_rng(seed)
-    # Gaussian projection scaled by 1/sqrt(src_dim) so the post-projection
-    # feature norms are O(1) regardless of dim change (Johnson-Lindenstrauss
-    # scaling for dim-reduction; same scale works for dim-expansion).
+    # Gaussian projection with scale = 1/sqrt(target_dim) so the post-
+    # projection feature norms are preserved in expectation:
+    # for P[i,j] ~ N(0, sigma^2) with sigma^2 = 1/target_dim,
+    # E[|x @ P|^2] = target_dim * sigma^2 * |x|^2 = |x|^2.
+    # The wrong scaling 1/sqrt(src_dim) shrinks the norm by
+    # target_dim/src_dim when dim-reducing and inflates it by the
+    # inverse ratio when dim-expanding — a confounder for hypothesis
+    # 005 that Gemini caught on PR #21's review. Now norm-preserving
+    # in both directions, so the experiment isolates dimensionality
+    # rather than feature magnitude.
     P = torch.from_numpy(
-        rng.normal(loc=0.0, scale=1.0 / max(1.0, src_dim**0.5), size=(src_dim, target_dim))
+        rng.normal(loc=0.0, scale=1.0 / max(1.0, target_dim**0.5), size=(src_dim, target_dim))
     ).to(torch.float64)
     projected = [
         GraphSample(x=s.x @ P, laplacian=s.laplacian, y=s.y)
