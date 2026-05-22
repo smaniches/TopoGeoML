@@ -35,7 +35,7 @@ Differentiable persistent homology layers, Hodge message passing, and a benchmar
 
 ## Status (honest)
 
-**Pre-stable research artefact.** The library is internally consistent (476 tests, 100% coverage on the library and benchmark framework), the mathematical layers are correctly implemented, and the statistical machinery is rigorous. **What it does NOT yet have**: a "topology helps on a real benchmark" claim that survives BH-corrected significance testing — the only such claim attempted so far on a real dataset is a *negative* result (see [`Empirical evidence`](#empirical-evidence) below).
+**Pre-stable research artefact.** The library is internally consistent (476 tests, 100% coverage on the library and benchmark framework), the mathematical layers are correctly implemented, and the statistical machinery is rigorous. **What it now has (as of hypothesis 003, 2026-05-21):** a strict positive-difference real-data claim — on the NCI1 chemical-compound benchmark (4110 graphs), a one-layer Hodge MP with symmetric Laplacian normalisation + residual connection beats an MLP baseline of matched capacity at paired Wilcoxon p_BH = 4.83 × 10⁻³ (rank-biserial r = +0.533, +8.6 pp median accuracy gain). See [`Empirical evidence`](#empirical-evidence) below — the claim is dataset-dependent and we document the small-dataset regressions honestly.
 
 This is a research toolkit, sized at ~7K LOC, positioned for researchers who need correct + citable topology-aware layers. It is **not** a production training framework. APIs will change without notice until v1.0.
 
@@ -109,6 +109,37 @@ Per-arm result (full report in `notebooks/results/proteins_hodge_ablation_30seed
 **Bottom line.** The Geo subsystem has a defensible *two-dataset equality* claim. A strict "topology helps" claim requires either a richer architecture (HL-HGAT attention, polynomial filters, SCConv up-down) or a substantially larger dataset (NCI1, DD, COLLAB). Hypothesis 003 picks the direction.
 
 Reproduce: `python -m benchmarks.hodge --datasets proteins --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10`.
+
+### 4. Scale-escalation on NCI1 — **STRICT POSITIVE-DIFFERENCE CLAIM (the headline)**
+
+NCI1 benchmark (4110 chemical-compound graphs, 2 classes, Wale et al. 2008 via PyG TUDataset; **22× MUTAG's sample size, 3.7× PROTEINS'**). Same 5-arm ablation, 30 seeds × 10 epochs, matched-capacity. Preregistered as hypothesis 003 (`docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md`) BEFORE the result was known, with five sub-hypotheses (H8–H12) and an outcome decision tree.
+
+Per-arm result (full report in `notebooks/results/nci1_hodge_ablation_30seeds.md`):
+
+| Arm | Median accuracy (95% BCa CI) | Wilcoxon p_BH vs MLP | Verdict |
+|---|---|---|---|
+| `hodge-mp-classifier` (combinatorial L) | 0.506 [0.501, 0.511] | **2.6 × 10⁻⁴** | loses 1.7 pp |
+| `hodge-mp-normalised` (H1) | 0.516 [0.511, 0.523] | 0.253 | matches MLP |
+| **`hodge-mp-residual` (H2)** | **0.609 [0.581, 0.625]** | **4.83 × 10⁻³** | **BEATS MLP by 8.6 pp** ✅ |
+| `hodge-mp-deep-residual` (H3) | 0.603 [0.594, 0.623] | 1.18 × 10⁻² | beats MLP by 8.0 pp |
+| `mlp-baseline` | 0.523 [0.513, 0.566] | — | control |
+
+**Defensible claim (the framework's first strict positive-difference real-data result):**
+
+> On NCI1 at 30 seeds × 10 epochs × hidden_dim=32, a one-layer Hodge MP classifier with a symmetrically-normalised Laplacian AND an identity residual connection strictly outperforms a no-topology MLP baseline of matched capacity (median Δ = +0.086, paired Wilcoxon p_BH = 4.83 × 10⁻³, rank-biserial r = +0.533, BCa 95% CI on Hodge accuracy: [0.581, 0.625]).
+
+**Surprising cross-dataset twist.** The residual variant — which *lost* to MLP on MUTAG (p_BH = 0.019) and *matched* on PROTEINS (p_BH = 0.339) — **wins** on NCI1. The residual's contribution scales positively with dataset size at this architectural class. The cross-dataset behaviour table:
+
+| Architecture | MUTAG (188) | PROTEINS (1113) | NCI1 (4110) |
+|---|---|---|---|
+| combinatorial L | LOSES (-9pp) | matches | LOSES (-1.7pp) |
+| symm L̃ | matches | matches | matches |
+| symm L̃ + residual | LOSES (-4pp) | matches | **WINS (+8.6pp)** |
+| symm L̃ + 2L + residual | matches | matches | **WINS (+8pp)** |
+
+The same architecture's verdict literally inverts across dataset scale. Two interpretations (mechanism TBD by hypothesis 004): (a) NCI1's 37-dim dense features let the residual augment the propagated signal rather than displacing sparse one-hots; (b) NCI1's larger training set lets the optimiser actually learn to use the residual.
+
+Reproduce: `python -m benchmarks.hodge --datasets nci1 --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10`.
 
 ---
 

@@ -150,9 +150,42 @@ def _load_tudataset(name: str) -> tuple[list[GraphSample], int, int]:
     return samples, input_dim, int(ds.num_classes)
 
 
+@dataclass(frozen=True)
+class NCI1Dataset:
+    """NCI1: 4110 chemical-compound graphs, 2 classes (anti-cancer activity).
+
+    Nodes are atoms with 37-dim one-hot atom-type features; edges are
+    chemical bonds. Average graph size: 30 nodes, 32 edges. 22x larger
+    than MUTAG, 3.7x larger than PROTEINS by graph count. The largest
+    standard TUDataset benchmark currently registered in this bench;
+    used as the scale-escalation arm of hypothesis 003 to test whether
+    the MUTAG + PROTEINS equality ceiling lifts when the dataset is
+    big enough to discriminate between simple architectures.
+
+    Citation: Wale et al. 2008, *Knowledge and Information Systems* 14;
+    Morris et al. 2020 TUDataset.
+    """
+
+    name: str = "nci1"
+    version: str = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        try:
+            import torch_geometric  # noqa: F401
+        except ImportError:  # pragma: no cover
+            return False
+        return True
+
+    def load(self) -> tuple[list[GraphSample], int, int]:
+        """Load and convert NCI1. Returns (samples, input_dim, num_classes)."""
+        return _load_tudataset("NCI1")
+
+
 REGISTERED: dict[str, Any] = {
     "mutag": MUTAGDataset(),
     "proteins": PROTEINSDataset(),
+    "nci1": NCI1Dataset(),
 }
 
 
