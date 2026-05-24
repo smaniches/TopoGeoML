@@ -424,12 +424,141 @@ class MLPBaseline:
         return _MLPGraphClassifier(input_dim, num_classes)
 
 
+def _adj_matmul_from_laplacian(
+    laplacian: torch.sparse.Tensor, h: torch.Tensor,
+) -> torch.Tensor:
+    """Compute A @ H from the Laplacian L = D - A, without forming A explicitly.
+
+    A @ H = D @ H - L @ H, where D is the degree diagonal read from L.
+    """
+    L = laplacian.coalesce()
+    LH = torch.sparse.mm(L, h)
+    indices = L.indices()
+    values = L.values()
+    n = L.shape[0]
+    diag = torch.zeros(n, dtype=values.dtype, device=values.device)
+    diag_mask = indices[0] == indices[1]
+    diag.index_add_(0, indices[0][diag_mask], values[diag_mask])
+    DH = diag.unsqueeze(1) * h
+    return DH - LH
+
+
+class _GINGraphClassifier(nn.Module):
+    """GIN (Graph Isomorphism Network, Xu et al. 2019) baseline.
+
+    Update: h' = MLP((1 + eps) * h + A @ h)
+    where A @ h is computed from the Laplacian via A = D - L.
+    Matched-capacity design: proj_in + gin_nn + head ≈ 2339 params on NCI1.
+    """
+
+    def __init__(self, input_dim: int, num_classes: int, hidden_dim: int = 32) -> None:
+        super().__init__()
+        self._proj_in = nn.Linear(input_dim, hidden_dim).to(torch.float64)
+        self._eps = nn.Parameter(torch.zeros(1, dtype=torch.float64))
+        self._gin_nn = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim).to(torch.float64),
+            nn.ReLU(),
+        )
+        self.head = nn.Linear(hidden_dim, num_classes).to(torch.float64)
+
+    def forward_one(
+        self, x: torch.Tensor, laplacian: torch.sparse.Tensor,
+    ) -> torch.Tensor:
+        h = self._proj_in(x)
+        agg = _adj_matmul_from_laplacian(laplacian, h)
+        h = self._gin_nn((1.0 + self._eps) * h + agg)
+        return self.head(h.sum(dim=0))
+
+
+class GINBaseline:
+    """GIN baseline (Xu et al. 2019) — the WL-1 upper bound."""
+
+    name: ClassVar[str] = "gin-baseline"
+    version: ClassVar[str] = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        return True
+
+    @staticmethod
+    def build(input_dim: int, num_classes: int, seed: int) -> nn.Module:
+        torch.manual_seed(seed)
+        return _GINGraphClassifier(input_dim, num_classes)
+
+
+class _GATGraphClassifier(nn.Module):
+    """GAT (Graph Attention Network, Velickovic et al. 2018) baseline.
+
+    Single-head attention with LeakyReLU gating. Attention is computed
+    over the Laplacian's off-diagonal sparsity pattern (= edge set).
+    Matched-capacity design: proj_in + W + attn + head ≈ 2340 params on NCI1.
+    """
+
+    def __init__(self, input_dim: int, num_classes: int, hidden_dim: int = 32) -> None:
+        super().__init__()
+        self._proj_in = nn.Linear(input_dim, hidden_dim).to(torch.float64)
+        self._W = nn.Linear(hidden_dim, hidden_dim, bias=False).to(torch.float64)
+        self._attn_src = nn.Parameter(torch.empty(hidden_dim, dtype=torch.float64))
+        self._attn_dst = nn.Parameter(torch.empty(hidden_dim, dtype=torch.float64))
+        nn.init.xavier_uniform_(self._W.weight)
+        nn.init.xavier_uniform_(self._attn_src.unsqueeze(0))
+        nn.init.xavier_uniform_(self._attn_dst.unsqueeze(0))
+        self._leaky_relu = nn.LeakyReLU(0.2)
+        self._activation = nn.ReLU()
+        self.head = nn.Linear(hidden_dim, num_classes).to(torch.float64)
+
+    def forward_one(
+        self, x: torch.Tensor, laplacian: torch.sparse.Tensor,
+    ) -> torch.Tensor:
+        h = self._proj_in(x)
+        Wh = self._W(h)
+
+        L = laplacian.coalesce()
+        indices = L.indices()
+        off_diag = indices[0] != indices[1]
+        src, dst = indices[0][off_diag], indices[1][off_diag]
+
+        e_src = (Wh[src] * self._attn_src).sum(dim=-1)
+        e_dst = (Wh[dst] * self._attn_dst).sum(dim=-1)
+        e = self._leaky_relu(e_src + e_dst)
+
+        n = h.shape[0]
+        agg = torch.zeros_like(Wh)
+        exp_e = torch.exp(e - e.max())
+        exp_sum = torch.zeros(n, dtype=h.dtype, device=h.device)
+        exp_sum.index_add_(0, dst, exp_e)
+        exp_sum = exp_sum.clamp(min=1e-8)
+        attn_weights = exp_e / exp_sum[dst]
+        agg.index_add_(0, dst, attn_weights.unsqueeze(1) * Wh[src])
+
+        h = self._activation(agg)
+        return self.head(h.sum(dim=0))
+
+
+class GATBaseline:
+    """GAT baseline (Velickovic et al. 2018) — attention-based aggregation."""
+
+    name: ClassVar[str] = "gat-baseline"
+    version: ClassVar[str] = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        return True
+
+    @staticmethod
+    def build(input_dim: int, num_classes: int, seed: int) -> nn.Module:
+        torch.manual_seed(seed)
+        return _GATGraphClassifier(input_dim, num_classes)
+
+
 REGISTERED: dict[str, type[GraphClassifier]] = {
     HodgeClassifier.name: HodgeClassifier,
     HodgeNormalisedClassifier.name: HodgeNormalisedClassifier,
     HodgeResidualClassifier.name: HodgeResidualClassifier,
     HodgeDeepResidualClassifier.name: HodgeDeepResidualClassifier,
     MLPBaseline.name: MLPBaseline,
+    GINBaseline.name: GINBaseline,
+    GATBaseline.name: GATBaseline,
 }
 
 
