@@ -46,7 +46,7 @@ x' = sigma(L_tilde_k @ x @ W + b)
 
 where L_tilde_k = D^{-1/2} L_k D^{-1/2} is the symmetrically-normalised k-Hodge Laplacian, W is a learnable weight matrix, b is a bias, and sigma is a nonlinearity (ReLU). The Hodge Laplacian L_k = partial_k^T partial_k + partial_{k+1} partial_{k+1}^T encodes both the "lower" boundary structure (shared faces) and the "upper" co-boundary structure (shared co-faces) of k-dimensional simplices.
 
-For graph classification, we operate on 0-simplices (nodes) with L_0 = D - A (the standard graph Laplacian), lifted to the clique complex of the input graph via Bron-Kerbosch enumeration.
+For the graph classification experiments reported here, we operate exclusively on 0-simplices (nodes) with L_0 = D - A (the standard graph Laplacian on the 1-skeleton). The codebase constructs the full clique complex via Bron-Kerbosch enumeration (infrastructure for future k > 0 experiments), but the higher-order simplices do not influence the results presented in this report. The symmetrically-normalised variant used in practice is L_tilde_0 = D^{-1/2}(D - A)D^{-1/2}, equivalent to the normalised graph Laplacian of Kipf & Welling (2017).
 
 ### 2.2 Experimental Arms
 
