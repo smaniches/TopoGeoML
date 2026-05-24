@@ -5,7 +5,9 @@ title: "TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Class
 version: 0.0.2
 date-released: "2026-05-24"
 license: MIT
+doi: "10.5281/zenodo.20365817"
 repository-code: "https://github.com/smaniches/TopoGeoML"
+url: "https://doi.org/10.5281/zenodo.20365817"
 authors:
   - family-names: Maniches
     given-names: Santiago

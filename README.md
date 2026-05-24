@@ -29,6 +29,7 @@ Differentiable persistent homology layers, Hodge message passing, and a benchmar
 [![CI](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
 [![Version](https://img.shields.io/badge/version-0.0.2--beta-green)](#status)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20365817.svg)](https://doi.org/10.5281/zenodo.20365817)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ---
@@ -351,12 +352,13 @@ Coverage is 100% on `topogeoml/` and `benchmarks/`. Torch-gated tests skip clean
   title        = {TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification},
   year         = {2026},
   version      = {0.0.2},
-  url          = {https://github.com/smaniches/TopoGeoML},
+  doi          = {10.5281/zenodo.20365817},
+  url          = {https://doi.org/10.5281/zenodo.20365817},
   orcid        = {0009-0005-6480-1987}
 }
 ```
 
-A machine-readable citation is available in [`CITATION.cff`](CITATION.cff) (GitHub renders a "Cite this repository" button from it). Zenodo DOI pending — see [`.zenodo.json`](.zenodo.json) for deposit metadata.
+A machine-readable citation is available in [`CITATION.cff`](CITATION.cff) (GitHub renders a "Cite this repository" button from it). DOI: [10.5281/zenodo.20365817](https://doi.org/10.5281/zenodo.20365817).
 
 ---
 
