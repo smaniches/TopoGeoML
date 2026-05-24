@@ -1,4 +1,4 @@
-# TopoGeomML Documentation
+# TopoGeoML Documentation
 
 This directory holds long-form documentation that lives in-repo and ships with each release.
 
@@ -7,53 +7,37 @@ This directory holds long-form documentation that lives in-repo and ships with e
 ```
 docs/
 ├── README.md                    ← you are here
-└── architecture/                ← architecture & specification documents
-    ├── README.md                  Architecture index and reading order
-    ├── SCOPE_LOCK_v0.0.1.md       What v0.0.1 ships and why; rationale for cuts
-    ├── 00-positioning.md          Strategic positioning: epistemic ML operating layer
-    ├── 01-five-layer-architecture.md  The five-layer model
-    ├── 02-emlir.md                EMLIR — Epistemic ML Intermediate Representation
-    ├── 03-claim-graphs.md         Claim graphs and attestations
-    ├── 04-evidence-bundles.md     Evidence bundle format and verification
-    ├── 05-invariant-ledgers.md    Invariant ledgers and topological provenance
-    ├── 06-shape-of-learning.md    ShapeOfLearning reports
-    ├── 07-diagnostics-and-audits.md  Collapse, cohort, regression diagnostics
-    ├── 08-autotopology.md         AutoTopology search + complexity penalty
-    ├── 09-benchmark-foundry.md    Benchmark Foundry
-    ├── 10-applications.md         Recommender, marketplace, exposure, biogeom, sheaf, causal
-    ├── 11-adapters.md             TF, PyTorch, JAX adapter strategy
-    ├── 12-governance.md           Model cards from evidence; deployment gates
-    └── 13-moat.md                 Strategic moat — mathematical, technical, commercial
+├── RESEARCH_REPORT.md           ← primary academic artifact
+├── hypotheses/                  ← preregistered hypothesis series
+│   ├── HYPOTHESIS-001-hodge-mutag.md
+│   ├── HYPOTHESIS-002-hodge-proteins.md
+│   ├── HYPOTHESIS-003-hodge-nci1.md
+│   ├── HYPOTHESIS-004-sample-size-mechanism.md
+│   ├── HYPOTHESIS-005-feature-density-mechanism.md
+│   ├── HYPOTHESIS-006-graph-topology-mechanism.md
+│   └── HYPOTHESIS-007-graph-structural-signal-decomposition.md
+└── mathematics/
+    └── foundations.md
 ```
 
 ## Reading order
 
-If you are new to the project:
+1. Top-level `README.md` for the project overview and empirical results summary.
+2. `docs/RESEARCH_REPORT.md` for the full structured technical report.
+3. `docs/hypotheses/HYPOTHESIS-001-*.md` through `007` for per-hypothesis preregistrations and resolved outcomes.
+4. `LEADERBOARD.md` (repo root) for the navigable empirical claim table.
+5. `REPRODUCING.md` (repo root) for step-by-step reproduction instructions.
 
-1. Top-level `README.md` for the v0.0.1 surface and quick-start.
-2. `architecture/00-positioning.md` for the strategic frame.
-3. `architecture/01-five-layer-architecture.md` for the system shape.
-4. `architecture/SCOPE_LOCK_v0.0.1.md` to understand what is and isn't built yet.
-5. The other architecture docs in any order — they are independent skeletons today.
+## Hypothesis documents
 
-## Status conventions
+Each hypothesis document follows a fixed structure:
 
-Every architecture document declares a status header:
+- Falsifiable sub-predictions with explicit statistical thresholds
+- Pre-specified outcome decision tree
+- Experimental design (seeds, epochs, arms, statistical procedure)
+- Resolved outcome (appended after execution; original predictions preserved)
 
-- `STATUS: IMPLEMENTED` — code exists in `topogeoml/`, tests cover it
-- `STATUS: PARTIAL` — some pieces in code, full design still drafted
-- `STATUS: DRAFT` — design only, no implementation
-- `STATUS: PROPOSED` — concept stage, open to redesign
-
-A document with `STATUS: DRAFT` or `STATUS: PROPOSED` is a contract for future work, not a description of present capability. Read accordingly.
-
-## How these documents relate to code
-
-Each architecture document names the modules it specifies. When implementation lands, the doc's status is upgraded and a `## Implementation` section is added linking to the module + tests. Documents that describe shipped features serve as the authoritative spec; documents that describe DRAFT features serve as design intent.
-
-## Citation and provenance
-
-Architecture documents originate from the **TopoGeomML Specification (Part I + Part II)** canvas authored by Santiago Maniches. Section numbers in the canvas correspond to the `## Spec source` line at the top of each architecture doc.
+Documents are committed BEFORE the experiment runs. The git history serves as the preregistration timestamp.
 
 ---
 

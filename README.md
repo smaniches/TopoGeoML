@@ -139,7 +139,7 @@ Per-arm result (full report in `notebooks/results/nci1_hodge_ablation_30seeds.md
 | symm L̃ + residual | LOSES (-4pp) | matches | **WINS (+8.6pp)** |
 | symm L̃ + 2L + residual | matches | matches | **WINS (+8pp)** |
 
-The same architecture's verdict literally inverts across dataset scale. Two interpretations (mechanism TBD by hypothesis 004): (a) NCI1's 37-dim dense features let the residual augment the propagated signal rather than displacing sparse one-hots; (b) NCI1's larger training set lets the optimiser actually learn to use the residual.
+The same architecture's verdict inverts across dataset scale. Two candidate mechanisms were proposed: (a) NCI1's 37-dim dense features let the residual augment the propagated signal rather than displacing sparse one-hots; (b) NCI1's larger training set lets the optimiser actually learn to use the residual. Both were investigated and ruled out — see [Mechanism Investigation](#mechanism-investigation-h004h007) below.
 
 Reproduce: `python -m benchmarks.hodge --datasets nci1 --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10`.
 
