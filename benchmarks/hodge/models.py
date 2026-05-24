@@ -646,6 +646,83 @@ class GINResidualBaseline:
         return _GINResidualGraphClassifier(input_dim, num_classes)
 
 
+class _SheafResidualGraphClassifier(nn.Module):
+    """Learned sheaf Laplacian with external residual (scalar stalks).
+
+    For each edge e={i,j}, a linear layer predicts restriction scalars
+    f_{i<-e}, f_{j<-e} from concatenated projected features [h_i || h_j].
+    The sheaf Laplacian L_F is PSD by construction (L_F = delta^T delta):
+      L_F[i,j] = -f_{i<-e} * f_{j<-e}  (off-diagonal)
+      L_F[i,i] = sum_{e containing i} f_{i<-e}^2  (diagonal)
+
+    Propagation: h' = act(L_F_tilde @ proj(x) @ W + b) + proj(x)
+    where L_F_tilde is the symmetrically normalised sheaf Laplacian.
+    Generalises the Hodge arm (special case: all f = 1).
+    """
+
+    def __init__(self, input_dim: int, num_classes: int, hidden_dim: int = 32) -> None:
+        super().__init__()
+        self._proj_in = nn.Linear(input_dim, hidden_dim).to(torch.float64)
+        self._sheaf_learner = nn.Linear(2 * hidden_dim, 2, bias=True).to(torch.float64)
+        self._mp_weight = nn.Parameter(
+            torch.empty(hidden_dim, hidden_dim, dtype=torch.float64),
+        )
+        self._mp_bias = nn.Parameter(torch.zeros(hidden_dim, dtype=torch.float64))
+        nn.init.xavier_uniform_(self._mp_weight)
+        self._activation = nn.ReLU()
+        self.head = nn.Linear(hidden_dim, num_classes).to(torch.float64)
+
+    def forward_one(
+        self, x: torch.Tensor, laplacian: torch.sparse.Tensor,
+    ) -> torch.Tensor:
+        proj = self._proj_in(x)
+        n = proj.shape[0]
+
+        L = laplacian.coalesce()
+        indices = L.indices()
+        off_diag = indices[0] != indices[1]
+        src, dst = indices[0][off_diag], indices[1][off_diag]
+
+        if src.numel() == 0:
+            h = self._activation(proj @ self._mp_weight + self._mp_bias) + proj
+            return self.head(h.sum(dim=0))
+
+        edge_features = torch.cat([proj[src], proj[dst]], dim=-1)
+        restrictions = self._sheaf_learner(edge_features)
+        f_src = restrictions[:, 0]
+        f_dst = restrictions[:, 1]
+
+        L_F = torch.zeros(n, n, dtype=proj.dtype, device=proj.device)
+        L_F[src, dst] = -f_src * f_dst
+        L_F_diag = torch.zeros(n, dtype=proj.dtype, device=proj.device)
+        L_F_diag.index_add_(0, src, f_src ** 2)
+        L_F_diag.index_add_(0, dst, f_dst ** 2)
+        L_F = L_F + torch.diag(L_F_diag)
+
+        d_inv_sqrt = 1.0 / torch.sqrt(L_F_diag.clamp(min=1e-6))
+        L_F_norm = L_F * d_inv_sqrt.unsqueeze(1) * d_inv_sqrt.unsqueeze(0)
+
+        propagated = L_F_norm @ proj
+        h = self._activation(propagated @ self._mp_weight + self._mp_bias) + proj
+        return self.head(h.sum(dim=0))
+
+
+class SheafResidualBaseline:
+    """Learned sheaf Laplacian + external residual (Bodnar et al. 2022)."""
+
+    name: ClassVar[str] = "sheaf-residual"
+    version: ClassVar[str] = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        return True
+
+    @staticmethod
+    def build(input_dim: int, num_classes: int, seed: int) -> nn.Module:
+        torch.manual_seed(seed)
+        return _SheafResidualGraphClassifier(input_dim, num_classes)
+
+
 REGISTERED: dict[str, type[GraphClassifier]] = {
     HodgeClassifier.name: HodgeClassifier,
     HodgeNormalisedClassifier.name: HodgeNormalisedClassifier,
@@ -656,6 +733,7 @@ REGISTERED: dict[str, type[GraphClassifier]] = {
     GINNormalisedBaseline.name: GINNormalisedBaseline,
     GINResidualBaseline.name: GINResidualBaseline,
     GATBaseline.name: GATBaseline,
+    SheafResidualBaseline.name: SheafResidualBaseline,
 }
 
 
