@@ -597,6 +597,55 @@ class GINNormalisedBaseline:
         return _GINNormalisedGraphClassifier(input_dim, num_classes)
 
 
+class _GINResidualGraphClassifier(nn.Module):
+    """Normalised adjacency aggregation with external residual.
+
+    Matches the Hodge-MP-residual architecture exactly except for the
+    operator: uses the normalised adjacency (I - L_tilde, low-pass) instead
+    of the normalised Laplacian (L_tilde, high-pass).
+
+    Forward: h' = act(A_norm @ proj(x) @ W + b) + proj(x)
+    where A_norm = I - L_tilde = D^{-1/2} A D^{-1/2}.
+    """
+
+    def __init__(self, input_dim: int, num_classes: int, hidden_dim: int = 32) -> None:
+        super().__init__()
+        self._proj_in = nn.Linear(input_dim, hidden_dim).to(torch.float64)
+        self._mp_weight = nn.Parameter(
+            torch.empty(hidden_dim, hidden_dim, dtype=torch.float64),
+        )
+        self._mp_bias = nn.Parameter(torch.zeros(hidden_dim, dtype=torch.float64))
+        nn.init.xavier_uniform_(self._mp_weight)
+        self._activation = nn.ReLU()
+        self.head = nn.Linear(hidden_dim, num_classes).to(torch.float64)
+
+    def forward_one(
+        self, x: torch.Tensor, laplacian: torch.sparse.Tensor,
+    ) -> torch.Tensor:
+        l_norm = _symmetric_normalize_sparse(laplacian)
+        proj = self._proj_in(x)
+        norm_adj_proj = proj - torch.sparse.mm(l_norm, proj)
+        h = self._activation(norm_adj_proj @ self._mp_weight + self._mp_bias) + proj
+        return self.head(h.sum(dim=0))
+
+
+class GINResidualBaseline:
+    """Normalised adjacency + external residual — isolates operator choice
+    from residual placement in the Hodge-GIN comparison."""
+
+    name: ClassVar[str] = "gin-residual"
+    version: ClassVar[str] = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        return True
+
+    @staticmethod
+    def build(input_dim: int, num_classes: int, seed: int) -> nn.Module:
+        torch.manual_seed(seed)
+        return _GINResidualGraphClassifier(input_dim, num_classes)
+
+
 REGISTERED: dict[str, type[GraphClassifier]] = {
     HodgeClassifier.name: HodgeClassifier,
     HodgeNormalisedClassifier.name: HodgeNormalisedClassifier,
@@ -605,6 +654,7 @@ REGISTERED: dict[str, type[GraphClassifier]] = {
     MLPBaseline.name: MLPBaseline,
     GINBaseline.name: GINBaseline,
     GINNormalisedBaseline.name: GINNormalisedBaseline,
+    GINResidualBaseline.name: GINResidualBaseline,
     GATBaseline.name: GATBaseline,
 }
 
