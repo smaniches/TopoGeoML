@@ -173,10 +173,10 @@ Two leading candidate mechanisms for the NCI1 positive result were proposed:
 
 | n_graphs | hodge-mp-residual (median) | MLP (median) | Delta | p_BH | Verdict |
 |---|---|---|---|---|---|
-| 188 (MUTAG-size) | 0.579 | 0.560 | +0.019 | 0.897 | matches |
-| 1113 (PROTEINS-size) | 0.601 | 0.549 | +0.052 | 0.045 | WINS |
-| 2000 | 0.595 | 0.536 | +0.059 | 0.053 | matches (border) |
-| 4110 (full, control) | 0.609 | 0.523 | +0.086 | 3.38 x 10^-3 | WINS |
+| 188 (MUTAG-size) | 0.579 | 0.560 | +0.019 | 0.897 | not significant |
+| 1113 (PROTEINS-size) | 0.601 | 0.549 | +0.052 | 0.045 | significant (alpha=0.05) |
+| 2000 | 0.595 | 0.536 | +0.059 | 0.053 | not significant (border) |
+| 4110 (full, control) | 0.609 | 0.523 | +0.086 | 3.38 x 10^-3 | significant (alpha=0.01) |
 
 **Verdict:** Sample size is not the primary mechanism. Subsampling NCI1 to MUTAG's 188 graphs does NOT reproduce MUTAG's residual-defeat (Delta = +0.019, not -0.04). The Hodge advantage on NCI1 data persists even at small sample sizes -- meaning NCI1's data distribution, not its sample count, drives the result. The advantage is monotone in n (Spearman rho = +1.0), growing more statistically detectable with more data.
 
