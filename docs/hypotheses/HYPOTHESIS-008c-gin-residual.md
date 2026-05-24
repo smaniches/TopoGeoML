@@ -1,6 +1,6 @@
 # Hypothesis 008-c: Is the external residual the operative factor in the Hodge-GIN gap?
 
-**Status.** Preregistered 2026-05-24, before execution.
+**Status.** Resolved 2026-05-24. H36 confirmed (gin-residual strictly outperforms gin-normalised); H37 confirmed in the first decision-tree row (gin-residual matches or exceeds Hodge — the external residual is the mechanism); H38 confirmed (gin-residual strictly outperforms MLP). See §6.
 
 **Falsification target.** Whether adding an external residual connection to GIN's normalised aggregation recovers performance comparable to Hodge-MP-residual on NCI1. H008-b ruled out normalisation alone. Three candidate factors remain: (1) spectral vs spatial operator, (2) weight-propagation order, (3) external vs internal residual. This experiment isolates factor (3).
 
@@ -52,7 +52,65 @@ The `gin-residual` arm uses the normalised adjacency (I - L_tilde) for aggregati
 - **Hidden dim:** 32, matched.
 - **Statistical procedure:** Pairwise paired Wilcoxon, BH-FDR at alpha=0.05.
 
-## 5. Reproduction
+## 5. Resolved outcome (2026-05-24, 30 seeds x 10 epochs, 4 arms, NCI1)
+
+Per-arm reports in `notebooks/results/h008c_nci1_gin_residual_30seeds.{json,md}`.
+
+### Per-arm accuracy
+
+| Arm | Median accuracy (BCa 95% CI) | vs MLP p_BH | Verdict |
+|---|---|---|---|
+| **gin-residual** | **0.629 [0.607, 0.641]** | **6.05 x 10^-4** | **WINS (+10.6 pp)** |
+| hodge-mp-residual | 0.609 [0.581, 0.625] | 4.05 x 10^-3 | WINS (+8.6 pp) |
+| gin-normalised | 0.500 [0.500, 0.500] | 5.33 x 10^-5 | LOSES (-2.3 pp) |
+| mlp-baseline | 0.523 [0.513, 0.566] | -- | control |
+
+### Pairwise comparisons
+
+| Comparison | median Delta | p_BH | r |
+|---|---|---|---|
+| gin-residual vs hodge-mp-residual | +0.0195 | 1.01 x 10^-2 | +0.400 |
+| gin-residual vs gin-normalised | +0.1290 | 5.20 x 10^-6 | +1.000 |
+| gin-residual vs mlp-baseline | +0.1058 | 6.05 x 10^-4 | +0.600 |
+| hodge-mp-residual vs gin-normalised | +0.1095 | 5.20 x 10^-6 | +1.000 |
+| hodge-mp-residual vs mlp-baseline | +0.0864 | 4.05 x 10^-3 | +0.533 |
+
+### Sub-hypotheses resolved
+
+- **H36** (gin-residual beats gin-normalised): **CONFIRMED.** gin-residual (0.629) strictly outperforms gin-normalised (0.500) at p_BH = 5.20 x 10^-6, r = +1.000. The external residual recovers learning from class-prior collapse.
+- **H37** (gin-residual matches Hodge): **CONFIRMED in the first decision-tree row.** gin-residual (0.629) not only matches but slightly exceeds Hodge (0.609). The difference is significant at p_BH = 0.010, r = +0.400, favouring gin-residual. The external residual is sufficient — the choice of spectral vs spatial operator is secondary.
+- **H38** (gin-residual beats MLP): **CONFIRMED.** gin-residual (0.629) strictly outperforms MLP (0.523) at p_BH = 6.05 x 10^-4, r = +0.600.
+
+### Interpretation
+
+The result corresponds to the first row of the preregistered decision tree: **the external residual is the mechanism.**
+
+The ablation series H008 → H008-b → H008-c systematically isolated three candidate factors:
+
+| Factor | Tested by | Outcome |
+|---|---|---|
+| Degree normalisation | H008-b (gin-normalised) | Does not recover (still at class prior) |
+| Spectral vs spatial operator | H008-c (gin-residual uses I-L_tilde, Hodge uses L_tilde) | gin-residual matches or exceeds Hodge — operator choice is secondary |
+| **External residual placement** | **H008-c (gin-residual adds external skip)** | **Recovers from class-prior collapse to 0.629 — the operative factor** |
+
+The Hodge Laplacian (L_tilde, high-pass spectral operator) does not confer a unique classification advantage on NCI1 at this configuration. The critical architectural element is the external residual connection (`act(propagation @ W + b) + h`), which preserves the projected features through the propagation step. Without it, both GIN variants (normalised and unnormalised) fail to learn. With it, even the normalised adjacency operator (low-pass, I - L_tilde) slightly outperforms the Hodge Laplacian.
+
+### Scoped claim
+
+> Under the matched-capacity protocol on NCI1 (30 seeds, 10 epochs, hidden_dim=32), the external residual connection is the operative architectural factor that enables topology-aware classification above MLP baseline. With external residual, both Hodge (L_tilde, 0.609) and normalised-adjacency (I - L_tilde, 0.629) arms outperform MLP (0.523). Without external residual, both normalised and unnormalised GIN collapse to class prior (0.500). The choice of spectral operator (high-pass vs low-pass) is secondary to the residual architecture at this configuration.
+
+### What the H003-H008c arc establishes
+
+The complete investigation arc, from the initial NCI1 positive claim (H003) through mechanism elimination (H004-H007) and architecture comparison (H008-H008c), converges on a specific finding:
+
+1. Topology-aware message passing outperforms no-topology MLP on NCI1 (+8-10 pp).
+2. The advantage requires an external residual connection; without it, message-passing architectures fail to learn.
+3. The advantage is not specific to the Hodge Laplacian — normalised adjacency aggregation with external residual performs comparably or better.
+4. The mechanism is architectural (residual placement), not operator-specific (Laplacian vs adjacency).
+
+---
+
+## 6. Reproduction
 
 ```bash
 python -m benchmarks.hodge \
