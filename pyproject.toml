@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "topogeoml"
-version = "0.0.1"
+version = "0.0.2"
 description = "Topology-aware geometric machine learning: persistent homology, higher-order domains, and geometric deep learning in reproducible ML pipelines."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,7 +22,7 @@ keywords = [
     "topological-deep-learning",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
@@ -91,9 +91,9 @@ bench = [
 ]
 
 [project.urls]
-Homepage = "https://topologica.ai"
-Repository = "https://github.com/topologica-llc/topogeoml"
-Issues = "https://github.com/topologica-llc/topogeoml/issues"
+Homepage = "https://github.com/smaniches/TopoGeoML"
+Repository = "https://github.com/smaniches/TopoGeoML"
+Issues = "https://github.com/smaniches/TopoGeoML/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["topogeoml"]

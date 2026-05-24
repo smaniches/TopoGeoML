@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software or its empirical findings, please cite it as below."
+type: software
+title: "TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification"
+version: 0.0.2
+date-released: "2026-05-24"
+license: MIT
+repository-code: "https://github.com/smaniches/TopoGeoML"
+authors:
+  - family-names: Maniches
+    given-names: Santiago
+    orcid: "https://orcid.org/0009-0005-6480-1987"
+    affiliation: "TOPOLOGICA LLC"
+keywords:
+  - persistent homology
+  - graph neural networks
+  - hodge laplacian
+  - topological data analysis
+  - preregistered research
+  - mechanism elimination
+abstract: >-
+  A preregistered research program (7 hypotheses, 27+ falsifiable
+  sub-predictions) investigating whether Hodge decomposition improves graph
+  neural network classification. Systematic mechanism elimination
+  (sample size, feature density, graph topology) narrows the positive NCI1
+  claim (+8.6 pp, p_BH = 4.83e-3) to an architecture-data complementarity
+  interaction. Includes 491 tests, 100% coverage, and statistically
+  defensible reporting (BCa bootstrap, paired Wilcoxon, BH-FDR).

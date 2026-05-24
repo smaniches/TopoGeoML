@@ -5,9 +5,9 @@ All notable changes to TopoGeomML will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — preparing v0.0.2
+## [0.0.2] — 2026-05-24
 
-Headline: **the framework has its first strict positive-difference real-data claim** (hypothesis 003, NCI1). The v0.0.2 release gate set in `docs/hypotheses/HYPOTHESIS-002-hodge-proteins.md` §5 ("strictly beats MLP at p_BH < 0.01") is met by the `hodge-mp-residual` arm on NCI1 (p_BH = 4.83 × 10⁻³, +8.6 pp). Release tagging is on hold pending explicit user approval.
+Headline: **the framework has its first strict positive-difference real-data claim** (hypothesis 003, NCI1). The v0.0.2 release gate set in `docs/hypotheses/HYPOTHESIS-002-hodge-proteins.md` §5 ("strictly beats MLP at p_BH < 0.01") is met by the `hodge-mp-residual` arm on NCI1 (p_BH = 4.83 × 10⁻³, +8.6 pp). A preregistered hypothesis series (H001–H007, 27 falsifiable sub-predictions) investigates the mechanism through systematic elimination.
 
 ### Added — empirical results (all 30-seed, BCa CIs, paired Wilcoxon + BH-FDR; per-seed reports in `notebooks/results/`)
 
@@ -51,9 +51,22 @@ Headline: **the framework has its first strict positive-difference real-data cla
 - Multi-rank simplicial neural network (full SCN)
 - Real DRIVE numbers — pipeline shipped (PR #9), user-side GPU run pending
 
-### Quality gates as of preparing v0.0.2
+### Added — academic infrastructure
+
+- `docs/RESEARCH_REPORT.md` — structured technical report documenting the full preregistered hypothesis series (H001–H007) with results, discussion, and bounded claims
+- `CITATION.cff` — CFF 1.2.0 machine-readable citation (GitHub renders "Cite this repository")
+- `.zenodo.json` — Zenodo deposit metadata for DOI minting
+- `CONTRIBUTING.md` — academic collaboration guidelines (preregistration pattern, code standards, statistical discipline)
+- `REPRODUCING.md` — per-hypothesis reproduction guide with commands, wall-clock estimates, and expected outputs
+
+### Changed
+
+- `pyproject.toml`: version bumped to 0.0.2, classifier updated to "Development Status :: 4 - Beta", URLs fixed to `smaniches/TopoGeoML`
+- `README.md`: badges updated, status section rewritten to reflect positive results, mechanism-investigation section added, roadmap updated, citation section updated with CITATION.cff reference
+
+### Quality gates for v0.0.2
 - `ruff check topogeoml tests benchmarks scripts notebooks`: clean
-- `pytest`: 489 passed (up from 118 at v0.0.1)
+- `pytest`: 491 passed (up from 118 at v0.0.1)
 - `coverage(topogeoml/ + benchmarks/)`: 100%
 - `mypy topogeoml`: 0 errors (CI enforcement deferred to a separate PR pending constrained-env reproduction)
 - 6 CI workflows on main, all green
