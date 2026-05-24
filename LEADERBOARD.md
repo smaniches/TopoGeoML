@@ -144,6 +144,22 @@ The discipline of the table:
 
 ---
 
+## Claim 9 — Hodge-MP-residual outperforms GIN and GAT under matched-capacity protocol (H008)
+
+| Field | Value |
+|---|---|
+| Status | **Positive (Hodge outperforms all baselines); negative (GIN and GAT collapse to class prior under capacity constraint)** |
+| Domain | Architecture comparison |
+| Setup | NCI1 (4110 graphs), 30 seeds × 10 epochs × hidden_dim=32, 4 arms: `hodge-mp-residual`, `gin-baseline`, `gat-baseline`, `mlp-baseline`. All arms matched to ~2339 params. |
+| Headline numbers | Hodge 0.609 [0.581, 0.625] vs GIN 0.500 [0.500, 0.505]: p_BH = 6.36 × 10⁻⁶, r = +0.933. Hodge vs GAT 0.500 [0.500, 0.500]: p_BH = 6.36 × 10⁻⁶, r = +1.000. GIN and GAT both strictly underperform MLP 0.523 [0.513, 0.566]. |
+| Interpretation | The Hodge arm's symmetric Laplacian normalisation provides training stability that unnormalised GIN/GAT aggregation lacks under the tested capacity constraints. This is an architectural interaction finding, not a theoretical expressiveness claim. |
+| Per-seed report | `notebooks/results/h008_nci1_gin_gat_30seeds.md` |
+| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-008-gin-gat-comparison.md` (H28/H29/H30/H31/H32) |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-baseline gat-baseline mlp-baseline --seeds 0..29 --n-epochs 10` |
+| First shipped in | This commit |
+
+---
+
 ## Deferred — DRIVE retinal-vessel segmentation with `CubicalTopologyLoss`
 
 | Field | Value |

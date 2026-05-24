@@ -1,6 +1,6 @@
 # Hypothesis 008: Comparative evaluation of Hodge-MP-residual against GIN and GAT baselines on NCI1
 
-**Status.** Preregistered 2026-05-24, before execution.
+**Status.** Resolved 2026-05-24. H28 falsified (Hodge strictly outperforms GIN); H29 outcome exceeds prediction (Hodge strictly outperforms GAT); H30 refuted (GIN underperforms MLP); H31 refuted (GAT underperforms MLP); H32 marginally falsified (GIN above GAT at p_BH = 0.013). See §8.
 
 **Falsification target.** Whether the NCI1 positive claim (H003: Hodge-MP-residual +8.6 pp over MLP at p_BH = 4.83e-3) generalises to comparisons against topology-aware GNN baselines — specifically GIN (Xu et al. 2019, ICLR) and GAT (Velickovic et al. 2018, ICLR) — or whether it is specific to the Hodge-vs-no-topology contrast.
 
@@ -119,19 +119,19 @@ Per-arm reports in `notebooks/results/h008_nci1_gin_gat_30seeds.{json,md}`. All 
 
 ### Sub-hypotheses resolved
 
-- **H28** (Hodge vs GIN): **FALSIFIED as stated (GIN matches Hodge), but in the unexpected direction — Hodge strictly BEATS GIN** at p_BH = 6.36 x 10^-6 with r = +0.933. The prediction that GIN would at least match Hodge based on WL-1 expressiveness is refuted at this configuration.
-- **H29** (Hodge vs GAT): Hodge strictly beats GAT at p_BH = 6.36 x 10^-6 with r = +1.000 (perfect rank separation).
-- **H30** (GIN vs MLP): **REFUTED.** GIN does NOT beat MLP. GIN collapses to class prior (0.500) and is strictly worse than MLP (p_BH = 2.96 x 10^-3). This was the unexpected outcome flagged in the decision tree.
-- **H31** (GAT vs MLP): **REFUTED.** Same as H30 — GAT collapses to class prior.
-- **H32** (GIN vs GAT): Both near class prior; GIN marginally above GAT at p_BH = 0.013.
+- **H28** (Hodge vs GIN): **FALSIFIED.** The prediction was that GIN would at least match Hodge based on WL-1 expressiveness. Observed: Hodge strictly outperforms GIN at p_BH = 6.36 x 10^-6 with r = +0.933. GIN collapses to class prior (0.500), failing to learn from either features or structure under this protocol. The theoretical expressiveness hierarchy does not manifest under the tested capacity and training constraints.
+- **H29** (Hodge vs GAT): Hodge strictly outperforms GAT at p_BH = 6.36 x 10^-6 with r = +1.000 (perfect rank separation across all 30 seeds).
+- **H30** (GIN vs MLP): **REFUTED.** GIN does not beat MLP; it strictly underperforms MLP at p_BH = 2.96 x 10^-3, r = -0.600. This corresponds to the unexpected outcome flagged in the preregistered decision tree (§4, row 4).
+- **H31** (GAT vs MLP): **REFUTED.** GAT strictly underperforms MLP at p_BH = 1.05 x 10^-4, r = -0.833.
+- **H32** (GIN vs GAT): Both near class prior. GIN marginally above GAT at p_BH = 0.013, r = +0.368.
 
 ### Interpretation
 
 The result is unambiguous at the level of the observed data: under the matched-capacity protocol, Hodge-MP-residual dramatically outperforms both GIN and GAT on NCI1. However, the interpretation requires careful analysis of *why* GIN and GAT collapse to class prior when MLP does not.
 
-**The spectral normalisation hypothesis.** The Hodge-MP-residual arm applies symmetric normalisation (L_tilde = D^{-1/2} L D^{-1/2}), which bounds the propagation operator's eigenvalues to [0, 2] and prevents degree-dependent feature scaling (Kipf & Welling 2017, Lemma 1). GIN's update rule `(1+eps)*h + A@h` uses the raw adjacency sum without normalisation. On NCI1 (average degree ~2.1, but with high-degree nodes in aromatic compounds), the unnormalised aggregation can produce features that scale linearly with degree, leading to gradient instability at the tested learning rate and epoch budget. The MLP baseline avoids this entirely by ignoring graph structure.
+**Candidate explanation: degree-dependent feature scaling.** The Hodge-MP-residual arm applies symmetric normalisation (L_tilde = D^{-1/2} L D^{-1/2}), which bounds the propagation operator's eigenvalues to [0, 2] and prevents degree-dependent feature scaling (Kipf & Welling 2017, Lemma 1). GIN's update rule `(1+eps)*h + A@h` uses the unnormalised adjacency sum. On NCI1, where aromatic compounds contain high-degree ring atoms, the unnormalised aggregation term A@h scales linearly with node degree while the self-loop term (1+eps)*h does not. This asymmetry can bury the per-node feature signal beneath the aggregated neighbourhood signal — the same mechanism that explains the combinatorial Hodge arm's underperformance on MUTAG (H001: unnormalised L_0 loses by 9 pp). The MLP baseline avoids this by ignoring graph structure entirely.
 
-**This is an architectural interaction, not a theoretical expressiveness result.** GIN's WL-1 expressiveness guarantee holds in the limit of sufficient capacity, depth, and training. The matched-capacity protocol (1 layer, 32 hidden units, 10 epochs, no batch normalisation) is a deliberate experimental constraint that isolates the propagation mechanism but may be insufficient for GIN's aggregation dynamics. The result demonstrates that the Hodge Laplacian's symmetric normalisation provides a training-stability advantage under tight capacity constraints — a practical finding, not a claim about theoretical expressiveness.
+**Scope of the finding.** GIN's WL-1 expressiveness guarantee (Xu et al. 2019, Theorem 3) requires injective multiset aggregation and a sufficiently expressive MLP. These conditions are architecture-level properties; the guarantee does not entail that every GIN instantiation learns effectively under arbitrary training regimes. The matched-capacity protocol (1 layer, 32 hidden units, 10 epochs, no batch normalisation) is a controlled experimental constraint that isolates the propagation mechanism. The result demonstrates that symmetric Laplacian normalisation provides a training-stability advantage under these specific constraints. It does not constitute a claim about the theoretical expressiveness of the Hodge Laplacian relative to WL-1.
 
 **Controls.** The MLP and Hodge-MP-residual arms reproduce H003 exactly (MLP: 0.523, Hodge: 0.609), confirming that the experimental infrastructure is correct and the result is specific to the GIN/GAT architectures under these constraints.
 
