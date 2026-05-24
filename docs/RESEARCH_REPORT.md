@@ -78,7 +78,7 @@ All datasets accessed via PyTorch Geometric's TUDataset interface.
 - **Train/test split:** Stratified 80/20 per seed.
 - **Confidence intervals:** BCa bootstrap 95% CIs (Efron 1987) on per-arm accuracy median, using 10,000 bootstrap replicates.
 - **Hypothesis testing:** Paired Wilcoxon signed-rank test (matched by seed), with Benjamini-Hochberg FDR correction across comparison families.
-- **Effect size:** Rank-biserial correlation r (Kerby 2014), where r = 2U/(n_1 * n_2) - 1.
+- **Effect size:** Rank-biserial correlation r (Kerby 2014). For paired Wilcoxon, computed as r = (R+ - R-) / (R+ + R-) where R+ and R- are the sums of positive and negative signed ranks.
 - **Falsification threshold:** p_BH < 0.01 for strict positive-difference claims; p_BH < 0.05 for directional findings.
 - **Implementation:** `benchmarks/stats.py` (100% test coverage, all procedures cited).
 
@@ -128,7 +128,7 @@ Each hypothesis follows a fixed template:
 | + 2 layers + residual | 0.695 [0.659, 0.709] | 0.426 | matches |
 | MLP baseline | 0.675 [0.596, 0.706] | -- | control |
 
-**Key findings:** Two-dataset equality confirmed. The MUTAG combinatorial-L harm (9 pp) does not replicate on PROTEINS (effect drops by ~10x). Sub-hypotheses H4 refuted, H5 reconfirmed, H6 refuted, H7 unresolved.
+**Key findings:** Two-dataset equality confirmed. The MUTAG combinatorial-L harm does not replicate on PROTEINS (rank-biserial r drops from -0.760 to -0.071; percentage-point gap shrinks from 9.2 pp to 2.9 pp). Sub-hypotheses H4 refuted, H5 reconfirmed, H6 refuted, H7 unresolved.
 
 #### Hypothesis 003: NCI1 Scale Escalation -- The Headline Positive Result
 
