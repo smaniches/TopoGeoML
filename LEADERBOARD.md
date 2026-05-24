@@ -160,6 +160,21 @@ The discipline of the table:
 
 ---
 
+## Claim 10 — Degree normalisation does not close the GIN-Hodge gap (H008-b)
+
+| Field | Value |
+|---|---|
+| Status | **Negative (candidate explanation refuted)** |
+| Domain | Architecture comparison / mechanism ablation |
+| Setup | NCI1 (4110 graphs), 30 seeds × 10 epochs × hidden_dim=32, 4 arms: `hodge-mp-residual`, `gin-normalised` (D^{-1/2}AD^{-1/2}), `gin-baseline` (raw A), `mlp-baseline`. |
+| Headline numbers | gin-normalised: 0.500 [0.500, 0.500] — still at class prior. Hodge vs gin-normalised: p_BH = 6.36 × 10⁻⁶, r = +1.000 (perfect rank separation). The candidate explanation from H008 (normalisation accounts for the gap) is refuted. |
+| Interpretation | The Hodge advantage on NCI1 is not attributable to degree normalisation alone. The operative architectural difference involves the spectral operator (Laplacian vs adjacency), the weight-propagation interaction order, or the residual placement. |
+| Per-seed report | `notebooks/results/h008b_nci1_gin_normalised_30seeds.md` |
+| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-008b-gin-normalised.md` (H33/H34/H35) |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-normalised gin-baseline mlp-baseline --seeds 0..29 --n-epochs 10` |
+
+---
+
 ## Deferred — DRIVE retinal-vessel segmentation with `CubicalTopologyLoss`
 
 | Field | Value |
@@ -177,11 +192,12 @@ The discipline of the table:
 
 | Metric | Value |
 |---|---|
-| Total tests | 491 (as of v0.0.2) |
+| Total tests | 497 |
 | Coverage on `topogeoml/` and `benchmarks/` | **100%** |
 | Ruff clean across `topogeoml tests benchmarks scripts notebooks` | Yes |
 | Mypy strict on `topogeoml/` | **0 errors** |
-| CI workflows | 7 (4 test matrix + 2 CodeQL + benchmark-hodge) — all green on main |
+| CI workflows | 8 (4 test matrix + 2 CodeQL + benchmark-hodge + experiment runner) — all green on main |
+| Registered model arms | 9 (5 Hodge/MLP + GIN + GIN-normalised + GIN-residual + GAT) |
 | Lockfile / Dockerfile | None — deliberate; library is a research toolkit, not a deployment artefact |
 | DOI | [10.5281/zenodo.20365817](https://doi.org/10.5281/zenodo.20365817) |
 

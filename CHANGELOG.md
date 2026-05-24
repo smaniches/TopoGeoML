@@ -66,7 +66,7 @@ Headline: **the framework has its first strict positive-difference real-data cla
 
 ### Quality gates for v0.0.2
 - `ruff check topogeoml tests benchmarks scripts notebooks`: clean
-- `pytest`: 491 passed (up from 118 at v0.0.1)
+- `pytest`: 497 passed (up from 118 at v0.0.1)
 - `coverage(topogeoml/ + benchmarks/)`: 100%
 - `mypy topogeoml`: 0 errors (CI enforcement deferred to a separate PR pending constrained-env reproduction)
 - 6 CI workflows on main, all green

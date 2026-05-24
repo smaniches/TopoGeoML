@@ -1,6 +1,6 @@
 {
   "title": "TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification",
-  "description": "Preregistered research program investigating Hodge decomposition for graph neural network classification. Seven hypotheses (H001-H007) with 27+ falsifiable sub-predictions systematically investigate candidate mechanisms (sample size, feature density, graph topology) for the observed NCI1 positive claim (+8.6 pp, p_BH = 4.83e-3). Includes differentiable persistent homology, Hodge Laplacian message passing, 491 tests with 100% coverage, BCa bootstrap CIs, paired Wilcoxon signed-rank tests with BH-FDR correction, and honest reporting of null results alongside confirmed positive differences.",
+  "description": "Preregistered research program investigating Hodge decomposition for graph neural network classification. Seven hypotheses (H001-H007) with 27+ falsifiable sub-predictions systematically investigate candidate mechanisms (sample size, feature density, graph topology) for the observed NCI1 positive claim (+8.6 pp, p_BH = 4.83e-3). Includes differentiable persistent homology, Hodge Laplacian message passing, 497 tests with 100% coverage, BCa bootstrap CIs, paired Wilcoxon signed-rank tests with BH-FDR correction, and honest reporting of null results alongside confirmed positive differences.",
   "creators": [
     {
       "name": "Maniches, Santiago",

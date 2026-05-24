@@ -36,9 +36,9 @@ Differentiable persistent homology layers, Hodge message passing, and a benchmar
 
 ## Status
 
-**Research toolkit with a confirmed positive result.** The library is internally consistent (491 tests, 100% coverage on the library and benchmark framework), the mathematical layers are correctly implemented, and the statistical machinery is rigorous.
+**Research toolkit with a confirmed positive result.** The library is internally consistent (497 tests, 100% coverage on the library and benchmark framework), the mathematical layers are correctly implemented, and the statistical machinery is rigorous.
 
-**Headline result:** On the NCI1 chemical-compound benchmark (4110 graphs), a one-layer Hodge MP with symmetric Laplacian normalisation + residual connection strictly beats an MLP baseline of matched capacity (paired Wilcoxon p_BH = 4.83 × 10⁻³, rank-biserial r = +0.533, +8.6 pp median accuracy gain). A preregistered hypothesis series (H001–H007, 27 falsifiable sub-predictions) investigates the mechanism — see [`Empirical evidence`](#empirical-evidence) below and [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) for the full narrative.
+**Headline result:** On the NCI1 chemical-compound benchmark (4110 graphs), a one-layer Hodge MP with symmetric Laplacian normalisation + residual connection strictly outperforms a matched-capacity MLP baseline (paired Wilcoxon p_BH = 4.83 × 10⁻³, rank-biserial r = +0.533, +8.6 pp median accuracy gain). A preregistered hypothesis series (H001–H008, 38 falsifiable sub-predictions) investigates the mechanism and compares against GIN and GAT baselines — see [`Empirical evidence`](#empirical-evidence) below and [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) for the full narrative.
 
 This is a research toolkit, sized at ~7K LOC, positioned for researchers who need correct + citable topology-aware layers. It is **not** a production training framework. APIs will change without notice until v1.0.
 
@@ -325,7 +325,7 @@ The package enforces the following floor:
 ## Testing
 
 ```bash
-pytest                          # 491 tests
+pytest                          # 497 tests
 pytest -m "not slow"            # skip slow tests
 pytest --cov=topogeoml --cov=benchmarks  # with coverage
 ```
@@ -336,9 +336,9 @@ Coverage is 100% on `topogeoml/` and `benchmarks/`. Torch-gated tests skip clean
 
 ## Roadmap
 
-**v0.0.2 (current).** Strict positive-difference claim on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³). Preregistered hypothesis series H001–H007 complete with mechanism investigation. Full academic infrastructure (CITATION.cff, Zenodo metadata, reproduction guide). 491 tests, 100% coverage, 6 CI workflows.
+**v0.0.2 (current).** Strict positive-difference claim on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³). Preregistered hypothesis series H001–H008 (including GIN/GAT comparison and residual-placement ablation) with mechanism investigation. Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide). 497 tests, 100% coverage, 8 CI workflows.
 
-**v0.0.3 (next).** Deeper architectures (HL-HGAT-style polynomial filters, attention) on NCI1 and additional datasets (DD, COLLAB). Test whether the complementarity pattern generalises. DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). The bar remains paired Wilcoxon p < 0.01 after BH correction.
+**v0.0.3 (next).** Cross-domain validation (DD, COLLAB, social-network benchmarks). DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). Continued mechanism ablation (spectral vs spatial operator isolation). The bar remains paired Wilcoxon p < 0.01 after BH correction.
 
 **v0.1 and later.** Cross-domain validation (social networks, citation graphs). Cross-PLM experiments (ProtT5, SaProt embeddings as node features). Feature-interaction ablations with controlled dimensionality sweeps. Conditional on the v0.0.3 empirical results determining which direction has the most signal.
 

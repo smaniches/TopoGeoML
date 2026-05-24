@@ -6,7 +6,7 @@
 
 ## Abstract
 
-We report a preregistered research program investigating whether Hodge decomposition improves graph neural network classification on standard benchmarks. The program comprises seven hypotheses (H001-H007) with 27 falsifiable sub-predictions, following a systematic mechanism-elimination methodology. A one-layer Hodge message-passing classifier with symmetric Laplacian normalisation and residual connection strictly outperforms a matched-capacity MLP baseline on NCI1 (4110 chemical-compound graphs, +8.6 percentage points, paired Wilcoxon p_BH = 4.83 x 10^-3, rank-biserial r = +0.533) and extracts graph-structural classification signal under constant-feature ablation across all three tested datasets (MUTAG, PROTEINS, NCI1; all p_BH < 5 x 10^-4). Systematic mechanism elimination rules out sample size and feature dimensionality as drivers of the cross-dataset pattern. The mechanism is narrowed to an architecture-data interaction where the Hodge advantage is largest on datasets where the MLP baseline fails to extract class signal from node features alone. Research continues with deeper architectures and cross-domain validation.
+We report a preregistered research program investigating whether Hodge decomposition improves graph neural network classification on standard benchmarks. The program comprises ten hypotheses (H001-H008c) with 38 falsifiable sub-predictions, following a systematic mechanism-elimination methodology. A one-layer Hodge message-passing classifier with symmetric Laplacian normalisation and residual connection strictly outperforms a matched-capacity MLP baseline on NCI1 (4110 chemical-compound graphs, +8.6 percentage points, paired Wilcoxon p_BH = 4.83 x 10^-3, rank-biserial r = +0.533) and extracts graph-structural classification signal under constant-feature ablation across all three tested datasets (MUTAG, PROTEINS, NCI1; all p_BH < 5 x 10^-4). Systematic mechanism elimination rules out sample size and feature dimensionality as drivers of the cross-dataset pattern. The mechanism is narrowed to an architecture-data interaction where the Hodge advantage is largest on datasets where the MLP baseline fails to extract class signal from node features alone. Research continues with deeper architectures and cross-domain validation.
 
 ---
 
@@ -295,7 +295,7 @@ Our findings are consistent with Errica et al. (2020): simple architecture compa
 
 ## 5. Conclusion
 
-A preregistered investigation comprising 7 hypotheses and 27 falsifiable sub-predictions establishes:
+A preregistered investigation comprising 10 hypotheses and 38 falsifiable sub-predictions establishes:
 
 1. **A positive NCI1 claim.** Hodge-MP-residual strictly beats MLP on NCI1 (+8.6 pp, p_BH = 4.83 x 10^-3).
 2. **Graph-structural signal extraction.** The Hodge architecture reads class-relevant topology on all three datasets under constant-feature control (all p_BH < 5 x 10^-4).

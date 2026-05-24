@@ -15,7 +15,10 @@ docs/
 │   ├── HYPOTHESIS-004-sample-size-mechanism.md
 │   ├── HYPOTHESIS-005-feature-density-mechanism.md
 │   ├── HYPOTHESIS-006-graph-topology-mechanism.md
-│   └── HYPOTHESIS-007-graph-structural-signal-decomposition.md
+│   ├── HYPOTHESIS-007-graph-structural-signal-decomposition.md
+│   ├── HYPOTHESIS-008-gin-gat-comparison.md
+│   ├── HYPOTHESIS-008b-gin-normalised.md
+│   └── HYPOTHESIS-008c-gin-residual.md
 └── mathematics/
     └── foundations.md
 ```
@@ -24,7 +27,7 @@ docs/
 
 1. [Top-level README.md](../README.md) for the project overview and empirical results summary.
 2. [RESEARCH_REPORT.md](RESEARCH_REPORT.md) for the full structured technical report.
-3. [hypotheses/](hypotheses/) for per-hypothesis preregistrations and resolved outcomes (HYPOTHESIS-001 through 007).
+3. [hypotheses/](hypotheses/) for per-hypothesis preregistrations and resolved outcomes (HYPOTHESIS-001 through 008c).
 4. [LEADERBOARD.md](../LEADERBOARD.md) for the navigable empirical claim table.
 5. [REPRODUCING.md](../REPRODUCING.md) for step-by-step reproduction instructions.
 
