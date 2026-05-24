@@ -220,6 +220,14 @@ Due to hardware-specific floating-point differences (CPU architecture, BLAS impl
 
 If your results diverge from the archived reports by more than these bounds, please open an issue with your hardware/software versions and the full JSON output.
 
+## Compute Environment and Comparison Validity
+
+All pairwise comparisons within a hypothesis (e.g. Hodge vs GIN vs MLP within H008) were executed on the **same machine in the same session** to ensure identical floating-point behaviour, BLAS dispatch, and memory conditions. The JSON provenance block in each result file records the platform, Python version, dependency versions, and git commit hash.
+
+**Valid comparisons require identical compute environments.** Results from different machines (e.g. local laptop vs GitHub Actions runner vs cloud container) should not be mixed within a single pairwise comparison family. When reproducing, run all arms of a comparison in a single invocation of `python -m benchmarks.hodge` so they share the same environment.
+
+The GitHub Actions workflow (`.github/workflows/experiment.yml`) runs experiments on `ubuntu-latest` runners (2-core x86_64, 7GB RAM). Results from Actions runs form their own comparison family and should not be directly compared against results from other environments without re-running all arms.
+
 ---
 
 ## Full Suite
