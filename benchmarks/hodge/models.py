@@ -551,6 +551,51 @@ class GATBaseline:
         return _GATGraphClassifier(input_dim, num_classes)
 
 
+class _GINNormalisedGraphClassifier(nn.Module):
+    """GIN with symmetric degree normalisation (GCN-style aggregation).
+
+    Update: h' = MLP((1 + eps) * h + D^{-1/2} A D^{-1/2} @ h)
+    where D^{-1/2} A D^{-1/2} @ h = (I - L_tilde) @ h = h - L_tilde @ h,
+    with L_tilde the symmetrically normalised Laplacian.
+    """
+
+    def __init__(self, input_dim: int, num_classes: int, hidden_dim: int = 32) -> None:
+        super().__init__()
+        self._proj_in = nn.Linear(input_dim, hidden_dim).to(torch.float64)
+        self._eps = nn.Parameter(torch.zeros(1, dtype=torch.float64))
+        self._gin_nn = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim).to(torch.float64),
+            nn.ReLU(),
+        )
+        self.head = nn.Linear(hidden_dim, num_classes).to(torch.float64)
+
+    def forward_one(
+        self, x: torch.Tensor, laplacian: torch.sparse.Tensor,
+    ) -> torch.Tensor:
+        h = self._proj_in(x)
+        l_norm = _symmetric_normalize_sparse(laplacian)
+        norm_adj_h = h - torch.sparse.mm(l_norm, h)
+        h = self._gin_nn((1.0 + self._eps) * h + norm_adj_h)
+        return self.head(h.sum(dim=0))
+
+
+class GINNormalisedBaseline:
+    """GIN with symmetric degree normalisation — tests whether normalisation
+    alone closes the gap observed in H008."""
+
+    name: ClassVar[str] = "gin-normalised"
+    version: ClassVar[str] = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        return True
+
+    @staticmethod
+    def build(input_dim: int, num_classes: int, seed: int) -> nn.Module:
+        torch.manual_seed(seed)
+        return _GINNormalisedGraphClassifier(input_dim, num_classes)
+
+
 REGISTERED: dict[str, type[GraphClassifier]] = {
     HodgeClassifier.name: HodgeClassifier,
     HodgeNormalisedClassifier.name: HodgeNormalisedClassifier,
@@ -558,6 +603,7 @@ REGISTERED: dict[str, type[GraphClassifier]] = {
     HodgeDeepResidualClassifier.name: HodgeDeepResidualClassifier,
     MLPBaseline.name: MLPBaseline,
     GINBaseline.name: GINBaseline,
+    GINNormalisedBaseline.name: GINNormalisedBaseline,
     GATBaseline.name: GATBaseline,
 }
 
