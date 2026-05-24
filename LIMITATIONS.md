@@ -1,4 +1,4 @@
-# Limitations of TopoGeomML v0.0.1
+# Limitations of TopoGeoML v0.0.2
 
 This document lists what TopoGeomML v0.0.1 **does not do**, what it does **only partially**, and the **failure modes** the user should expect. Honest accounting is part of the contract: every claim in the codebase must name its validation, and every absence must be named here.
 

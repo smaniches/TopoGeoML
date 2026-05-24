@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "topogeoml"
 version = "0.0.2"
-description = "Topology-aware geometric machine learning: persistent homology, higher-order domains, and geometric deep learning in reproducible ML pipelines."
+description = "Preregistered topology-aware machine learning research toolkit: differentiable persistent homology, Hodge Laplacian message passing, and statistically defensible benchmarking on graph classification (MUTAG, PROTEINS, NCI1)."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

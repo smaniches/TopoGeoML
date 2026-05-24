@@ -65,30 +65,93 @@ The discipline of the table:
 
 ---
 
-## Claim 4 — NCI1 (4110 graphs, 22× MUTAG): scale-escalation test
+## Claim 4 — NCI1 scale-escalation: first strict positive-difference claim
 
 | Field | Value |
 |---|---|
-| Status | **Pending** (30-seed × 10-epoch ablation running ~2h background) |
+| Status | **Positive (strict, the headline result)** |
 | Domain | Graph classification |
 | Setup | NCI1 (4110 chemical-compound graphs, 2 classes, Wale et al. 2008 via PyG TUDataset), 30 seeds × 10 epochs × hidden_dim=32 |
 | Comparison | Same 5 arms as Claims 2 and 3 |
-| Smoke preview (3 seeds, underpowered) | `hodge-mp-deep-residual` 0.630 vs `mlp-baseline` 0.518 (Δ = +0.112) — *if this direction holds at 30 seeds*, it would be the framework's first strict positive-difference claim. The underpowered smoke is not licensed as a result; the 30-seed run is the verdict. |
-| Per-seed report | `notebooks/results/nci1_hodge_ablation_30seeds.md` (when result lands) |
+| Headline numbers | `hodge-mp-residual` 0.609 [0.581, 0.625] vs `mlp-baseline` 0.523 [0.513, 0.566]; median Δ = +0.086; paired Wilcoxon p_BH = **4.83 × 10⁻³**; rank-biserial r = +0.533 |
+| Sub-finding 1 | Combinatorial L still underperforms MLP (Δ = −0.017, p_BH = 2.6 × 10⁻⁴) |
+| Sub-finding 2 | The residual variant — which *lost* on MUTAG and *matched* on PROTEINS — **wins** on NCI1. The residual's contribution scales positively with dataset size at this architectural class. |
+| Cross-dataset pattern | Architecture effects literally invert across datasets: same architecture goes from LOSES (MUTAG) → matches (PROTEINS) → **WINS** (NCI1) |
+| Per-seed report | `notebooks/results/nci1_hodge_ablation_30seeds.md` |
 | Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md` (H8/H9/H10/H11/H12) |
-| Reproduce | `python -m benchmarks.hodge --datasets nci1 --seeds 0..29 --n-epochs 10` |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
+| First shipped in | PR #19 |
 
 ---
 
-## Claim 5 — DRIVE retinal-vessel segmentation with `CubicalTopologyLoss`
+## Claim 5 — Sample size is NOT the mechanism (H004)
 
 | Field | Value |
 |---|---|
-| Status | **Pending** (manual GPU run, DRIVE dataset gated behind registration at https://drive.grand-challenge.org/) |
+| Status | **Negative (mechanism ruled out)** |
+| Domain | Mechanism investigation |
+| Setup | NCI1 subsampled to {188, 1113, 2000, 4110} graphs per seed, 30 seeds × 10 epochs, `hodge-mp-residual` vs `mlp-baseline` |
+| Headline numbers | NCI1@188: Δ = +0.019, p_BH = 0.897 (not significant); NCI1@4110: Δ = +0.086, p_BH = 3.38 × 10⁻³ (control reproduces). Hodge advantage monotone in n (Spearman ρ = +1.0) but never crosses zero — MUTAG's residual-defeat is NOT replicated by sample-size matching. |
+| Per-seed report | `notebooks/results/h004_nci1_n{188,1113,2000,4110}_30seeds.md` |
+| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-004-sample-size-mechanism.md` (H13/H14/H15/H16/H17) |
+| Reproduce | See `REPRODUCING.md` §H004 |
+| First shipped in | PR #21 |
+
+---
+
+## Claim 6 — Feature dimensionality is NOT the mechanism (H005)
+
+| Field | Value |
+|---|---|
+| Status | **Negative (mechanism ruled out); secondary positive (feature-degradation robustness)** |
+| Domain | Mechanism investigation |
+| Setup | NCI1 features projected 37→7 dim (direction A); MUTAG features expanded 7→37 dim (direction B). 30 seeds × 10 epochs, `hodge-mp-residual` vs `mlp-baseline` |
+| Headline numbers | NCI1-7d: Hodge 0.581 vs MLP 0.500 (class prior), Δ = +0.081, p_BH = 4.93 × 10⁻⁴ — MLP collapses, Hodge retains signal. MUTAG-37d: Δ = −0.013, p_BH = 0.246 — no difference. |
+| Per-seed report | `notebooks/results/h005_{nci1_7d,mutag_37d}_30seeds.md` |
+| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-005-feature-density-mechanism.md` (H18/H19/H20/H21) |
+| Reproduce | See `REPRODUCING.md` §H005 |
+| First shipped in | PR #21 |
+
+---
+
+## Claim 7 — Graph-structural signal is universal but rank-inverted vs full-feature gain (H006)
+
+| Field | Value |
+|---|---|
+| Status | **Positive (graph-structural signal on all 3 datasets); negative (simple topology-predicts-gain hypothesis refuted)** |
+| Domain | Mechanism investigation |
+| Setup | All node features replaced with constant vector (all-ones). 30 seeds × 10 epochs × 3 datasets, `hodge-mp-residual` vs class prior |
+| Headline numbers | MUTAG: +0.098 over class prior (p_BH = 4.53 × 10⁻⁶); PROTEINS: +0.088 (p_BH = 1.41 × 10⁻⁴); NCI1: +0.071 (p_BH = 1.93 × 10⁻⁵). All significant. But constant-feature gap is rank-inverted vs full-feature gain (Spearman ρ = −1.0). |
+| Per-seed report | `notebooks/results/h006_{mutag,proteins,nci1}_constant_30seeds.md` |
+| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-006-graph-topology-mechanism.md` (H22/H23/H24/H25) |
+| Reproduce | See `REPRODUCING.md` §H006 |
+| First shipped in | PR #22 |
+
+---
+
+## Claim 8 — No single structural proxy explains the full-feature gain (H007)
+
+| Field | Value |
+|---|---|
+| Status | **Negative (no proxy is predictive of full-feature gain)** |
+| Domain | Mechanism investigation (analysis-only, no model training) |
+| Setup | Five graph-structural proxies (size, degree, WL subtree, cycle, spectral) × 3 datasets. Per-class separability measured by max |rank-biserial r|. |
+| Headline numbers | All five proxies rank MUTAG > PROTEINS > NCI1 (ρ = +1.0 vs constant-feature gap; ρ = −1.0 vs full-feature gain). No single proxy explains where Hodge helps under full features. |
+| Per-seed report | `notebooks/results/h007_structural_decomposition.md` |
+| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-007-graph-structural-signal-decomposition.md` (H26/H27) |
+| Reproduce | `python -m benchmarks.hodge.h007_analysis` |
+| First shipped in | PR #23 |
+
+---
+
+## Deferred — DRIVE retinal-vessel segmentation with `CubicalTopologyLoss`
+
+| Field | Value |
+|---|---|
+| Status | **Deferred** (infrastructure exists; experiment not yet run) |
 | Domain | Image segmentation training-loss regularisation |
 | Setup | DRIVE (40 retinal fundus images, binary vessel segmentation, Staal 2004), 5–10 seeds × 50 epochs, small 3-level U-Net, Dice+BCE baseline vs Dice+BCE + λ·`CubicalTopologyLoss` |
 | Comparison | Per-seed paired IoU on the test split (matched seed, same model architecture, only the loss term differs) |
-| Per-seed report | `notebooks/results/drive_*.{md,json}` (when result lands) |
 | Preregistered? | Not yet — script exists in `notebooks/drive_unet_topology_loss.py`, hypothesis doc to be written before the run |
 | Reproduce | `python notebooks/drive_unet_topology_loss.py --seeds 0 1 2 3 4 --n-epochs 50 --topo-weight 0.1 --topo-resolution 64` (requires DRIVE downloaded to `~/.cache/topogeoml/drive/`) |
 
@@ -98,12 +161,13 @@ The discipline of the table:
 
 | Metric | Value |
 |---|---|
-| Total tests | 476 (as of PR #17) |
+| Total tests | 491 (as of v0.0.2) |
 | Coverage on `topogeoml/` and `benchmarks/` | **100%** |
 | Ruff clean across `topogeoml tests benchmarks scripts notebooks` | Yes |
-| Mypy strict on `topogeoml/` | **0 errors** (as of this PR — `continue-on-error: true` removed from `ci.yml`) |
-| CI workflows | 6 (4 matrix cells + 2 bench workflows) — all green on main |
+| Mypy strict on `topogeoml/` | **0 errors** |
+| CI workflows | 7 (4 test matrix + 2 CodeQL + benchmark-hodge) — all green on main |
 | Lockfile / Dockerfile | None — deliberate; library is a research toolkit, not a deployment artefact |
+| DOI | [10.5281/zenodo.20365817](https://doi.org/10.5281/zenodo.20365817) |
 
 ---
 
