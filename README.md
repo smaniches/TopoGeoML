@@ -65,7 +65,7 @@ Result (full report in `notebooks/results/topology_predicts_divergence_30seeds.m
 | Paired Wilcoxon p_raw | **5.77 × 10⁻⁴** |
 | BCa 95% CI on median advantage | [+0.0, +10.0] steps |
 
-The directional verdict is unambiguous — topology never fires *later* than loss. The magnitude is lower-bounded by the topology watchdog's baseline-window floor (every topology firing landed at step 30, the earliest possible step).
+The directional verdict is consistent across all 30 seeds — topology never fires *later* than loss. The magnitude is lower-bounded by the topology watchdog's baseline-window floor (every topology firing landed at step 30, the earliest possible step).
 
 Reproduce: `python notebooks/topology_predicts_divergence.py --n-seeds 30`.
 
@@ -315,7 +315,7 @@ The package enforces the following floor:
 - Explicit `float64` dtype on every numerical array
 - No Python sample loops for numerical computation (construction loops permitted)
 - `random_state=42` / `np.random.default_rng(42)` for reproducible RNG
-- Provenance dict on every fit + every benchmark cell
+- Provenance metadata (model, seed, platform, dependency versions) on every benchmark cell
 - 100% coverage on the library (`topogeoml/`) and the benchmark framework (`benchmarks/`)
 - ruff clean across all source directories
 - Every empirical claim in any docstring or README must point to either a literature citation or an in-repo experiment (negative results count and are shipped)

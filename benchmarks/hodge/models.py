@@ -518,18 +518,19 @@ class _GATGraphClassifier(nn.Module):
         off_diag = indices[0] != indices[1]
         src, dst = indices[0][off_diag], indices[1][off_diag]
 
-        e_src = (Wh[src] * self._attn_src).sum(dim=-1)
-        e_dst = (Wh[dst] * self._attn_dst).sum(dim=-1)
-        e = self._leaky_relu(e_src + e_dst)
-
         n = h.shape[0]
         agg = torch.zeros_like(Wh)
-        exp_e = torch.exp(e - e.max())
-        exp_sum = torch.zeros(n, dtype=h.dtype, device=h.device)
-        exp_sum.index_add_(0, dst, exp_e)
-        exp_sum = exp_sum.clamp(min=1e-8)
-        attn_weights = exp_e / exp_sum[dst]
-        agg.index_add_(0, dst, attn_weights.unsqueeze(1) * Wh[src])
+
+        if src.numel() > 0:
+            e_src = (Wh[src] * self._attn_src).sum(dim=-1)
+            e_dst = (Wh[dst] * self._attn_dst).sum(dim=-1)
+            e = self._leaky_relu(e_src + e_dst)
+            exp_e = torch.exp(e - e.max())
+            exp_sum = torch.zeros(n, dtype=h.dtype, device=h.device)
+            exp_sum.index_add_(0, dst, exp_e)
+            exp_sum = exp_sum.clamp(min=1e-8)
+            attn_weights = exp_e / exp_sum[dst]
+            agg.index_add_(0, dst, attn_weights.unsqueeze(1) * Wh[src])
 
         h = self._activation(agg)
         return self.head(h.sum(dim=0))

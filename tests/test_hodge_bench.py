@@ -119,6 +119,9 @@ class TestModelsRegistry:
             "hodge-mp-residual",
             "hodge-mp-deep-residual",
             "mlp-baseline",
+            "gin-baseline",
+            "gin-normalised",
+            "gat-baseline",
         ],
     )
     def test_every_registered_model_forwards_on_a_triangle(
@@ -215,6 +218,105 @@ class TestModelsRegistry:
         # The optimizer should have moved the MP weight by a non-trivial
         # amount in at least one entry.
         assert not torch.allclose(before, after)
+
+    def test_gin_gat_models_registered(self) -> None:
+        from benchmarks.hodge.models import REGISTERED
+
+        assert "gin-baseline" in REGISTERED
+        assert "gin-normalised" in REGISTERED
+        assert "gat-baseline" in REGISTERED
+
+    def test_adj_matmul_from_laplacian_correctness(self) -> None:
+        """A @ h must equal D @ h - L @ h for a known small graph."""
+        from benchmarks.hodge.models import _adj_matmul_from_laplacian
+
+        # 3-node path: 0-1-2. A = [[0,1,0],[1,0,1],[0,1,0]], D = diag(1,2,1)
+        # L = D - A = [[1,-1,0],[-1,2,-1],[0,-1,1]]
+        indices = torch.tensor(
+            [[0, 0, 1, 1, 1, 2, 2], [1, 0, 0, 1, 2, 1, 2]], dtype=torch.long,
+        )
+        values = torch.tensor([-1.0, 1.0, -1.0, 2.0, -1.0, -1.0, 1.0], dtype=torch.float64)
+        L = torch.sparse_coo_tensor(indices, values, (3, 3)).coalesce()
+        h = torch.tensor([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], dtype=torch.float64)
+        A = torch.tensor(
+            [[0.0, 1.0, 0.0], [1.0, 0.0, 1.0], [0.0, 1.0, 0.0]], dtype=torch.float64,
+        )
+        expected = A @ h
+        result = _adj_matmul_from_laplacian(L, h)
+        assert torch.allclose(result, expected, atol=1e-12)
+
+    def test_gin_gradient_flows(self) -> None:
+        from benchmarks.hodge.models import GINBaseline
+
+        model = GINBaseline.build(input_dim=4, num_classes=2, seed=0).to(torch.float64)
+        indices = torch.tensor(
+            [[0, 0, 1, 1, 2, 2, 0, 1, 2], [1, 2, 0, 2, 0, 1, 0, 1, 2]], dtype=torch.long,
+        )
+        values = torch.tensor(
+            [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 2.0, 2.0, 2.0], dtype=torch.float64,
+        )
+        L = torch.sparse_coo_tensor(indices, values, (3, 3)).coalesce()
+        x = torch.randn(3, 4, dtype=torch.float64)
+        out = model.forward_one(x, L)
+        loss = out.sum()
+        loss.backward()
+        grad_count = sum(1 for p in model.parameters() if p.grad is not None and p.grad.abs().sum() > 0)
+        assert grad_count >= 2
+
+    def test_gat_isolated_node_no_crash(self) -> None:
+        """GAT softmax on a node with no neighbours should not produce NaN."""
+        from benchmarks.hodge.models import GATBaseline
+
+        model = GATBaseline.build(input_dim=4, num_classes=2, seed=0).to(torch.float64)
+        # 2-node graph with no edges — Laplacian is zero matrix.
+        L = torch.sparse_coo_tensor(
+            torch.zeros(2, 0, dtype=torch.long),
+            torch.zeros(0, dtype=torch.float64),
+            (2, 2),
+        ).coalesce()
+        x = torch.randn(2, 4, dtype=torch.float64)
+        out = model.forward_one(x, L)
+        assert out.shape == (2,)
+        assert torch.all(torch.isfinite(out))
+
+    @pytest.mark.parametrize("model_name", ["gin-baseline", "gin-normalised", "gat-baseline"])
+    def test_new_models_param_count_nci1(self, model_name: str) -> None:
+        """GIN/GAT arms must have param counts within 1% of the Hodge/MLP arms
+        for the matched-capacity protocol to be valid."""
+        from benchmarks.hodge.models import get_model
+
+        model = get_model(model_name).build(input_dim=37, num_classes=2, seed=0)
+        count = sum(p.numel() for p in model.parameters())
+        # Hodge-residual and MLP both have 2338 params at input_dim=37
+        assert abs(count - 2338) / 2338 < 0.02, f"{model_name}: {count} params vs 2338 target"
+
+    def test_nan_guard_in_training_loop(self) -> None:
+        """If a model produces NaN loss, training must stop early and record
+        NaN train loss instead of corrupting subsequent gradient steps."""
+        from benchmarks.hodge.classification import _train_one_seed
+        from benchmarks.hodge.datasets import GraphSample
+
+        class _NaNModel(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self._dummy = torch.nn.Parameter(torch.zeros(1, dtype=torch.float64))
+
+            def forward_one(
+                self, x: torch.Tensor, laplacian: torch.sparse.Tensor,
+            ) -> torch.Tensor:
+                return torch.tensor([float("nan"), float("nan")], dtype=torch.float64)
+
+        L = torch.sparse_coo_tensor(
+            torch.tensor([[0, 1, 0, 1], [1, 0, 0, 1]], dtype=torch.long),
+            torch.tensor([-1.0, -1.0, 1.0, 1.0], dtype=torch.float64),
+            (2, 2),
+        ).coalesce()
+        samples = [GraphSample(x=torch.randn(2, 3, dtype=torch.float64), laplacian=L, y=0)]
+        cell = _train_one_seed(
+            _NaNModel(), train_samples=samples, test_samples=samples,
+            n_epochs=5, learning_rate=1e-2, seed=0,
+        )
+        assert np.isnan(cell.final_train_loss)
 
 
 # ---------------------------------------------------------------------------

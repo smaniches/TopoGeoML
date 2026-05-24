@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import platform
+import subprocess
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -23,12 +24,34 @@ from benchmarks.stats import benjamini_hochberg, compare_paired
 SCHEMA_VERSION = "hodge-1.0.0"
 
 
+def _get_git_sha() -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL, text=True,
+        ).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "unknown"
+
+
+def _get_dependency_versions() -> dict[str, str]:
+    versions: dict[str, str] = {}
+    for mod in ("torch", "numpy", "scipy", "torch_geometric"):
+        try:
+            m = __import__(mod)
+            versions[mod] = getattr(m, "__version__", "unknown")
+        except ImportError:
+            versions[mod] = "not installed"
+    return versions
+
+
 @dataclass
 class HodgeRunResult:
     schema_version: str
     timestamp_utc: str
     platform_string: str
     python_version: str
+    git_commit_sha: str = ""
+    dependency_versions: dict[str, str] = field(default_factory=dict)
     reports: list[ClassificationReport] = field(default_factory=list)
     pairwise_comparisons: list[dict[str, Any]] = field(default_factory=list)
 
@@ -38,6 +61,8 @@ class HodgeRunResult:
             "timestamp_utc": self.timestamp_utc,
             "platform_string": self.platform_string,
             "python_version": self.python_version,
+            "git_commit_sha": self.git_commit_sha,
+            "dependency_versions": self.dependency_versions,
             "reports": [r.as_dict() for r in self.reports],
             "pairwise_comparisons": self.pairwise_comparisons,
         }
@@ -72,6 +97,8 @@ def run(
         timestamp_utc=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         platform_string=platform.platform(),
         python_version=platform.python_version(),
+        git_commit_sha=_get_git_sha(),
+        dependency_versions=_get_dependency_versions(),
     )
 
     # Per-(model, dataset) classification reports.
@@ -144,6 +171,11 @@ def render_markdown(result: HodgeRunResult) -> str:
     lines.append(f"- Timestamp (UTC): {result.timestamp_utc}")
     lines.append(f"- Platform: {result.platform_string}")
     lines.append(f"- Python: {result.python_version}")
+    if result.git_commit_sha:
+        lines.append(f"- Git commit: `{result.git_commit_sha}`")
+    if result.dependency_versions:
+        deps = ", ".join(f"{k}={v}" for k, v in sorted(result.dependency_versions.items()))
+        lines.append(f"- Dependencies: {deps}")
     lines.append("")
     lines.append("## Per-(model × dataset) test accuracy")
     lines.append("")

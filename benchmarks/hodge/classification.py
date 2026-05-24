@@ -93,6 +93,7 @@ def _train_one_seed(
     # SGD steps with a fixed-order curriculum, which is not SGD.
     # Caught by Gemini's PR #6 review.
     epoch_rng = np.random.default_rng(seed)
+    nan_detected = False
     for _ in range(n_epochs):
         model.train()
         epoch_loss = 0.0
@@ -102,9 +103,15 @@ def _train_one_seed(
             opt.zero_grad()
             logits = model.forward_one(sample.x, sample.laplacian).unsqueeze(0)
             loss = loss_fn(logits, torch.tensor([sample.y]))
+            if not torch.isfinite(loss):
+                nan_detected = True
+                break
             loss.backward()
             opt.step()
             epoch_loss += float(loss.item())
+        if nan_detected:
+            final_train_loss = float("nan")
+            break
         final_train_loss = epoch_loss / max(len(train_samples), 1)
 
     # Test accuracy.
