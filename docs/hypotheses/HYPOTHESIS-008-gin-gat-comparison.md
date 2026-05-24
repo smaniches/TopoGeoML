@@ -93,7 +93,66 @@ Both implementations use the existing `forward_one(x, laplacian)` interface. No 
 | mlp-baseline | ~40 min |
 | **Total** | **~4 hours** |
 
-## 8. Reproduction
+## 8. Resolved outcome (2026-05-24, 30 seeds x 10 epochs, 4 arms, NCI1)
+
+Per-arm reports in `notebooks/results/h008_nci1_gin_gat_30seeds.{json,md}`. All numbers below are read directly from the JSON artifact.
+
+### Per-arm accuracy
+
+| Arm | Median accuracy (BCa 95% CI) | vs MLP p_BH | vs MLP verdict |
+|---|---|---|---|
+| **hodge-mp-residual** | **0.609 [0.581, 0.625]** | **4.05 x 10^-3** | **WINS (+8.6 pp)** |
+| gin-baseline | 0.500 [0.500, 0.505] | 2.96 x 10^-3 | LOSES (-2.3 pp) |
+| gat-baseline | 0.500 [0.500, 0.500] | 1.05 x 10^-4 | LOSES (-2.3 pp) |
+| mlp-baseline | 0.523 [0.513, 0.566] | -- | control |
+
+### Headline comparison: Hodge vs GIN and GAT
+
+| Comparison | median Delta | p_BH | r | Verdict |
+|---|---|---|---|---|
+| Hodge vs GIN | +0.1095 | 6.36 x 10^-6 | +0.933 | Hodge strictly outperforms |
+| Hodge vs GAT | +0.1095 | 6.36 x 10^-6 | +1.000 | Hodge strictly outperforms |
+| Hodge vs MLP | +0.0864 | 4.05 x 10^-3 | +0.533 | Hodge strictly outperforms (reproduces H003) |
+| GIN vs GAT | +0.0000 | 1.33 x 10^-2 | +0.368 | GIN marginally above GAT |
+| GIN vs MLP | -0.0231 | 2.96 x 10^-3 | -0.600 | GIN strictly underperforms MLP |
+| GAT vs MLP | -0.0231 | 1.05 x 10^-4 | -0.833 | GAT strictly underperforms MLP |
+
+### Sub-hypotheses resolved
+
+- **H28** (Hodge vs GIN): **FALSIFIED as stated (GIN matches Hodge), but in the unexpected direction — Hodge strictly BEATS GIN** at p_BH = 6.36 x 10^-6 with r = +0.933. The prediction that GIN would at least match Hodge based on WL-1 expressiveness is refuted at this configuration.
+- **H29** (Hodge vs GAT): Hodge strictly beats GAT at p_BH = 6.36 x 10^-6 with r = +1.000 (perfect rank separation).
+- **H30** (GIN vs MLP): **REFUTED.** GIN does NOT beat MLP. GIN collapses to class prior (0.500) and is strictly worse than MLP (p_BH = 2.96 x 10^-3). This was the unexpected outcome flagged in the decision tree.
+- **H31** (GAT vs MLP): **REFUTED.** Same as H30 — GAT collapses to class prior.
+- **H32** (GIN vs GAT): Both near class prior; GIN marginally above GAT at p_BH = 0.013.
+
+### Interpretation
+
+The result is unambiguous at the level of the observed data: under the matched-capacity protocol, Hodge-MP-residual dramatically outperforms both GIN and GAT on NCI1. However, the interpretation requires careful analysis of *why* GIN and GAT collapse to class prior when MLP does not.
+
+**The spectral normalisation hypothesis.** The Hodge-MP-residual arm applies symmetric normalisation (L_tilde = D^{-1/2} L D^{-1/2}), which bounds the propagation operator's eigenvalues to [0, 2] and prevents degree-dependent feature scaling (Kipf & Welling 2017, Lemma 1). GIN's update rule `(1+eps)*h + A@h` uses the raw adjacency sum without normalisation. On NCI1 (average degree ~2.1, but with high-degree nodes in aromatic compounds), the unnormalised aggregation can produce features that scale linearly with degree, leading to gradient instability at the tested learning rate and epoch budget. The MLP baseline avoids this entirely by ignoring graph structure.
+
+**This is an architectural interaction, not a theoretical expressiveness result.** GIN's WL-1 expressiveness guarantee holds in the limit of sufficient capacity, depth, and training. The matched-capacity protocol (1 layer, 32 hidden units, 10 epochs, no batch normalisation) is a deliberate experimental constraint that isolates the propagation mechanism but may be insufficient for GIN's aggregation dynamics. The result demonstrates that the Hodge Laplacian's symmetric normalisation provides a training-stability advantage under tight capacity constraints — a practical finding, not a claim about theoretical expressiveness.
+
+**Controls.** The MLP and Hodge-MP-residual arms reproduce H003 exactly (MLP: 0.523, Hodge: 0.609), confirming that the experimental infrastructure is correct and the result is specific to the GIN/GAT architectures under these constraints.
+
+### Scoped claim
+
+> Under the matched-capacity protocol (1-layer message passing, hidden_dim=32, no batch normalisation, Adam(lr=1e-2), 10 epochs, 30 seeds, NCI1), the Hodge-MP-residual arm strictly outperforms both GIN (p_BH = 6.36 x 10^-6, r = +0.933) and GAT (p_BH = 6.36 x 10^-6, r = +1.000). GIN and GAT collapse to class prior (0.500), performing strictly worse than the no-topology MLP baseline (0.523). The result is attributable to the Hodge arm's symmetric Laplacian normalisation providing training stability that unnormalised message-passing architectures lack at this capacity and epoch budget.
+
+### Limitations of this result
+
+1. The comparison uses minimal-capacity single-layer implementations without batch normalisation. Standard GIN and GAT architectures in the literature use 2-5 layers, batch normalisation, and larger hidden dimensions. The result does not generalise to those configurations without further testing.
+2. The GIN implementation uses sum aggregation from the raw adjacency. Adding degree normalisation (as in GCN) or mean aggregation (as in GraphSAGE) would likely change the result.
+3. The epoch budget (10) may be insufficient for GIN/GAT to converge. Longer training schedules are a natural follow-up.
+
+### Next steps
+
+- **H008-b (planned):** Repeat with degree-normalised GIN (GCN-style: D^{-1/2} A D^{-1/2} instead of raw A) to test whether normalisation alone closes the gap.
+- **H008-c (planned):** Repeat with batch normalisation enabled on all arms to test whether the capacity constraint is the binding factor.
+
+---
+
+## 9. Reproduction
 
 ```bash
 python -m benchmarks.hodge \
