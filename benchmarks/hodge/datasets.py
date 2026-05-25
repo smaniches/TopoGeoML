@@ -182,10 +182,63 @@ class NCI1Dataset:
         return _load_tudataset("NCI1")
 
 
+def _load_tudataset_degree_features(name: str) -> tuple[list[GraphSample], int, int]:
+    """TUDataset loader using degree as node feature (for featureless graphs).
+
+    For datasets like COLLAB where num_node_features == 0, using one-hot
+    node identity creates input dimensions that scale with graph size,
+    breaking capacity matching. Degree features are a fixed 1-dim input
+    that encodes local graph structure without identity leakage.
+    """
+    from torch_geometric.datasets import TUDataset
+
+    ds = TUDataset(root=str(_cache_root()), name=name)
+    samples: list[GraphSample] = []
+    for g in ds:
+        n = g.num_nodes
+        ei = g.edge_index
+        degrees = torch.zeros(n, dtype=torch.float64)
+        if ei.numel() > 0:
+            for node_idx in ei[0].tolist():
+                degrees[node_idx] += 1.0
+        x = degrees.unsqueeze(1)
+        L = _graph_to_laplacian(n, ei)
+        samples.append(GraphSample(x=x, laplacian=L, y=int(g.y.item())))
+    return samples, 1, int(ds.num_classes)
+
+
+@dataclass(frozen=True)
+class COLLABDataset:
+    """COLLAB: 5000 scientific-collaboration graphs, 3 classes.
+
+    Graphs represent researcher ego-networks from High Energy Physics,
+    Condensed Matter Physics, and Astrophysics. Nodes are researchers;
+    edges are co-authorships. No node features — degree is used as the
+    1-dim input. Average graph: 74 nodes, 2458 edges, triangle-rich.
+
+    Citation: Yanardag & Vishwanathan 2015; Morris et al. 2020 TUDataset.
+    """
+
+    name: str = "collab"
+    version: str = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        try:
+            import torch_geometric  # noqa: F401
+        except ImportError:  # pragma: no cover
+            return False
+        return True
+
+    def load(self) -> tuple[list[GraphSample], int, int]:
+        return _load_tudataset_degree_features("COLLAB")
+
+
 REGISTERED: dict[str, Any] = {
     "mutag": MUTAGDataset(),
     "proteins": PROTEINSDataset(),
     "nci1": NCI1Dataset(),
+    "collab": COLLABDataset(),
 }
 
 
