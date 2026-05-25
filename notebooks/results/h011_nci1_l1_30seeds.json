@@ -1,0 +1,1257 @@
+{
+  "dependency_versions": {
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "torch": "2.12.0+cu130",
+    "torch_geometric": "2.7.0"
+  },
+  "git_commit_sha": "7076c1097c28d08eb99351abec693d3c7d8086f3",
+  "pairwise_comparisons": [
+    {
+      "arm_a_name": "l1-hodge-residual",
+      "arm_b_name": "hodge-mp-residual",
+      "dataset": "nci1",
+      "effect_size": -0.3076923076923077,
+      "effect_size_name": "rank-biserial",
+      "kind": "not_significant",
+      "median_a": 0.5900243309002433,
+      "median_b": 0.6094890510948905,
+      "median_diff": -0.019464720194647178,
+      "median_ratio": 0.9680638722554891,
+      "n_a": 30,
+      "n_b": 30,
+      "p_value_bh_adjusted": 0.07867070697659483,
+      "p_value_raw": 0.06555892248049569,
+      "test_name": "wilcoxon-signed-rank",
+      "test_statistic": 103.0
+    },
+    {
+      "arm_a_name": "l1-hodge-residual",
+      "arm_b_name": "gin-residual",
+      "dataset": "nci1",
+      "effect_size": -0.5333333333333333,
+      "effect_size_name": "rank-biserial",
+      "kind": "significant",
+      "median_a": 0.5900243309002433,
+      "median_b": 0.6289537712895377,
+      "median_diff": -0.038929440389294356,
+      "median_ratio": 0.9381044487427467,
+      "n_a": 30,
+      "n_b": 30,
+      "p_value_bh_adjusted": 0.006756023155995143,
+      "p_value_raw": 0.003160965989436802,
+      "test_name": "wilcoxon-signed-rank",
+      "test_statistic": 89.0
+    },
+    {
+      "arm_a_name": "l1-hodge-residual",
+      "arm_b_name": "mlp-baseline",
+      "dataset": "nci1",
+      "effect_size": 0.26666666666666666,
+      "effect_size_name": "rank-biserial",
+      "kind": "not_significant",
+      "median_a": 0.5900243309002433,
+      "median_b": 0.5231143552311435,
+      "median_diff": 0.06690997566909984,
+      "median_ratio": 1.1279069767441863,
+      "n_a": 30,
+      "n_b": 30,
+      "p_value_bh_adjusted": 0.09569757283319624,
+      "p_value_raw": 0.09569757283319624,
+      "test_name": "wilcoxon-signed-rank",
+      "test_statistic": 151.5
+    },
+    {
+      "arm_a_name": "hodge-mp-residual",
+      "arm_b_name": "gin-residual",
+      "dataset": "nci1",
+      "effect_size": -0.4,
+      "effect_size_name": "rank-biserial",
+      "kind": "significant",
+      "median_a": 0.6094890510948905,
+      "median_b": 0.6289537712895377,
+      "median_diff": -0.019464720194647178,
+      "median_ratio": 0.9690522243713734,
+      "n_a": 30,
+      "n_b": 30,
+      "p_value_bh_adjusted": 0.015202965550792034,
+      "p_value_raw": 0.01013531036719469,
+      "test_name": "wilcoxon-signed-rank",
+      "test_statistic": 107.5
+    },
+    {
+      "arm_a_name": "hodge-mp-residual",
+      "arm_b_name": "mlp-baseline",
+      "dataset": "nci1",
+      "effect_size": 0.5333333333333333,
+      "effect_size_name": "rank-biserial",
+      "kind": "significant",
+      "median_a": 0.6094890510948905,
+      "median_b": 0.5231143552311435,
+      "median_diff": 0.08637469586374702,
+      "median_ratio": 1.1651162790697676,
+      "n_a": 30,
+      "n_b": 30,
+      "p_value_bh_adjusted": 0.006756023155995143,
+      "p_value_raw": 0.003378011577997571,
+      "test_name": "wilcoxon-signed-rank",
+      "test_statistic": 90.0
+    },
+    {
+      "arm_a_name": "gin-residual",
+      "arm_b_name": "mlp-baseline",
+      "dataset": "nci1",
+      "effect_size": 0.6,
+      "effect_size_name": "rank-biserial",
+      "kind": "significant",
+      "median_a": 0.6289537712895377,
+      "median_b": 0.5231143552311435,
+      "median_diff": 0.1058394160583942,
+      "median_ratio": 1.2023255813953488,
+      "n_a": 30,
+      "n_b": 30,
+      "p_value_bh_adjusted": 0.002418699462701965,
+      "p_value_raw": 0.0004031165771169942,
+      "test_name": "wilcoxon-signed-rank",
+      "test_statistic": 60.5
+    }
+  ],
+  "platform_string": "Linux-6.18.5-x86_64-with-glibc2.39",
+  "python_version": "3.11.15",
+  "reports": [
+    {
+      "accuracy_ci95_high": 0.614963503649635,
+      "accuracy_ci95_low": 0.5249391727493917,
+      "accuracy_median": 0.5900243309002433,
+      "cells": [
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8850274002926668,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 0,
+          "test_accuracy": 0.5316301703163017
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9384872763329687,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 1,
+          "test_accuracy": 0.5170316301703163
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 1.0718899709049474,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 2,
+          "test_accuracy": 0.6253041362530414
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7983868577329843,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 3,
+          "test_accuracy": 0.6642335766423357
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8291841040012876,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 4,
+          "test_accuracy": 0.5145985401459854
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9667025636629119,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 5,
+          "test_accuracy": 0.6277372262773723
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9740951585179167,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 6,
+          "test_accuracy": 0.5036496350364964
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 1.0457998918287912,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 7,
+          "test_accuracy": 0.6143552311435523
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9195861133506407,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 8,
+          "test_accuracy": 0.6386861313868614
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 1.0740866534535591,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 9,
+          "test_accuracy": 0.621654501216545
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 1.0416142375958708,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 10,
+          "test_accuracy": 0.6009732360097324
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9859135411434622,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 11,
+          "test_accuracy": 0.583941605839416
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 1.0520596083013787,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 12,
+          "test_accuracy": 0.6155717761557178
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8872255502532812,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 13,
+          "test_accuracy": 0.5158150851581509
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 1.0354016380799878,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 14,
+          "test_accuracy": 0.51338199513382
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8872712929106485,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 15,
+          "test_accuracy": 0.5961070559610706
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8115322281874251,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 16,
+          "test_accuracy": 0.6265206812652068
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9162799112023737,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 17,
+          "test_accuracy": 0.5985401459854015
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9236933283254806,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 18,
+          "test_accuracy": 0.5109489051094891
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9137544452091793,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 19,
+          "test_accuracy": 0.5742092457420924
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.885819384755041,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 20,
+          "test_accuracy": 0.6240875912408759
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 1.0326936100908382,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 21,
+          "test_accuracy": 0.5340632603406326
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9308257773150634,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 22,
+          "test_accuracy": 0.51338199513382
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8727077044623527,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 23,
+          "test_accuracy": 0.49878345498783455
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9888690504732175,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 24,
+          "test_accuracy": 0.648418491484185
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 1.0783825058273184,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 25,
+          "test_accuracy": 0.648418491484185
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8907669542975681,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 26,
+          "test_accuracy": 0.5182481751824818
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.9598826672124844,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 27,
+          "test_accuracy": 0.5705596107055961
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8862878097312042,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 28,
+          "test_accuracy": 0.597323600973236
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 1.6737706512320112,
+          "model_name": "l1-hodge-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 29,
+          "test_accuracy": 0.5158150851581509
+        }
+      ],
+      "dataset_name": "nci1",
+      "dataset_version": "1.0.0",
+      "learning_rate": 0.01,
+      "model_name": "l1-hodge-residual",
+      "model_version": "1.0.0",
+      "n_epochs": 10
+    },
+    {
+      "accuracy_ci95_high": 0.6253041362530414,
+      "accuracy_ci95_low": 0.5809002433090025,
+      "accuracy_median": 0.6094890510948905,
+      "cells": [
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7523485644254526,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 0,
+          "test_accuracy": 0.5328467153284672
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.802293486967507,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 1,
+          "test_accuracy": 0.5802919708029197
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7908768401916956,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 2,
+          "test_accuracy": 0.5364963503649635
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8126661046103499,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 3,
+          "test_accuracy": 0.6386861313868614
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7481158191915589,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 4,
+          "test_accuracy": 0.6228710462287105
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7740712646811747,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 5,
+          "test_accuracy": 0.6386861313868614
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7623088620141292,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 6,
+          "test_accuracy": 0.5815085158150851
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7920913029752614,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 7,
+          "test_accuracy": 0.5888077858880778
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7549676820800111,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 8,
+          "test_accuracy": 0.6265206812652068
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7632971815319387,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 9,
+          "test_accuracy": 0.6119221411192214
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8101285386892538,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 10,
+          "test_accuracy": 0.6301703163017032
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7920102533676388,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 11,
+          "test_accuracy": 0.6204379562043796
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7943097320086333,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 12,
+          "test_accuracy": 0.6301703163017032
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7476524489054358,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 13,
+          "test_accuracy": 0.6277372262773723
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7768667590626079,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 14,
+          "test_accuracy": 0.5644768856447688
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.790069115960547,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 15,
+          "test_accuracy": 0.6313868613138686
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7797112048985656,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 16,
+          "test_accuracy": 0.6399026763990268
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7832863417201753,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 17,
+          "test_accuracy": 0.5985401459854015
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.756619871552489,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 18,
+          "test_accuracy": 0.5109489051094891
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7918669437603381,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 19,
+          "test_accuracy": 0.597323600973236
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7541858805376495,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 20,
+          "test_accuracy": 0.6240875912408759
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7859536237413828,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 21,
+          "test_accuracy": 0.621654501216545
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7876696527084658,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 22,
+          "test_accuracy": 0.51338199513382
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7634462260365819,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 23,
+          "test_accuracy": 0.6277372262773723
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7572735821902926,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 24,
+          "test_accuracy": 0.6070559610705596
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8131342263041865,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 25,
+          "test_accuracy": 0.6411192214111923
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7782460781852519,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 26,
+          "test_accuracy": 0.5304136253041363
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7688506495304841,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 27,
+          "test_accuracy": 0.5632603406326034
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7644394509146031,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 28,
+          "test_accuracy": 0.551094890510949
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7602279891024043,
+          "model_name": "hodge-mp-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 29,
+          "test_accuracy": 0.5194647201946472
+        }
+      ],
+      "dataset_name": "nci1",
+      "dataset_version": "1.0.0",
+      "learning_rate": 0.01,
+      "model_name": "hodge-mp-residual",
+      "model_version": "1.0.0",
+      "n_epochs": 10
+    },
+    {
+      "accuracy_ci95_high": 0.6405109489051095,
+      "accuracy_ci95_low": 0.6070559610705596,
+      "accuracy_median": 0.6289537712895377,
+      "cells": [
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7420234025410988,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 0,
+          "test_accuracy": 0.6265206812652068
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8218564080056373,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 1,
+          "test_accuracy": 0.6496350364963503
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7730406047463314,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 2,
+          "test_accuracy": 0.5085158150851582
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7675063698102148,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 3,
+          "test_accuracy": 0.6581508515815085
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7381129704695356,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 4,
+          "test_accuracy": 0.6678832116788321
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7619875668085543,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 5,
+          "test_accuracy": 0.6362530413625304
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7788213137963875,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 6,
+          "test_accuracy": 0.6094890510948905
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7953898530310969,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 7,
+          "test_accuracy": 0.6253041362530414
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7798752498162803,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 8,
+          "test_accuracy": 0.5644768856447688
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7546953107140185,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 9,
+          "test_accuracy": 0.6788321167883211
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7819773462284074,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 10,
+          "test_accuracy": 0.5206812652068127
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7636923011580588,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 11,
+          "test_accuracy": 0.670316301703163
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7447190150018611,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 12,
+          "test_accuracy": 0.6678832116788321
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.752618723250716,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 13,
+          "test_accuracy": 0.6070559610705596
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8010501606497519,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 14,
+          "test_accuracy": 0.6338199513381995
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7526002858473436,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 15,
+          "test_accuracy": 0.6666666666666666
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7509579579197444,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 16,
+          "test_accuracy": 0.6557177615571776
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7815450864302786,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 17,
+          "test_accuracy": 0.5924574209245742
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7492272901362484,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 18,
+          "test_accuracy": 0.6253041362530414
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.8035257169206935,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 19,
+          "test_accuracy": 0.5827250608272506
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.737552211621782,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 20,
+          "test_accuracy": 0.6253041362530414
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7842765568891902,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 21,
+          "test_accuracy": 0.6313868613138686
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7387340295436127,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 22,
+          "test_accuracy": 0.5316301703163017
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7369506526142153,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 23,
+          "test_accuracy": 0.6399026763990268
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7710654946327673,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 24,
+          "test_accuracy": 0.6508515815085159
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7581639954959183,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 25,
+          "test_accuracy": 0.6313868613138686
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7772730119556455,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 26,
+          "test_accuracy": 0.5364963503649635
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7765121557887298,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 27,
+          "test_accuracy": 0.551094890510949
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.7401142461294732,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 28,
+          "test_accuracy": 0.6411192214111923
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.767153610570854,
+          "model_name": "gin-residual",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 29,
+          "test_accuracy": 0.5790754257907542
+        }
+      ],
+      "dataset_name": "nci1",
+      "dataset_version": "1.0.0",
+      "learning_rate": 0.01,
+      "model_name": "gin-residual",
+      "model_version": "1.0.0",
+      "n_epochs": 10
+    },
+    {
+      "accuracy_ci95_high": 0.5663017031630171,
+      "accuracy_ci95_low": 0.5133819951338199,
+      "accuracy_median": 0.5231143552311435,
+      "cells": [
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6425443891930283,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 0,
+          "test_accuracy": 0.5997566909975669
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6948621803920458,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 1,
+          "test_accuracy": 0.5
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6876452749553508,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 2,
+          "test_accuracy": 0.5194647201946472
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6870441697273442,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 3,
+          "test_accuracy": 0.5
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6942580747239343,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 4,
+          "test_accuracy": 0.5
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6588963865338806,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 5,
+          "test_accuracy": 0.6520681265206812
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6456965535662272,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 6,
+          "test_accuracy": 0.5693430656934306
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6489834296148775,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 7,
+          "test_accuracy": 0.6654501216545012
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6499317478397109,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 8,
+          "test_accuracy": 0.5632603406326034
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6855136942215224,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 9,
+          "test_accuracy": 0.5218978102189781
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6468424307587128,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 10,
+          "test_accuracy": 0.6277372262773723
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6873440809262436,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 11,
+          "test_accuracy": 0.5
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6667152284812099,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 12,
+          "test_accuracy": 0.524330900243309
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6867647136305669,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 13,
+          "test_accuracy": 0.5304136253041363
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6557686657658384,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 14,
+          "test_accuracy": 0.6362530413625304
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6860960921606698,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 15,
+          "test_accuracy": 0.5145985401459854
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6837018816599975,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 16,
+          "test_accuracy": 0.5170316301703163
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6888687552860498,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 17,
+          "test_accuracy": 0.5
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6830142930965498,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 18,
+          "test_accuracy": 0.5158150851581509
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6976166372196377,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 19,
+          "test_accuracy": 0.5060827250608273
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6480714610959185,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 20,
+          "test_accuracy": 0.6131386861313869
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6459157128174946,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 21,
+          "test_accuracy": 0.5632603406326034
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6558342916915738,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 22,
+          "test_accuracy": 0.6411192214111923
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6482136443075392,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 23,
+          "test_accuracy": 0.6386861313868614
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6579662350337968,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 24,
+          "test_accuracy": 0.5705596107055961
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6840719658004446,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 25,
+          "test_accuracy": 0.5
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6858339498830225,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 26,
+          "test_accuracy": 0.5
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6584899427502551,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 27,
+          "test_accuracy": 0.4975669099756691
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.684239983422028,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 28,
+          "test_accuracy": 0.5279805352798054
+        },
+        {
+          "dataset_name": "nci1",
+          "final_train_loss": 0.6884628497657805,
+          "model_name": "mlp-baseline",
+          "n_test": 822,
+          "n_train": 3288,
+          "seed": 29,
+          "test_accuracy": 0.5121654501216545
+        }
+      ],
+      "dataset_name": "nci1",
+      "dataset_version": "1.0.0",
+      "learning_rate": 0.01,
+      "model_name": "mlp-baseline",
+      "model_version": "1.0.0",
+      "n_epochs": 10
+    }
+  ],
+  "schema_version": "hodge-1.0.0",
+  "timestamp_utc": "2026-05-25T03:51:28Z"
+}
