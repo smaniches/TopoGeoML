@@ -73,6 +73,14 @@ The L_1 arm has identical parameter count to the L_0 Hodge arm — the only diff
 
 L_1 is computed inside `forward_one` from the L_0 Laplacian: the edge set is extracted from L_0's off-diagonal entries, the clique complex is constructed with max_dim=2, and `hodge_laplacian(sc, k=1)` returns L_1. This avoids interface changes to the GraphSample dataclass or the training loop. The per-graph overhead is negligible at the tested graph sizes (18-30 nodes).
 
+**Critical structural observation (discovered after preregistration, before results).** Triangle counts in the tested datasets:
+- MUTAG: **0 triangles in all 188 graphs.** Molecular graphs are sparse; aromatic rings are 5-6 cycles, not 3-cliques.
+- NCI1: **96% of graphs (3961/4110) have 0 triangles.** Only 149 graphs have any triangle; maximum is 3.
+
+This means L_1's up-Laplacian component ∂_2 ∂_2^T (shared-triangle adjacency) is effectively zero for nearly all graphs. L_1 degenerates to the down-Laplacian ∂_1^T ∂_1 (edges sharing a vertex), which encodes the same neighbourhood structure as L_0. A negative H011 result should be interpreted as "these datasets lack the higher-order simplicial structure that L_1 is designed to exploit" rather than "L_1 message passing is uninformative in general."
+
+Testing L_1 on datasets with rich triangle structure (social networks, collaboration graphs, protein contact maps) is the appropriate follow-up if H011 produces a null result on these molecular benchmarks.
+
 ## 7. Reproduction
 
 ```bash
