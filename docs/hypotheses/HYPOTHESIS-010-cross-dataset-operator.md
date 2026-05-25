@@ -1,6 +1,6 @@
 # Hypothesis 010: Does the high-pass vs low-pass operator distinction predict cross-dataset performance?
 
-**Status.** Preregistered 2026-05-25, before execution.
+**Status.** Resolved 2026-05-25. H42 directionally confirmed but for the wrong reason (gin-residual wins on MUTAG AND NCI1, not MUTAG-specifically); H43 neither arm distinguishable on PROTEINS; H44 partially confirmed (gap is dataset-dependent in magnitude but not direction); H45 refuted (Hodge loses to MLP on MUTAG even with external residual); H46 refuted (neither arm significantly outperforms MLP on PROTEINS). See §6.
 
 **Falsification target.** Whether the choice between high-pass (Hodge Laplacian L_tilde) and low-pass (normalised adjacency I - L_tilde) propagation operators produces dataset-dependent classification differences when both arms use external residual. H008-c showed the operators are interchangeable on NCI1 (gin-residual 0.629 vs Hodge 0.609). This experiment tests whether the same holds on MUTAG and PROTEINS, or whether the high-pass/low-pass distinction interacts with dataset-level structural properties.
 
@@ -76,3 +76,41 @@ python -m benchmarks.hodge \
   --output notebooks/results/h010_proteins_operator_30seeds.json \
   --markdown notebooks/results/h010_proteins_operator_30seeds.md
 ```
+
+## 6. Resolved outcome (2026-05-25, 30 seeds, MUTAG 20 epochs / PROTEINS 10 epochs)
+
+Per-arm reports in `notebooks/results/h010_{mutag,proteins}_operator_30seeds.{json,md}`.
+
+### Cross-dataset summary (with NCI1 from H008-c)
+
+| Dataset | Hodge (high-pass) | gin-residual (low-pass) | MLP | Hodge vs gin-residual p_BH | Direction |
+|---|---|---|---|---|---|
+| MUTAG (188) | 0.750 [0.724, 0.789] | 0.789 [0.763, 0.816] | 0.789 [0.763, 0.816] | 7.44 x 10^-3 | low-pass wins |
+| PROTEINS (1113) | 0.686 [0.670, 0.717] | 0.675 [0.657, 0.709] | 0.675 [0.596, 0.706] | 0.292 | no difference |
+| NCI1 (4110) | 0.609 [0.581, 0.625] | 0.629 [0.607, 0.641] | 0.523 [0.513, 0.566] | 1.01 x 10^-2 | low-pass wins |
+
+### Sub-hypotheses resolved
+
+- **H42** (gin-residual > Hodge on MUTAG): **CONFIRMED directionally** (gin-residual 0.789 > Hodge 0.750, p_BH = 7.44 x 10^-3). However, the prediction that this would be MUTAG-specific due to homophily is not supported — the same direction holds on NCI1.
+- **H43** (gin-residual vs Hodge on PROTEINS): Neither arm is distinguishable from the other or from MLP (all p_BH > 0.29). PROTEINS does not discriminate between operators at this configuration.
+- **H44** (dataset-dependent gap): **PARTIALLY CONFIRMED.** The gap magnitude varies (significant on MUTAG and NCI1, null on PROTEINS), but the direction never reverses. The low-pass operator is consistently equal or better than the high-pass operator across all three datasets.
+- **H45** (both arms beat MLP on MUTAG): **REFUTED.** Hodge (0.750) strictly underperforms MLP (0.789) at p_BH = 8.61 x 10^-3. gin-residual matches MLP (p_BH = 0.438). The external residual does not rescue the Hodge arm on MUTAG — high-pass filtering actively harms classification on this dataset.
+- **H46** (both arms beat MLP on PROTEINS): **REFUTED.** Neither arm significantly outperforms MLP (Hodge vs MLP: p_BH = 0.29; gin-residual vs MLP: p_BH = 0.78).
+
+### Interpretation
+
+The high-pass (Hodge Laplacian) vs low-pass (normalised adjacency) operator distinction does not produce a dataset-dependent advantage that favours the Hodge Laplacian on any tested dataset. The low-pass operator is consistently equal or superior:
+
+- **MUTAG:** low-pass matches MLP; high-pass loses by 4 pp. The Laplacian's high-pass filtering attenuates the smooth class signal that MLP captures directly from atom-type features.
+- **PROTEINS:** neither operator adds measurable value over MLP. The dataset does not discriminate between architectures at this capacity (consistent with H002).
+- **NCI1:** both operators beat MLP with external residual; low-pass slightly ahead (+2 pp over Hodge, p_BH = 0.010).
+
+### What the full investigation establishes (H001-H010)
+
+The complete preregistered investigation, comprising 13 hypotheses and 46 falsifiable sub-predictions across three datasets, converges on the following:
+
+1. **Topology-aware message passing with external residual outperforms MLP on NCI1** (+8-10 pp, robust across operators). This is the one positive claim that survives the full ablation series.
+2. **The operative architectural factor is the external residual connection**, not the propagation operator. Without external residual, all message-passing architectures (GIN, GAT, normalised GIN) collapse to class prior on NCI1.
+3. **The Hodge Laplacian does not confer a unique advantage on any tested dataset.** The normalised adjacency operator (low-pass) matches or outperforms the Hodge Laplacian (high-pass) on all three datasets when both use external residual.
+4. **The high-pass Hodge Laplacian is actively harmful on MUTAG**, where it attenuates the class signal that the MLP captures from features alone.
+5. **The NCI1 advantage does not transfer to MUTAG or PROTEINS** at this capacity and epoch budget.
