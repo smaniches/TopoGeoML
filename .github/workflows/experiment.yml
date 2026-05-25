@@ -75,7 +75,7 @@ jobs:
             --datasets ${{ inputs.datasets }} \
             --models ${{ inputs.models }} \
             --seeds ${{ steps.seeds.outputs.list }} \
-            --n-epochs ${{ inputs.epochs }} \
+            --n-epochs $(python -c "print(int(${{ inputs.epochs }}))") \
             --output notebooks/results/${{ inputs.hypothesis }}_30seeds.json \
             --markdown notebooks/results/${{ inputs.hypothesis }}_30seeds.md \
             ${{ inputs.extra_args }}
