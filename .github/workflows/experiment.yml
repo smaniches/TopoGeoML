@@ -24,7 +24,7 @@ on:
         description: "Number of seeds (will use 0..n-1)"
         required: true
         type: number
-        default: 30
+        default: 18
       epochs:
         description: "Number of training epochs"
         required: true
@@ -66,7 +66,7 @@ jobs:
       - name: Generate seed list
         id: seeds
         run: |
-          python -c "print(' '.join(str(i) for i in range(${{ inputs.seeds }})))" > /tmp/seeds.txt
+          python -c "print(' '.join(str(i) for i in range(int(${{ inputs.seeds }}))))" > /tmp/seeds.txt
           echo "list=$(cat /tmp/seeds.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Run experiment
