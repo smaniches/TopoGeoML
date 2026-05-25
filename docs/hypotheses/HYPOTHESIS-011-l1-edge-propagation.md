@@ -1,6 +1,6 @@
 # Hypothesis 011: Does L_1 edge-level message passing capture structural signal that L_0 node-level propagation cannot?
 
-**Status.** Preregistered 2026-05-25, before execution.
+**Status.** Partially resolved 2026-05-25. NCI1 result: L_1 does not significantly outperform MLP (p_BH = 0.096) and underperforms gin-residual (p_BH = 0.007). Expected given that 96% of NCI1 graphs have 0 triangles — L_1's up-Laplacian component is effectively zero. COLLAB (triangle-rich) test running on GitHub Actions. See §8.
 
 **Falsification target.** Whether the 1-Hodge Laplacian L_1 (operating on edge features, encoding shared-triangle adjacency) provides classification-relevant structural information beyond what L_0-based methods capture. This is the first experiment in this series that uses genuinely higher-order topological information.
 

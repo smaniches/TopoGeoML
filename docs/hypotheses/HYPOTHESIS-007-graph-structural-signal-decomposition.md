@@ -1,6 +1,6 @@
 # Hypothesis 007: Which graph-structural proxies explain the H006 constant-feature signal?
 
-**Status.** Preregistered 2026-05-22, before the analysis runs. Lightweight analysis-only follow-up to H006.
+**Status.** Resolved 2026-05-22. H26 refuted (all proxies correlate positively with constant-feature gap, rho = +1.0); H27 refuted (no proxy correlates positively with full-feature gain, rho = -1.0). No single structural proxy explains the full-feature Hodge-vs-MLP gain. See §8.
 
 **Falsification target.** For each of five graph-structural proxies — graph size, degree distribution, Weisfeiler-Lehman (WL) subtree features, cycle statistics, and normalized Hodge Laplacian spectral summaries — measure the per-class separability on MUTAG, PROTEINS, and NCI1. Then ask: which proxy (if any) tracks the dataset-by-dataset *constant-feature* Hodge-vs-prior gap from H006? And which (if any) tracks the *full-feature* Hodge-vs-MLP gain?
 

@@ -1,6 +1,6 @@
 # Hypothesis 006: Does graph-topology signal predict the Hodge advantage? A Weisfeiler-Lehman + feature-shuffle test
 
-**Status.** Preregistered 2026-05-22, before any execution. Conditional on H004 + H005 having both refuted (which they did).
+**Status.** Resolved 2026-05-22. H22 supported (NCI1 constant-feature Hodge above prior); H23 refuted (MUTAG also shows signal); H24 refuted (PROTEINS similar magnitude); H25 refuted (constant-feature gap rank-inverted vs full-feature gain, Spearman rho = -1.0). See §6.
 **Falsification target.** Whether, under constant-feature ablation, the Hodge MP arm retains above-prior predictive signal on the three TUDataset benchmarks (MUTAG, PROTEINS, NCI1). The preregistered sub-hypotheses (§2) frame this as an NCI1-vs-others contrast; the data may confirm that contrast, refute it, or reveal a more nuanced pattern. The verdict is recorded in §6 after the run completes.
 **Prior results that motivate this hypothesis.** H004 refuted sample size as the mechanism (subsampling NCI1 to MUTAG-size leaves Hodge-residual *winning*); H005 refuted feature dimensionality (projecting NCI1 to 7-dim noise leaves Hodge-residual *winning* while MLP collapses to chance). One remaining candidate to test is whether graph-structural signal — measurable by removing node features entirely — accounts for the dataset-by-dataset difference. The preregistered prediction below is that the signal lives mostly in NCI1; the experiment is designed so the data can refute that prediction if it is wrong.
 
