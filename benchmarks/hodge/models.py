@@ -723,6 +723,114 @@ class SheafResidualBaseline:
         return _SheafResidualGraphClassifier(input_dim, num_classes)
 
 
+class _L1HodgeResidualGraphClassifier(nn.Module):
+    """Edge-level message passing on the 1-Hodge Laplacian L_1.
+
+    L_1 operates on edge features and encodes shared-triangle adjacency —
+    two edges are L_1-adjacent if they are co-faces of a common triangle.
+    This captures cycle and ring topology that L_0 (node-level) cannot access.
+
+    Forward:
+      1. proj = proj_in(x)  (n_nodes, d)
+      2. e_{ij} = proj[i] + proj[j]  for each edge (i,j)  (n_edges, d)
+      3. e' = act(L_1_tilde @ e @ W + b) + e  (external residual on edges)
+      4. graph_emb = sum(e')
+      5. logits = head(graph_emb)
+    """
+
+    def __init__(self, input_dim: int, num_classes: int, hidden_dim: int = 32) -> None:
+        super().__init__()
+        self._proj_in = nn.Linear(input_dim, hidden_dim).to(torch.float64)
+        self._mp_weight = nn.Parameter(
+            torch.empty(hidden_dim, hidden_dim, dtype=torch.float64),
+        )
+        self._mp_bias = nn.Parameter(torch.zeros(hidden_dim, dtype=torch.float64))
+        nn.init.xavier_uniform_(self._mp_weight)
+        self._activation = nn.ReLU()
+        self.head = nn.Linear(hidden_dim, num_classes).to(torch.float64)
+
+    def _compute_l1(
+        self, n_nodes: int, laplacian: torch.sparse.Tensor,
+    ) -> tuple[torch.Tensor, list[tuple[int, int]]]:
+        """Compute L_1 from L_0 by reconstructing the graph and building
+        the clique complex with max_dim=2."""
+        import networkx as nx
+
+        from topogeoml.core.complexes import hodge_laplacian
+        from topogeoml.data.graph_to_complex import graph_to_clique_complex
+        from topogeoml.nn.hodge import sparse_scipy_to_torch
+
+        L = laplacian.coalesce()
+        indices = L.indices()
+        off_diag = indices[0] != indices[1]
+        src = indices[0][off_diag].tolist()
+        dst = indices[1][off_diag].tolist()
+
+        g = nx.Graph()
+        g.add_nodes_from(range(n_nodes))
+        seen: set[tuple[int, int]] = set()
+        for s, d in zip(src, dst, strict=True):
+            edge = (min(s, d), max(s, d))
+            if edge not in seen:
+                g.add_edge(*edge)
+                seen.add(edge)
+
+        sc = graph_to_clique_complex(g, max_dim=2, include_isolated_vertices=True)
+        n_edges = sc.n_simplices(1)
+        if n_edges == 0:
+            return torch.zeros(0, 0, dtype=torch.float64), []
+
+        L1 = hodge_laplacian(sc, k=1)
+        L1_torch = sparse_scipy_to_torch(L1, dtype=torch.float64)
+
+        edge_list = sorted(sc.simplices.get(1, []))
+        edge_pairs = [(int(e[0]), int(e[1])) for e in edge_list]
+        return L1_torch, edge_pairs
+
+    def forward_one(
+        self, x: torch.Tensor, laplacian: torch.sparse.Tensor,
+    ) -> torch.Tensor:
+        proj = self._proj_in(x)
+        n_nodes = x.shape[0]
+
+        L1, edge_pairs = self._compute_l1(n_nodes, laplacian)
+
+        if len(edge_pairs) == 0:
+            return self.head(proj.sum(dim=0))
+
+        edge_src = [e[0] for e in edge_pairs]
+        edge_dst = [e[1] for e in edge_pairs]
+        edge_features = proj[edge_src] + proj[edge_dst]
+
+        L1_norm = _symmetric_normalize_sparse(L1)
+        propagated = torch.sparse.mm(L1_norm, edge_features)
+        edge_out = self._activation(
+            propagated @ self._mp_weight + self._mp_bias
+        ) + edge_features
+
+        return self.head(edge_out.sum(dim=0))
+
+
+class L1HodgeResidualClassifier:
+    """L_1 Hodge message passing on edges — tests higher-order topology."""
+
+    name: ClassVar[str] = "l1-hodge-residual"
+    version: ClassVar[str] = "1.0.0"
+
+    @staticmethod
+    def available() -> bool:
+        try:
+            import topogeoml.nn.hodge  # noqa: F401
+        except ImportError:  # pragma: no cover
+            return False
+        return True
+
+    @staticmethod
+    def build(input_dim: int, num_classes: int, seed: int) -> nn.Module:
+        torch.manual_seed(seed)
+        return _L1HodgeResidualGraphClassifier(input_dim, num_classes)
+
+
 REGISTERED: dict[str, type[GraphClassifier]] = {
     HodgeClassifier.name: HodgeClassifier,
     HodgeNormalisedClassifier.name: HodgeNormalisedClassifier,
@@ -734,6 +842,7 @@ REGISTERED: dict[str, type[GraphClassifier]] = {
     GINResidualBaseline.name: GINResidualBaseline,
     GATBaseline.name: GATBaseline,
     SheafResidualBaseline.name: SheafResidualBaseline,
+    L1HodgeResidualClassifier.name: L1HodgeResidualClassifier,
 }
 
 
