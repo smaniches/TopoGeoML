@@ -14,12 +14,12 @@ on:
         description: "Space-separated model names"
         required: true
         type: string
-        default: "hodge-mp-residual mlp-baseline"
+        default: "l1-hodge-residual hodge-mp-residual gin-residual mlp-baseline"
       datasets:
         description: "Space-separated dataset names"
         required: true
         type: string
-        default: "nci1"
+        default: "collab"
       seeds:
         description: "Number of seeds (will use 0..n-1)"
         required: true
