@@ -10,6 +10,9 @@ on:
     paths:
       - "topogeoml/nn/diff_ph.py"
       - "benchmarks/**"
+
+permissions:
+  contents: read
       - ".github/workflows/benchmark.yml"
 
 jobs:

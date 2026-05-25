@@ -10,6 +10,9 @@ on:
       - "benchmarks/hodge/**"
       - ".github/workflows/benchmark-hodge.yml"
 
+permissions:
+  contents: read
+
 jobs:
   bench:
     name: HodgeMP vs MLP baseline on MUTAG (CPU)
