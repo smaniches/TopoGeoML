@@ -38,7 +38,7 @@ Differentiable persistent homology layers, Hodge message passing, and a benchmar
 
 **Research toolkit with a confirmed positive result.** The library is internally consistent (497 tests, 100% coverage on the library and benchmark framework), the mathematical layers are correctly implemented, and the statistical machinery is rigorous.
 
-**Headline result:** On the NCI1 chemical-compound benchmark (4110 graphs), a one-layer Hodge MP with symmetric Laplacian normalisation + residual connection strictly outperforms a matched-capacity MLP baseline (paired Wilcoxon p_BH = 4.83 × 10⁻³, rank-biserial r = +0.533, +8.6 pp median accuracy gain). A preregistered hypothesis series (H001–H008, 38 falsifiable sub-predictions) investigates the mechanism and compares against GIN and GAT baselines — see [`Empirical evidence`](#empirical-evidence) below and [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) for the full narrative.
+**Result:** On the NCI1 benchmark (4110 graphs), topology-aware message passing with an external residual connection outperforms a matched-capacity MLP baseline by 8–10 pp (paired Wilcoxon p_BH < 0.01). A preregistered hypothesis series (H001–H011, 50+ falsifiable sub-predictions) identified the external residual connection — not the Hodge Laplacian specifically — as the operative architectural factor. See [`Empirical evidence`](#empirical-evidence) below and [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) for the full investigation.
 
 This is a research toolkit, sized at ~7K LOC, positioned for researchers who need correct + citable topology-aware layers. It is **not** a production training framework. APIs will change without notice until v1.0.
 
@@ -113,7 +113,7 @@ Per-arm result (full report in `notebooks/results/proteins_hodge_ablation_30seed
 
 Reproduce: `python -m benchmarks.hodge --datasets proteins --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10`.
 
-### 4. Scale-escalation on NCI1 — **STRICT POSITIVE-DIFFERENCE CLAIM (the headline)**
+### 4. Scale-escalation on NCI1 — positive-difference result
 
 NCI1 benchmark (4110 chemical-compound graphs, 2 classes, Wale et al. 2008 via PyG TUDataset; **22× MUTAG's sample size, 3.7× PROTEINS'**). Same 5-arm ablation, 30 seeds × 10 epochs, matched-capacity. Preregistered as hypothesis 003 (`docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md`) BEFORE the result was known, with five sub-hypotheses (H8–H12) and an outcome decision tree.
 

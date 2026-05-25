@@ -69,14 +69,14 @@ The discipline of the table:
 
 | Field | Value |
 |---|---|
-| Status | **Positive (strict, the headline result)** |
+| Status | **Positive (strict positive-difference result)** |
 | Domain | Graph classification |
 | Setup | NCI1 (4110 chemical-compound graphs, 2 classes, Wale et al. 2008 via PyG TUDataset), 30 seeds × 10 epochs × hidden_dim=32 |
 | Comparison | Same 5 arms as Claims 2 and 3 |
 | Headline numbers | `hodge-mp-residual` 0.609 [0.581, 0.625] vs `mlp-baseline` 0.523 [0.513, 0.566]; median Δ = +0.086; paired Wilcoxon p_BH = **4.83 × 10⁻³**; rank-biserial r = +0.533 |
 | Sub-finding 1 | Combinatorial L still underperforms MLP (Δ = −0.017, p_BH = 2.6 × 10⁻⁴) |
 | Sub-finding 2 | The residual variant — which *lost* on MUTAG and *matched* on PROTEINS — **wins** on NCI1. The residual's contribution scales positively with dataset size at this architectural class. |
-| Cross-dataset pattern | Architecture effects literally invert across datasets: same architecture goes from LOSES (MUTAG) → matches (PROTEINS) → **WINS** (NCI1) |
+| Cross-dataset pattern | Architecture effects invert across datasets: same architecture underperforms MLP on MUTAG, matches on PROTEINS, outperforms on NCI1 |
 | Per-seed report | `notebooks/results/nci1_hodge_ablation_30seeds.md` |
 | Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md` (H8/H9/H10/H11/H12) |
 | Reproduce | `python -m benchmarks.hodge --datasets nci1 --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
@@ -148,7 +148,7 @@ The discipline of the table:
 
 | Field | Value |
 |---|---|
-| Status | **Positive (Hodge outperforms all baselines); negative (GIN and GAT collapse to class prior under capacity constraint)** |
+| Status | **Positive (Hodge outperforms GIN and GAT under matched capacity); negative (GIN and GAT collapse to class prior without external residual). Note: H008-c subsequently showed gin-residual (with external residual) matches or exceeds Hodge.** |
 | Domain | Architecture comparison |
 | Setup | NCI1 (4110 graphs), 30 seeds × 10 epochs × hidden_dim=32, 4 arms: `hodge-mp-residual`, `gin-baseline`, `gat-baseline`, `mlp-baseline`. All arms matched to ~2339 params. |
 | Headline numbers | Hodge 0.609 [0.581, 0.625] vs GIN 0.500 [0.500, 0.505]: p_BH = 6.36 × 10⁻⁶, r = +0.933. Hodge vs GAT 0.500 [0.500, 0.500]: p_BH = 6.36 × 10⁻⁶, r = +1.000. GIN and GAT both strictly underperform MLP 0.523 [0.513, 0.566]. |

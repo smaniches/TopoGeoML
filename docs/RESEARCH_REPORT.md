@@ -6,7 +6,7 @@
 
 ## Abstract
 
-We report a preregistered research program investigating whether Hodge decomposition improves graph neural network classification on standard benchmarks. The program comprises ten hypotheses (H001-H008c) with 38 falsifiable sub-predictions, following a systematic mechanism-elimination methodology. A one-layer Hodge message-passing classifier with symmetric Laplacian normalisation and residual connection strictly outperforms a matched-capacity MLP baseline on NCI1 (4110 chemical-compound graphs, +8.6 percentage points, paired Wilcoxon p_BH = 4.83 x 10^-3, rank-biserial r = +0.533) and extracts graph-structural classification signal under constant-feature ablation across all three tested datasets (MUTAG, PROTEINS, NCI1; all p_BH < 5 x 10^-4). Systematic mechanism elimination rules out sample size and feature dimensionality as drivers of the cross-dataset pattern. The mechanism is narrowed to an architecture-data interaction where the Hodge advantage is largest on datasets where the MLP baseline fails to extract class signal from node features alone. Research continues with deeper architectures and cross-domain validation.
+We report a preregistered research program investigating whether Hodge decomposition improves graph neural network classification on standard benchmarks. The program comprises ten hypotheses (H001-H008c) with 38 falsifiable sub-predictions, following a systematic mechanism-elimination methodology. A one-layer message-passing classifier with symmetric normalisation and external residual connection outperforms a matched-capacity MLP baseline on NCI1 (4110 chemical-compound graphs, +8.6 percentage points, paired Wilcoxon p_BH = 4.83 x 10^-3, rank-biserial r = +0.533). Subsequent ablation (H008-H008c) identifies the external residual connection — not the Hodge Laplacian specifically — as the operative architectural factor: normalised adjacency aggregation with external residual (0.629) matches or exceeds Hodge (0.609), while both collapse to class prior without it. The propagation operator (Laplacian, adjacency, or learned sheaf) is secondary to the residual architecture at the tested configuration.
 
 ---
 
@@ -130,7 +130,7 @@ Each hypothesis follows a fixed template:
 
 **Key findings:** Two-dataset equality confirmed. The MUTAG combinatorial-L harm does not replicate on PROTEINS (rank-biserial r drops from -0.760 to -0.071; percentage-point gap shrinks from 9.2 pp to 2.9 pp). Sub-hypotheses H4 refuted, H5 reconfirmed, H6 refuted, H7 unresolved.
 
-#### Hypothesis 003: NCI1 Scale Escalation -- The Headline Positive Result
+#### Hypothesis 003: NCI1 Scale Escalation
 
 **Question:** Does scale lift the Hodge = MLP ceiling?
 
