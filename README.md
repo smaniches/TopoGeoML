@@ -336,7 +336,7 @@ Coverage is 100% on `topogeoml/` and `benchmarks/`. Torch-gated tests skip clean
 
 ## Roadmap
 
-**v0.0.2 (current).** Experimentally observed positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni). Preregistered hypothesis series H001–H011 (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 497 tests, coverage enforced at 100% in CI, type-checked with mypy strict.
+**v0.0.2 (current).** Experimentally observed positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni). Preregistered hypothesis series H001–H011 (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 497 tests, 100% line coverage with full dependencies, type-checked with mypy strict in CI.
 
 **v0.0.3 (next).** Cross-domain validation (DD, COLLAB, social-network benchmarks). DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). Continued mechanism ablation (spectral vs spatial operator isolation). The bar remains paired Wilcoxon p < 0.01 after BH correction.
 
