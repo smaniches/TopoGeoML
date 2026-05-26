@@ -15,10 +15,10 @@ Every numerical or empirical claim in the README, mapped to its evidence artifac
 
 | Field | Value |
 |---|---|
-| Evidence | `pytest --cov=topogeoml --cov=benchmarks --cov-fail-under=100` |
+| Evidence | `pytest --cov=topogeoml --cov-fail-under=100` |
 | Artifact | CI output (reproduced on every push) |
 | Tolerance | Exact: 497 test functions as counted by `grep -c "def test_" tests/*.py` |
-| Limitation | Coverage is line coverage on `topogeoml/` and `benchmarks/` only. Tests, notebooks, and scripts are excluded from the coverage target. |
+| Limitation | Coverage gate (100%) applies to `topogeoml/` only. `benchmarks/` coverage is measured but not gated because torch-dependent test paths skip in CI environments without GPU/torch. `__init__.py` files are omitted per `pyproject.toml [tool.coverage.run]`. |
 
 ---
 
