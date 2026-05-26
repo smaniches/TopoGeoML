@@ -14,7 +14,7 @@ All empirical results are bounded to the tested configuration:
 - **Training:** Adam(lr=1e-2), 10-20 epochs, no batch normalisation, no learning rate scheduling
 - **Datasets:** MUTAG (188 graphs), PROTEINS (1113), NCI1 (4110), COLLAB (5000, pending)
 - **Seeds:** 18-30 per experiment
-- **Statistical power:** Minimum detectable effect |r| = 0.289 at n=30 (see `docs/STATISTICAL_SUMMARY.md`)
+- **Statistical power:** Minimum detectable effect |r| = 0.289 at n=30 (see [docs/STATISTICAL_SUMMARY.md](docs/STATISTICAL_SUMMARY.md))
 - **Multiple testing:** Investigation-wide BH-FDR applied across 76 comparisons; NCI1 Hodge-vs-MLP survives global BH but not Bonferroni
 
 Results at different configurations (deeper architectures, batch normalisation, learning rate schedules, larger hidden dimensions, different datasets) may differ. No claim of generality beyond the tested configuration is made.

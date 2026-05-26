@@ -7,7 +7,12 @@ A 10-minute path to verify this repository's claims.
 ```bash
 git clone https://github.com/smaniches/TopoGeoML.git
 cd TopoGeoML
+
+# Core (type checking, lint, non-torch tests):
 pip install -e ".[dev]"
+
+# Full (all tests, coverage, reproduction of empirical results):
+pip install -e ".[all]"
 ```
 
 ## 2. Run tests (3 minutes)
@@ -40,7 +45,7 @@ Expected: all checks passed.
 
 ## 5. Reproduce one result (5 minutes)
 
-The fastest reproducible claim is the topology-divergence callback (Claim 1 in LEADERBOARD.md):
+The fastest reproducible claim is the topology-divergence callback (Claim 1 in LEADERBOARD.md). Requires full dependencies (`.[all]`):
 
 ```bash
 python notebooks/topology_predicts_divergence.py --n-seeds 5
