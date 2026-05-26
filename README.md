@@ -36,7 +36,7 @@ Differentiable persistent homology layers, Hodge message passing, and a benchmar
 
 ## Status
 
-**Research toolkit with experimentally observed results.** The library is internally consistent (497 tests, line coverage enforced at 100% in CI on `topogeoml/`), type-checked with mypy in strict mode, and statistically validated with investigation-wide FDR control (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md)).
+**Research toolkit with experimentally observed results.** The library is internally consistent (497 tests, 100% line coverage when run with full dependencies), type-checked with mypy in strict mode, and statistically validated with investigation-wide FDR control (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md)).
 
 **Result:** On the NCI1 benchmark (4110 graphs), topology-aware message passing with an external residual connection outperforms a matched-capacity MLP baseline by 8–10 pp (paired Wilcoxon p_BH < 0.01). A preregistered hypothesis series (H001–H011, 50+ falsifiable sub-predictions) identified the external residual connection — not the Hodge Laplacian specifically — as the operative architectural factor. See [`Empirical evidence`](#empirical-evidence) below and [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) for the full investigation.
 

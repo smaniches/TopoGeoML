@@ -13,10 +13,14 @@ pip install -e ".[dev]"
 ## 2. Run tests (3 minutes)
 
 ```bash
-pytest --cov=topogeoml --cov=benchmarks --cov-fail-under=100
+# With full dependencies (torch installed):
+pytest --cov=topogeoml --cov=benchmarks
+
+# Without torch (dev-only install):
+pytest
 ```
 
-Expected: 497 tests pass, 100% coverage on `topogeoml/` and `benchmarks/`. Torch-dependent tests skip cleanly if torch is not installed.
+Expected: 497 tests pass. With full dependencies (`pip install -e ".[all]"`), 100% coverage on `topogeoml/` and `benchmarks/`. Without torch, torch-dependent tests skip cleanly and coverage is partial (nn/ code paths not exercised).
 
 ## 3. Type check (30 seconds)
 
