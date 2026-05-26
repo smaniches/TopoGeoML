@@ -36,7 +36,7 @@ Differentiable persistent homology layers, Hodge message passing, and a benchmar
 
 ## Status
 
-**Research toolkit with a confirmed positive result.** The library is internally consistent (497 tests, 100% coverage on the library and benchmark framework), the mathematical layers are correctly implemented, and the statistical machinery is rigorous.
+**Research toolkit with experimentally observed results.** The library is internally consistent (497 tests, coverage enforced at 100% in CI on the library and benchmark framework), type-checked with mypy in strict mode, and statistically validated with investigation-wide FDR control (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md)).
 
 **Result:** On the NCI1 benchmark (4110 graphs), topology-aware message passing with an external residual connection outperforms a matched-capacity MLP baseline by 8–10 pp (paired Wilcoxon p_BH < 0.01). A preregistered hypothesis series (H001–H011, 50+ falsifiable sub-predictions) identified the external residual connection — not the Hodge Laplacian specifically — as the operative architectural factor. See [`Empirical evidence`](#empirical-evidence) below and [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) for the full investigation.
 
@@ -336,7 +336,7 @@ Coverage is 100% on `topogeoml/` and `benchmarks/`. Torch-gated tests skip clean
 
 ## Roadmap
 
-**v0.0.2 (current).** Strict positive-difference claim on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³). Preregistered hypothesis series H001–H008 (including GIN/GAT comparison and residual-placement ablation) with mechanism investigation. Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide). 497 tests, 100% coverage, 8 CI workflows.
+**v0.0.2 (current).** Experimentally observed positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni). Preregistered hypothesis series H001–H011 (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 497 tests, coverage enforced at 100% in CI, type-checked with mypy strict.
 
 **v0.0.3 (next).** Cross-domain validation (DD, COLLAB, social-network benchmarks). DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). Continued mechanism ablation (spectral vs spatial operator isolation). The bar remains paired Wilcoxon p < 0.01 after BH correction.
 
