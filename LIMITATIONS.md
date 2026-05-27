@@ -1,8 +1,27 @@
 # Limitations of TopoGeoML v0.0.2
 
-This document lists what TopoGeomML v0.0.1 **does not do**, what it does **only partially**, and the **failure modes** the user should expect. Honest accounting is part of the contract: every claim in the codebase must name its validation, and every absence must be named here.
+This document lists what TopoGeoML v0.0.2 **does not do**, what it does **only partially**, and the **failure modes** the user should expect. Honest accounting is part of the contract: every claim in the codebase must name its validation, and every absence must be named here.
 
 If you hit a behavior that is not listed here and is not what the docstring promises, that is a bug — open an issue.
+
+---
+
+## 0. Empirical scope (v0.0.2)
+
+All empirical results are bounded to the tested configuration:
+
+- **Architecture:** 1-layer message passing (2-layer for deep-residual arm), hidden_dim=32
+- **Training:** Adam(lr=1e-2), 10-20 epochs, no batch normalisation, no learning rate scheduling
+- **Datasets:** MUTAG (188 graphs), PROTEINS (1113), NCI1 (4110), COLLAB (5000, pending)
+- **Seeds:** 18-30 per experiment
+- **Statistical power:** Minimum detectable effect |r| = 0.289 at n=30 (see [docs/STATISTICAL_SUMMARY.md](docs/STATISTICAL_SUMMARY.md))
+- **Multiple testing:** Investigation-wide BH-FDR applied across 76 comparisons; NCI1 Hodge-vs-MLP survives global BH but not Bonferroni
+
+Results at different configurations (deeper architectures, batch normalisation, learning rate schedules, larger hidden dimensions, different datasets) may differ. No claim of generality beyond the tested configuration is made.
+
+### Type checking
+
+mypy strict mode is enforced in CI on `topogeoml/`. Third-party stubs for `ripser`, `persim`, and `gudhi` are not available; `ignore_missing_imports = true` is set in `pyproject.toml` to handle this. Type annotations on the library code itself are complete and checked on every push.
 
 ---
 

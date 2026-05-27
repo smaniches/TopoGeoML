@@ -86,7 +86,7 @@ def sparse_scipy_to_torch(
     return tensor
 
 
-class HodgeMessagePassing(nn.Module):
+class HodgeMessagePassing(nn.Module):  # type: ignore[misc]
     """
     One layer of Hodge-Laplacian message passing on k-simplices.
 

@@ -298,7 +298,7 @@ def betti_matching_loss(
 # Module interface
 # ---------------------------------------------------------------------------
 
-class CubicalTopologyLoss(nn.Module):
+class CubicalTopologyLoss(nn.Module):  # type: ignore[misc]
     """
     Cubical-PH topology loss for image segmentation training.
 

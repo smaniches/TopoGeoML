@@ -390,7 +390,7 @@ def betti_regularization_loss(
 # Module interface
 # ---------------------------------------------------------------------------
 
-class TopologyRegularizer(nn.Module):
+class TopologyRegularizer(nn.Module):  # type: ignore[misc]
     """
     Differentiable topology regularizer for use in training loops.
 

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
@@ -30,7 +30,7 @@ from topogeoml.core.vectorizers import (
 
 # Type alias: a batch of point clouds. Either a 3D array (n_samples, n_points, dim)
 # when point clouds share size, or a sequence of 2D arrays with varying sizes.
-PointCloudBatch = NDArray[np.floating[Any]] | Sequence[NDArray[np.floating[Any]]]
+PointCloudBatch: TypeAlias = NDArray[np.floating[Any]] | Sequence[NDArray[np.floating[Any]]]
 
 
 @dataclass
