@@ -52,6 +52,7 @@ jobs:
         # an underpowered-but-directional accuracy comparison.
         run: |
           python -m benchmarks.hodge \
+            --datasets mutag proteins nci1 \
             --seeds 0 1 2 \
             --n-epochs 10 \
             --output benchmarks/hodge/leaderboard/current.json \
