@@ -1,0 +1,54 @@
+# Project Status
+
+## What this project is
+
+TopoGeoML is a preregistered research investigation into whether Hodge decomposition improves graph neural network classification. It is a research prototype, not a production framework.
+
+## Investigation summary
+
+14 preregistered hypotheses (H001-H011b) with 53 falsifiable sub-predictions, tested across 4 datasets (MUTAG, PROTEINS, NCI1, COLLAB), 11 model variants, and 76 pairwise statistical comparisons.
+
+### Findings
+
+1. **Topology-aware message passing with external residual outperforms MLP on NCI1 by 8-10 pp.** This result survives investigation-wide Benjamini-Hochberg correction (p_BH = 4.05e-3) but not Bonferroni (threshold 6.58e-4).
+
+2. **The external residual connection is the operative architectural factor.** The choice of propagation operator (Hodge Laplacian, normalised adjacency, or learned sheaf) is secondary. All three operators perform comparably once the external residual is present; all collapse to class prior without it.
+
+3. **The Hodge Laplacian (L_0) does not confer a unique advantage** on any tested dataset. Normalised adjacency with external residual matches or exceeds Hodge on all three chemistry/protein benchmarks.
+
+4. **The NCI1 advantage does not transfer to MUTAG or PROTEINS** at the tested configuration (1-layer, hidden_dim=32, 10-20 epochs, no batch normalisation).
+
+5. **L_1 (edge-level Hodge Laplacian) is untested on triangle-rich data at statistical rigor.** NCI1 has no triangles (L_1 degenerates to the down-Laplacian). COLLAB (mean 9,290 triangles per graph) showed a directionally strong smoke result (+14.8 pp, 1 seed) but the full experiment has not completed due to compute constraints.
+
+### What is not claimed
+
+- "Topology helps graph classification" — not supported across datasets
+- "Hodge is better than GNNs" — refuted (H008-c)
+- "L_1 captures unique structural signal" — not yet tested at rigor
+- Any result beyond the tested configuration
+
+## Quality
+
+| Metric | Value |
+|---|---|
+| Tests | 497 |
+| Coverage | 100% line coverage with full dependencies (`.[all]`); reported but not gated in CI (torch-less environment) |
+| Type checking | mypy strict enforced in CI |
+| Lint | ruff, all checks passing |
+| DOI | [10.5281/zenodo.20365817](https://doi.org/10.5281/zenodo.20365817) |
+| Statistical analysis | Investigation-wide BH-FDR across 76 comparisons ([docs/STATISTICAL_SUMMARY.md](docs/STATISTICAL_SUMMARY.md)) |
+| Preregistration | 14 hypothesis documents with git-timestamped commit history |
+| Negative results | 37% of comparisons are non-significant; all reported |
+
+## Open items
+
+| Item | Status | Next step |
+|---|---|---|
+| H011-b (L_1 on COLLAB) | Smoke test completed; full run pending | Run locally on higher-compute hardware |
+| RESEARCH_REPORT.md | Covers H001-H007; does not reflect H008-H011 findings | Update after COLLAB result |
+| Cross-domain validation | Only chemistry/protein datasets tested | Test on social-network, citation-graph benchmarks |
+| Multi-layer architectures | All results at 1-layer, hidden_dim=32 | Test with 2-5 layers, batch normalisation |
+
+## How to verify
+
+See [REVIEWER.md](REVIEWER.md) for a 10-minute verification path. See [docs/CLAIMS_TO_EVIDENCE.md](docs/CLAIMS_TO_EVIDENCE.md) for every claim mapped to evidence.

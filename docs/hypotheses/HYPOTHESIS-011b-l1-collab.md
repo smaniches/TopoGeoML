@@ -1,6 +1,6 @@
 # Hypothesis 011-b: L_1 edge-level message passing on COLLAB (triangle-rich graphs)
 
-**Status.** Preregistered 2026-05-25, before execution.
+**Status.** Preregistered 2026-05-25. Smoke test (1 seed, 1 epoch) completed on container: L_1 0.668 vs MLP 0.520 (directional only, not a claim). Full 18-seed run timed out on GitHub Actions (6h limit exceeded). Awaiting local execution on higher-compute hardware.
 
 **Falsification target.** Whether L_1 edge-level message passing provides a classification advantage on a dataset with rich triangle structure, where the up-Laplacian component ∂_2 ∂_2^T is non-trivial.
 
