@@ -9,6 +9,8 @@ The discipline of the table:
 - **Negative** = strict regression; the comparison method underperforms the baseline at p_BH < 0.05 with CI strictly below zero.
 - **Pending** = experiment is running or queued; results will land in a future PR.
 
+> ⚠️ **Read-before-citing — capacity regime.** Every accuracy number below is obtained under a deliberately constrained *matched-capacity* protocol (1 layer, hidden_dim=32, 10–20 epochs, no batch normalisation, ~1.4–2.3k parameters per arm). This isolates architectural *mechanism* at fixed capacity. It is **not** a benchmark-performance comparison: absolute accuracies (0.50–0.79) sit well below literature SOTA (e.g. properly-trained GNNs reach ~0.80+ on NCI1), and under this protocol the standard GNN baselines (GIN, GAT) collapse to the class prior (0.500) on NCI1. Phrases like "outperforms GIN/GAT" mean "at equal, severely-limited capacity" — **not** "is a better graph classifier." The investigation's *primary* finding is negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (Claim 11 / H008c).
+
 ---
 
 ## Claim 1 — Topology-divergence score detects overfitting no later than a val-loss watchdog
@@ -65,11 +67,11 @@ The discipline of the table:
 
 ---
 
-## Claim 4 — NCI1 scale-escalation: first strict positive-difference claim
+## Claim 4 — NCI1 scale-escalation: one narrow strict positive-difference claim (matched-capacity regime)
 
 | Field | Value |
 |---|---|
-| Status | **Positive (strict positive-difference result)** |
+| Status | **Positive (strict positive-difference), regime-bound.** See the capacity-regime caveat at the top: this is a matched-capacity *mechanism* result (best arm 0.609 vs MLP 0.523, both ~20 pp below SOTA), not a benchmark-performance claim. H008c (Claim 11) shows the Hodge Laplacian is not the operative factor. |
 | Domain | Graph classification |
 | Setup | NCI1 (4110 chemical-compound graphs, 2 classes, Wale et al. 2008 via PyG TUDataset), 30 seeds × 10 epochs × hidden_dim=32 |
 | Comparison | Same 5 arms as Claims 2 and 3 |
@@ -144,11 +146,11 @@ The discipline of the table:
 
 ---
 
-## Claim 9 — Hodge-MP-residual outperforms GIN and GAT under matched-capacity protocol (H008)
+## Claim 9 — Under matched capacity, GIN and GAT collapse to class prior on NCI1; Hodge-MP-residual does not (H008)
 
 | Field | Value |
 |---|---|
-| Status | **Positive (Hodge outperforms GIN and GAT under matched capacity); negative (GIN and GAT collapse to class prior without external residual). Note: H008-c subsequently showed gin-residual (with external residual) matches or exceeds Hodge.** |
+| Status | **Regime-bound, NOT an expressiveness or SOTA claim.** Under the matched-capacity protocol, GIN (0.500) and GAT (0.500) collapse to the class prior on NCI1 while Hodge-MP-residual reaches 0.609. This is a *training-stability-at-fixed-capacity* finding — properly-trained GIN reaches ~0.80+ on NCI1, so "outperforms GIN/GAT" here means only "at equal, severely-limited capacity." H008-c (Claim 11) subsequently showed a normalised-adjacency arm with an external residual matches or exceeds Hodge, so the operative factor is the residual, not the operator. |
 | Domain | Architecture comparison |
 | Setup | NCI1 (4110 graphs), 30 seeds × 10 epochs × hidden_dim=32, 4 arms: `hodge-mp-residual`, `gin-baseline`, `gat-baseline`, `mlp-baseline`. All arms matched to ~2339 params. |
 | Headline numbers | Hodge 0.609 [0.581, 0.625] vs GIN 0.500 [0.500, 0.505]: p_BH = 6.36 × 10⁻⁶, r = +0.933. Hodge vs GAT 0.500 [0.500, 0.500]: p_BH = 6.36 × 10⁻⁶, r = +1.000. GIN and GAT both strictly underperform MLP 0.523 [0.513, 0.566]. |
@@ -172,6 +174,21 @@ The discipline of the table:
 | Per-seed report | `notebooks/results/h008b_nci1_gin_normalised_30seeds.md` |
 | Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-008b-gin-normalised.md` (H33/H34/H35) |
 | Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-normalised gin-baseline mlp-baseline --seeds 0..29 --n-epochs 10` |
+
+---
+
+## Claim 11 — The external residual, not the Hodge Laplacian, is the operative factor (H008-c) — *primary finding*
+
+| Field | Value |
+|---|---|
+| Status | **Primary finding of the investigation (refutes "topology helps").** Once an external residual is added, a normalised-*adjacency* operator (low-pass, `I − L̃`) matches or slightly exceeds the Hodge Laplacian (high-pass, `L̃`). The Hodge Laplacian confers no unique advantage. |
+| Domain | Architecture comparison / mechanism isolation |
+| Setup | NCI1 (4110 graphs), 30 seeds × 10 epochs × hidden_dim=32, 4 arms: `gin-residual` (`I−L̃` + external residual), `hodge-mp-residual` (`L̃` + external residual), `gin-normalised` (internal self-loop), `mlp-baseline`. All differ only in operator/residual placement. |
+| Headline numbers | `gin-residual` 0.629 [0.607, 0.641] vs MLP 0.523: p_BH = 6.05 × 10⁻⁴, r = +0.600 (WINS +10.6 pp). `gin-residual` vs `hodge-mp-residual`: Δ = +0.0195, p_BH = 1.01 × 10⁻², r = +0.400 — adjacency *slightly beats* Hodge. `gin-normalised` (no external residual) 0.500 — class-prior collapse. |
+| Interpretation | The operative architectural element is the external residual (`act(prop @ W + b) + h`), which preserves projected features through propagation. The choice of spectral operator (high-pass Hodge vs low-pass adjacency) is secondary. This refutes the strong "topology helps graph classification" hypothesis at the tested configuration. |
+| Per-seed report | `notebooks/results/h008c_nci1_gin_residual_30seeds.md` |
+| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-008c-gin-residual.md` (H36/H37/H38) |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-residual gin-normalised mlp-baseline --seeds 0..29 --n-epochs 10` |
 
 ---
 

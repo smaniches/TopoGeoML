@@ -16,6 +16,7 @@ All empirical results are bounded to the tested configuration:
 - **Seeds:** 18-30 per experiment
 - **Statistical power:** Minimum detectable effect |r| = 0.289 at n=30 (see [docs/STATISTICAL_SUMMARY.md](docs/STATISTICAL_SUMMARY.md))
 - **Multiple testing:** Investigation-wide BH-FDR applied across 76 comparisons; NCI1 Hodge-vs-MLP survives global BH but not Bonferroni
+- **Absolute performance regime (important):** All arms operate far below benchmark SOTA. On NCI1 the best arm reaches ~0.61–0.63 and the MLP baseline ~0.52, versus the ~0.80+ that properly-trained GNNs achieve in the literature. Under the matched-capacity protocol the standard GNN baselines (GIN, GAT) collapse to the class prior (0.500). Every "outperforms X" statement in this repository is therefore *at equal, deliberately-constrained capacity* — it isolates architectural mechanism and is **not** a benchmark-performance or expressiveness claim. The primary scientific finding is negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c).
 
 Results at different configurations (deeper architectures, batch normalisation, learning rate schedules, larger hidden dimensions, different datasets) may differ. No claim of generality beyond the tested configuration is made.
 

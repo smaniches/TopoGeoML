@@ -1,8 +1,8 @@
 # TopoGeoML
 
-**A rigorous research toolkit for topology-aware machine learning.**
+**A preregistered, self-falsifying investigation into topology-aware graph classification — plus a differentiable-TDA toolkit.**
 
-Differentiable persistent homology layers, Hodge message passing, and a benchmark framework with statistically defensible reporting — positioned as *complementary* to PyTorch / TensorFlow, not a replacement.
+Differentiable persistent-homology layers, Hodge message passing, and a benchmark framework with preregistered hypotheses and statistically defensible reporting. The headline scientific question — *does encoding topological structure via the Hodge Laplacian improve graph classification beyond node features?* — was tested across 14 preregistered hypotheses and **answered in the negative**: once an external residual connection is present, a plain normalised-adjacency operator matches or exceeds the Hodge Laplacian. The operative factor is the residual, not the topology. The library is positioned as *complementary* to PyTorch / TensorFlow, not a replacement.
 
 ```text
                             ┌─────────────────────────┐
@@ -36,11 +36,15 @@ Differentiable persistent homology layers, Hodge message passing, and a benchmar
 
 ## Status
 
-**Research toolkit with experimentally observed results.** The library is internally consistent (497 tests, 100% line coverage when run with full dependencies), type-checked with mypy in strict mode, and statistically validated with investigation-wide FDR control (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md)).
+**A research investigation with a primarily negative headline result, plus a working toolkit.** The library is internally consistent (497 tests, 100% line coverage when run with full dependencies), type-checked with mypy in strict mode, and statistically validated with investigation-wide FDR control (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md)).
 
-**Result:** On the NCI1 benchmark (4110 graphs), topology-aware message passing with an external residual connection outperforms a matched-capacity MLP baseline by 8–10 pp (paired Wilcoxon p_BH < 0.01). A preregistered hypothesis series (H001–H011, 50+ falsifiable sub-predictions) identified the external residual connection — not the Hodge Laplacian specifically — as the operative architectural factor. See [`Empirical evidence`](#empirical-evidence) below and [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) for the full investigation.
+**Primary finding (negative).** Across 14 preregistered hypotheses (H001–H011b, 53 falsifiable sub-predictions), encoding topological structure via the Hodge Laplacian does **not** confer a unique advantage for graph classification on any tested dataset. Once an external residual connection is present, a normalised *adjacency* operator matches or exceeds the Hodge Laplacian; without it, both collapse to the class prior. The operative architectural factor is the residual connection, not the topology (see H008c).
 
-This is a research toolkit, sized at ~7K LOC, positioned for researchers who need correct + citable topology-aware layers. It is **not** a production training framework. APIs will change without notice until v1.0.
+**Secondary finding (positive, narrow).** On NCI1 (4110 graphs), a one-layer message-passing classifier *with* an external residual outperforms a matched-capacity MLP by 8–10 pp (paired Wilcoxon p_BH < 0.01; survives investigation-wide BH but not Bonferroni).
+
+> ⚠️ **Regime caveat — read before citing any accuracy number.** All results are obtained under a deliberately constrained *matched-capacity* protocol (1 layer, hidden_dim=32, 10–20 epochs, no batch normalisation, ~1.4–2.3k parameters per arm). Under this protocol the standard GNN baselines (GIN, GAT) **collapse to the class prior (0.500)** on NCI1, and the best arm reaches ~0.61–0.63 — roughly **20 percentage points below the ~0.80+ that properly-trained GNNs achieve** on this benchmark in the literature. These comparisons isolate *architectural mechanism at fixed capacity*; they are **not** statements about leaderboard performance, and phrases like "outperforms GIN/GAT" must be read in that light. See [`LIMITATIONS.md`](LIMITATIONS.md) §0 and [`LEADERBOARD.md`](LEADERBOARD.md).
+
+This is a research toolkit, sized at ~7K LOC, positioned for researchers who need correct + citable topology-aware layers and a rigorous statistical harness. It is **not** a production training framework, and it does **not** claim competitive benchmark accuracy. APIs will change without notice until v1.0.
 
 See [`LIMITATIONS.md`](LIMITATIONS.md) for the full list of what does *not* work yet.
 
@@ -48,7 +52,7 @@ See [`LIMITATIONS.md`](LIMITATIONS.md) for the full list of what does *not* work
 
 ## Empirical evidence
 
-Every claim in the rest of this README is backed by an in-repo experiment or a literature citation. The full empirical record — including pending experiments and the discipline rules — lives in [`LEADERBOARD.md`](LEADERBOARD.md). Three experiments have been run + reported so far; both reproducible from the scripts in `notebooks/`.
+Every claim in the rest of this README is backed by an in-repo experiment or a literature citation, and every experiment is reproducible from the scripts in `notebooks/`. The full empirical record — including pending experiments and the discipline rules — lives in [`LEADERBOARD.md`](LEADERBOARD.md). **All accuracy numbers below are obtained in the constrained matched-capacity regime described in the [regime caveat](#status) above**; they isolate architectural mechanism at fixed capacity and are not benchmark-performance claims.
 
 ### 1. Topology divergence score detects overfitting no later than a val-loss watchdog (positive)
 
@@ -113,7 +117,7 @@ Per-arm result (full report in `notebooks/results/proteins_hodge_ablation_30seed
 
 Reproduce: `python -m benchmarks.hodge --datasets proteins --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10`.
 
-### 4. Scale-escalation on NCI1 — positive-difference result
+### 4. Scale-escalation on NCI1 — positive-difference result (matched-capacity regime)
 
 NCI1 benchmark (4110 chemical-compound graphs, 2 classes, Wale et al. 2008 via PyG TUDataset; **22× MUTAG's sample size, 3.7× PROTEINS'**). Same 5-arm ablation, 30 seeds × 10 epochs, matched-capacity. Preregistered as hypothesis 003 (`docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md`) BEFORE the result was known, with five sub-hypotheses (H8–H12) and an outcome decision tree.
 
@@ -127,9 +131,11 @@ Per-arm result (full report in `notebooks/results/nci1_hodge_ablation_30seeds.md
 | `hodge-mp-deep-residual` (H3) | 0.603 [0.594, 0.623] | 1.18 × 10⁻² | beats MLP by 8.0 pp |
 | `mlp-baseline` | 0.523 [0.513, 0.566] | — | control |
 
-**Defensible claim (the framework's first strict positive-difference real-data result):**
+**Defensible claim (the framework's one narrow strict positive-difference real-data result):**
 
 > On NCI1 at 30 seeds × 10 epochs × hidden_dim=32, a one-layer Hodge MP classifier with a symmetrically-normalised Laplacian AND an identity residual connection strictly outperforms a no-topology MLP baseline of matched capacity (median Δ = +0.086, paired Wilcoxon p_BH = 4.83 × 10⁻³, rank-biserial r = +0.533, BCa 95% CI on Hodge accuracy: [0.581, 0.625]).
+
+> ⚠️ **Regime caveat.** This is a *matched-capacity, fixed-architecture* comparison, not a benchmark-performance claim. The MLP baseline sits at 0.523 and the Hodge arm at 0.609 — both ~20 pp below the ~0.80+ that properly-tuned GNNs reach on NCI1. The result says only "at ~1.4k parameters and one layer, the residual architecture extracts more signal than a same-capacity MLP." Crucially, H008c below shows a normalised-*adjacency* operator with the same external residual does this *slightly better* than the Hodge Laplacian — so this is **not** evidence that topology per se helps.
 
 **Surprising cross-dataset twist.** The residual variant — which *lost* to MLP on MUTAG (p_BH = 0.019) and *matched* on PROTEINS (p_BH = 0.339) — **wins** on NCI1. The residual's contribution scales positively with dataset size at this architectural class. The cross-dataset behaviour table:
 
@@ -336,7 +342,7 @@ Coverage is 100% on `topogeoml/` and `benchmarks/`. Torch-gated tests skip clean
 
 ## Roadmap
 
-**v0.0.2 (current).** Experimentally observed positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni). Preregistered hypothesis series H001–H011 (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 497 tests, 100% line coverage with full dependencies, type-checked with mypy strict in CI.
+**v0.0.2 (current).** Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 497 tests, 100% line coverage with full dependencies, type-checked with mypy strict in CI.
 
 **v0.0.3 (next).** Cross-domain validation (DD, COLLAB, social-network benchmarks). DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). Continued mechanism ablation (spectral vs spatial operator isolation). The bar remains paired Wilcoxon p < 0.01 after BH correction.
 
