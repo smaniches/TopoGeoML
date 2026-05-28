@@ -1,3 +1,8 @@
+---
+title: Mathematical foundations
+nav_order: 6
+---
+
 # Mathematical Foundations for Topology-Aware Signal Analysis
 
 **TopoGeoML** — Santiago Maniches (ORCID: 0009-0005-6480-1987), TOPOLOGICA LLC.

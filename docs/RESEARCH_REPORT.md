@@ -1,3 +1,8 @@
+---
+title: Research report
+nav_order: 2
+---
+
 # TopoGeoML: A Preregistered Investigation into Hodge-Augmented Graph Classification
 
 **Version 0.0.2** | Santiago Maniches (ORCID: [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)) | TOPOLOGICA LLC

@@ -1,0 +1,72 @@
+# GitHub Pages (Jekyll) configuration for the TopoGeoML documentation site.
+# Served from /docs on the default branch using the just-the-docs remote theme.
+# Build is performed by GitHub Pages after Pages is enabled in repo settings
+# (Settings -> Pages -> Source: "Deploy from a branch" -> main / docs).
+
+title: TopoGeoML
+description: >-
+  A preregistered, self-falsifying investigation into topology-aware graph
+  classification — primary finding negative — plus a differentiable-TDA toolkit.
+remote_theme: just-the-docs/just-the-docs
+
+# Project Pages URL: https://smaniches.github.io/TopoGeoML/
+url: "https://smaniches.github.io"
+baseurl: "/TopoGeoML"
+
+plugins:
+  - jekyll-remote-theme
+
+# With a REMOTE theme, Jekyll does not load the theme's own layout defaults,
+# so apply the just-the-docs "default" layout (sidebar nav + search) to every
+# page explicitly. Without this, pages render as bare HTML with no navigation.
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+# --- just-the-docs options -------------------------------------------------
+color_scheme: light
+search_enabled: true
+heading_anchors: true
+
+# "Edit this page on GitHub" links
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/smaniches/TopoGeoML"
+gh_edit_branch: "main"
+gh_edit_source: docs
+gh_edit_view_mode: "tree"
+
+# Right-hand aux link
+aux_links:
+  "GitHub repository":
+    - "https://github.com/smaniches/TopoGeoML"
+aux_links_new_tab: true
+
+# Extra navigation links to canonical artefacts that live outside /docs
+nav_external_links:
+  - title: "GitHub repository"
+    url: "https://github.com/smaniches/TopoGeoML"
+  - title: "Reproduction guide"
+    url: "https://github.com/smaniches/TopoGeoML/blob/main/REPRODUCING.md"
+  - title: "DOI (Zenodo)"
+    url: "https://doi.org/10.5281/zenodo.20365817"
+
+# Styled callouts (degrade gracefully to blockquotes if unsupported)
+callouts:
+  warning:
+    title: "Regime caveat"
+    color: yellow
+  note:
+    title: "Note"
+    color: blue
+
+footer_content: >-
+  Santiago Maniches (ORCID 0009-0005-6480-1987). MIT licence.
+  All accuracy figures are obtained under a constrained matched-capacity
+  protocol and are not benchmark-performance claims — see Limitations.
+
+# The directory README is for GitHub's folder view, not a site page.
+exclude:
+  - README.md

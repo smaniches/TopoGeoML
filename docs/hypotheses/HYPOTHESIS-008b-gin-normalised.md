@@ -1,3 +1,9 @@
+---
+title: H008b · Normalised GIN
+parent: Hypotheses (H001–H011b)
+nav_order: 9
+---
+
 # Hypothesis 008-b: Does degree normalisation close the GIN-Hodge gap on NCI1?
 
 **Status.** Resolved 2026-05-24. H33 refuted (normalised GIN does not recover); H34 falsified (Hodge strictly beats normalised GIN, p_BH = 6.36e-6, r = +1.000); H35 refuted (normalised GIN underperforms MLP). The candidate explanation from H008 is incorrect — normalisation alone does not account for the GIN-Hodge gap. See §6.

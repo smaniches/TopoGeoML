@@ -1,3 +1,9 @@
+---
+title: H007 · Structural-proxy decomposition
+parent: Hypotheses (H001–H011b)
+nav_order: 7
+---
+
 # Hypothesis 007: Which graph-structural proxies explain the H006 constant-feature signal?
 
 **Status.** Resolved 2026-05-22. H26 refuted (all proxies correlate positively with constant-feature gap, rho = +1.0); H27 refuted (no proxy correlates positively with full-feature gain, rho = -1.0). No single structural proxy explains the full-feature Hodge-vs-MLP gain. See §8.

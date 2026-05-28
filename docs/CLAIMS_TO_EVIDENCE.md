@@ -1,3 +1,8 @@
+---
+title: Claims → evidence
+nav_order: 5
+---
+
 # Claims to Evidence
 
 Principal numerical and empirical claims in the README, mapped to evidence artifacts, reproduction commands, expected tolerances, and limitations. Per-arm statistics in the Empirical Evidence tables are sourced directly from the JSON artifacts listed below; this document maps the summary-level claims, not every individual table cell.

@@ -1,3 +1,9 @@
+---
+title: H001 · Hodge MP on MUTAG
+parent: Hypotheses (H001–H011b)
+nav_order: 1
+---
+
 # Hypothesis 001: Why the minimal Hodge MP loses on MUTAG, and what should win
 
 **Status.** Tested 2026-05-21. **H1 confirmed; H2 refuted; H3 refuted.** See §6 below for the resolved outcome.

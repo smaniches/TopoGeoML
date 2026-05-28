@@ -1,3 +1,9 @@
+---
+title: H008c · External residual (primary finding)
+parent: Hypotheses (H001–H011b)
+nav_order: 10
+---
+
 # Hypothesis 008-c: Is the external residual the operative factor in the Hodge-GIN gap?
 
 **Status.** Resolved 2026-05-24. H36 confirmed (gin-residual strictly outperforms gin-normalised); H37 confirmed in the first decision-tree row (gin-residual matches or exceeds Hodge — the external residual is the mechanism); H38 confirmed (gin-residual strictly outperforms MLP). See §6.

@@ -1,3 +1,9 @@
+---
+title: H008 · GIN / GAT comparison
+parent: Hypotheses (H001–H011b)
+nav_order: 8
+---
+
 # Hypothesis 008: Comparative evaluation of Hodge-MP-residual against GIN and GAT baselines on NCI1
 
 **Status.** Resolved 2026-05-24. H28 falsified (Hodge strictly outperforms GIN); H29 outcome exceeds prediction (Hodge strictly outperforms GAT); H30 refuted (GIN underperforms MLP); H31 refuted (GAT underperforms MLP); H32 marginally falsified (GIN above GAT at p_BH = 0.013). See §8.

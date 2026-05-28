@@ -1,3 +1,9 @@
+---
+title: H003 · Scale escalation (NCI1)
+parent: Hypotheses (H001–H011b)
+nav_order: 3
+---
+
 # Hypothesis 003: Does scale alone lift the Hodge MP = MLP ceiling? NCI1 (4110 graphs, 22× MUTAG)
 
 **Status.** Resolved 2026-05-21. **H8 refuted (small but real combinatorial harm); H9 reconfirmed across three datasets; H10 confirmed *for the residual variant* — first strict positive-difference real-data claim; H11 partially refuted (residual matters more than depth at NCI1 scale); H12 directional.** See §6 for the full outcome.

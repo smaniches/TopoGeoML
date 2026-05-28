@@ -1,3 +1,9 @@
+---
+title: H009 · Sheaf Laplacian
+parent: Hypotheses (H001–H011b)
+nav_order: 11
+---
+
 # Hypothesis 009: Does a learned sheaf Laplacian outperform fixed operators on NCI1?
 
 **Status.** Resolved 2026-05-25. H39 confirmed (sheaf outperforms MLP at p_BH = 0.017); H40 refuted (sheaf does not outperform Hodge, p_BH = 0.797); H41 refuted (sheaf strictly underperforms gin-residual at p_BH = 0.014). The learned sheaf Laplacian adds no value over fixed operators at this configuration. See §7.
