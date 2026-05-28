@@ -1,3 +1,9 @@
+---
+title: H005 · Feature-density mechanism
+parent: Hypotheses (H001–H011b)
+nav_order: 5
+---
+
 # Hypothesis 005: Is feature density the mechanism behind the residual-scale effect? Cross-dataset feature-projection study
 
 **Status.** Resolved 2026-05-22. **H18 REFUTED, H19 REFUTED — feature density is NOT the mechanism either.** Observed pattern (under the H005-A configuration): NCI1-7d MLP-baseline median is 0.500 (at class prior) while Hodge-residual median is 0.58 — feature-independent graph-structural predictive signal survives the projection. The constant-feature ablation (H006) is the appropriate test of whether this generalises; it does not isolate homology specifically. See §6.

@@ -1,3 +1,9 @@
+---
+title: H006 · Constant-feature ablation
+parent: Hypotheses (H001–H011b)
+nav_order: 6
+---
+
 # Hypothesis 006: Does graph-topology signal predict the Hodge advantage? A Weisfeiler-Lehman + feature-shuffle test
 
 **Status.** Resolved 2026-05-22. H22 supported (NCI1 constant-feature Hodge above prior); H23 refuted (MUTAG also shows signal); H24 refuted (PROTEINS similar magnitude); H25 refuted (constant-feature gap rank-inverted vs full-feature gain, Spearman rho = -1.0). See §6.

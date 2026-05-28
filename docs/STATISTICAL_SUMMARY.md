@@ -1,3 +1,8 @@
+---
+title: Statistical summary
+nav_order: 4
+---
+
 # Investigation-Wide Statistical Summary
 
 This document reports the statistical properties of the complete TopoGeoML investigation (H001-H011) at the investigation level, addressing multiple-testing burden, power, and the false discovery rate across all experiments.

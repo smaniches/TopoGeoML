@@ -1,3 +1,9 @@
+---
+title: H010 · Cross-dataset operator
+parent: Hypotheses (H001–H011b)
+nav_order: 12
+---
+
 # Hypothesis 010: Does the high-pass vs low-pass operator distinction predict cross-dataset performance?
 
 **Status.** Resolved 2026-05-25. H42 directionally confirmed but for the wrong reason (gin-residual wins on MUTAG AND NCI1, not MUTAG-specifically); H43 neither arm distinguishable on PROTEINS; H44 partially confirmed (gap is dataset-dependent in magnitude but not direction); H45 refuted (Hodge loses to MLP on MUTAG even with external residual); H46 refuted (neither arm significantly outperforms MLP on PROTEINS). See §6.

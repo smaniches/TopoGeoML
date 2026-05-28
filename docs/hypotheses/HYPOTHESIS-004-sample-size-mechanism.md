@@ -1,3 +1,9 @@
+---
+title: H004 · Sample-size mechanism
+parent: Hypotheses (H001–H011b)
+nav_order: 4
+---
+
 # Hypothesis 004: Is sample size the mechanism behind the residual-scale effect? NCI1 subsampling study
 
 **Status.** Resolved 2026-05-22. **H13 refuted, H14 refuted, H15 confirmed (reproducibility holds), H16 confirmed (monotone Δ in n), H17 N/A (Δ never crosses zero in the tested range).** Sample size is decisively NOT the mechanism. See §6 for the full outcome.

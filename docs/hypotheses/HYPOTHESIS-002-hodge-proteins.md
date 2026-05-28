@@ -1,3 +1,9 @@
+---
+title: H002 · Replication on PROTEINS
+parent: Hypotheses (H001–H011b)
+nav_order: 2
+---
+
 # Hypothesis 002: Does the H1-winning Hodge architecture beat MLP on PROTEINS, where MUTAG's discrimination ceiling doesn't apply?
 
 **Status.** Resolved 2026-05-21. **H4 refuted; H5 reconfirmed across datasets; H6 refuted; H7 unresolved.** See §6 for the full outcome.
