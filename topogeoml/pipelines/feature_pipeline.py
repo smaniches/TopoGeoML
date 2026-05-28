@@ -1,5 +1,5 @@
 """
-TopologyFeaturePipeline — Module 1 of the TopoGeomML MVP.
+TopologyFeaturePipeline — Module 1 of the TopoGeoML MVP.
 
 Flow: point clouds → Rips filtration → persistence diagram → vectorization → feature matrix.
 

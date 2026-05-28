@@ -5,7 +5,7 @@ Item 10 of the v0.0.1 scope.
 
 An experiment is fully specified by a YAML file describing:
   - dataset: how to generate / load inputs
-  - pipeline: which TopoGeomML pipeline + hyperparameters
+  - pipeline: which TopoGeoML pipeline + hyperparameters
   - validation: how to score (CV folds, seed, metric)
   - output: where to write JSON results
 

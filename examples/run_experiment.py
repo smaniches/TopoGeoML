@@ -1,5 +1,5 @@
 """
-Run a TopoGeomML v0.0.1 experiment from a YAML config and write JSON results.
+Run a TopoGeoML v0.0.1 experiment from a YAML config and write JSON results.
 
 Usage:
     python examples/run_experiment.py examples/configs/synthetic_shapes.yaml
@@ -137,7 +137,7 @@ def run_experiment(config: ExperimentConfig) -> dict[str, object]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Run a TopoGeomML YAML experiment.")
+    parser = argparse.ArgumentParser(description="Run a TopoGeoML YAML experiment.")
     parser.add_argument("config", help="Path to experiment YAML file")
     args = parser.parse_args(argv)
 

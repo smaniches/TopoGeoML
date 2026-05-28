@@ -21,8 +21,8 @@ keywords:
   - preregistered research
   - mechanism elimination
 abstract: >-
-  A preregistered research program (7 hypotheses, 27+ falsifiable
-  sub-predictions) investigating whether Hodge decomposition improves graph
+  A preregistered research program (14 hypotheses across H001–H011b, 53
+  falsifiable sub-predictions) investigating whether Hodge decomposition improves graph
   neural network classification. Systematic mechanism elimination
   (sample size, feature density, graph topology) narrows the positive NCI1
   claim (+8.6 pp, p_BH = 4.83e-3) to an architecture-data complementarity
