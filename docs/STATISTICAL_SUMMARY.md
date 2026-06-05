@@ -26,11 +26,11 @@ Applying Benjamini-Hochberg across all 76 raw p-values at alpha=0.05:
 
 | Metric | Value |
 |---|---|
-| Comparisons significant at per-hypothesis BH (alpha=0.05) | 48/76 (63%) |
+| Comparisons significant at per-hypothesis BH (alpha=0.05) | 47/76 (62%) |
 | Comparisons significant at investigation-wide BH (alpha=0.05) | 47/76 (62%) |
 | Comparisons surviving Bonferroni (alpha=0.05/76 = 6.58 x 10^-4) | 22/76 (29%) |
 
-One comparison loses significance under investigation-wide correction (48 → 47). All primary claims (NCI1 positive result, residual-placement finding, GIN/GAT collapse) survive both investigation-wide BH and Bonferroni correction.
+Per-hypothesis and investigation-wide BH agree at 47/76 significant; the global correction removes no additional comparison. Not all primary claims survive Bonferroni: the NCI1 Hodge-residual > MLP comparison (p_raw = 3.38 x 10^-3) survives investigation-wide BH but not Bonferroni (threshold 0.05/76 = 6.58 x 10^-4), whereas the residual-placement finding (gin-residual > MLP, p_raw = 4.03 x 10^-4) survives both. See the §2 table below and the note that follows it.
 
 ### Key claims under investigation-wide correction
 
@@ -62,7 +62,7 @@ H001-H007 were designed sequentially: each hypothesis's design was informed by t
 
 This is legitimate sequential testing (Pocock 1977; O'Brien & Fleming 1979), not p-hacking, provided:
 1. Each hypothesis was committed before its experiment ran (verified by git timestamps)
-2. All results — positive and negative — are reported (verified: 37% of comparisons are non-significant)
+2. All results — positive and negative — are reported (verified: 38% of comparisons are non-significant)
 3. The per-hypothesis BH correction accounts for the within-family multiplicity
 
 The investigation-wide BH analysis in §2 provides the additional global correction.
@@ -88,10 +88,10 @@ Results at different configurations (deeper architectures, batch normalisation, 
 
 | Category | Count | Percentage |
 |---|---|---|
-| Significant at per-hypothesis BH | 48 | 63% |
+| Significant at per-hypothesis BH | 47 | 62% |
 | Significant at investigation-wide BH | 47 | 62% |
 | Significant at Bonferroni | 22 | 29% |
-| Non-significant (null results reported) | 28 | 37% |
+| Non-significant (null results reported) | 29 | 38% |
 | **Total comparisons** | **76** | **100%** |
 
 No selective reporting. All 76 comparisons are documented in their respective hypothesis documents and JSON artifacts. Negative results are given identical formatting and statistical treatment as positive results.
