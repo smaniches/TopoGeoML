@@ -5,7 +5,7 @@
   "description": "Preregistered topology-aware machine learning research toolkit: differentiable persistent homology, Hodge Laplacian message passing, and statistically defensible benchmarking on graph classification (MUTAG, PROTEINS, NCI1).",
   "codeRepository": "https://github.com/smaniches/TopoGeoML",
   "programmingLanguage": "Python",
-  "license": "MIT",
+  "license": "https://spdx.org/licenses/MIT",
   "author": [
     {
       "@type": "Person",
