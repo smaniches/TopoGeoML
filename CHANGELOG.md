@@ -5,6 +5,14 @@ All notable changes to TopoGeomML will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3] — 2026-06-05
+
+Packaging/distribution release — no library or result changes.
+
+### Added
+
+- **PyPI distribution.** `topogeoml` is now published to PyPI via GitHub Actions Trusted Publishing (OIDC, no stored token), with a CycloneDX SBOM, build-provenance + SBOM attestations, and Sigstore signing — the same release pipeline used across the author's other packages. Install with `pip install topogeoml` (add the `[torch]` extra for the differentiable layers in `topogeoml.nn`).
+
 ## [0.0.2] — 2026-05-24
 
 Headline: **the framework has its first strict positive-difference real-data claim** (hypothesis 003, NCI1). The v0.0.2 release gate set in `docs/hypotheses/HYPOTHESIS-002-hodge-proteins.md` §5 ("strictly beats MLP at p_BH < 0.01") is met by the `hodge-mp-residual` arm on NCI1 (p_BH = 4.83 × 10⁻³, +8.6 pp). A preregistered hypothesis series (H001–H007, 27 falsifiable sub-predictions) investigates the mechanism through systematic elimination.
