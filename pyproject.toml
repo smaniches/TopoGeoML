@@ -20,6 +20,7 @@ keywords = [
     "machine-learning",
     "hodge-laplacian",
     "topological-deep-learning",
+    "topological-data-analysis",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
