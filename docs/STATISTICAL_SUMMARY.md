@@ -30,7 +30,7 @@ Applying Benjamini-Hochberg across all 76 raw p-values at alpha=0.05:
 | Comparisons significant at investigation-wide BH (alpha=0.05) | 47/76 (62%) |
 | Comparisons surviving Bonferroni (alpha=0.05/76 = 6.58 x 10^-4) | 22/76 (29%) |
 
-Per-hypothesis and investigation-wide BH agree at 47/76 significant; the global correction removes no additional comparison. Not all primary claims survive Bonferroni: the NCI1 Hodge-residual > MLP comparison (p_raw = 3.38 x 10^-3) survives investigation-wide BH but not Bonferroni (threshold 0.05/76 = 6.58 x 10^-4), whereas the residual-placement finding (gin-residual > MLP, p_raw = 4.03 x 10^-4) survives both. See the key claims table below and the note that follows it.
+Per-hypothesis and investigation-wide BH each yield 47/76 significant; the totals match, but the two procedures are not nested — the global correction drops one borderline H004 NCI1 hodge-residual-vs-MLP comparison (p_raw = 4.49 x 10^-2, n=1113 subsample) and promotes one MUTAG ablation comparison (hodge-classifier vs hodge-deep-residual, p_raw = 2.16 x 10^-2), so the significant membership differs by one comparison even though the count is unchanged. Not all primary claims survive Bonferroni: the H003 NCI1 Hodge-residual > MLP comparison (p_raw = 3.38 x 10^-3) survives investigation-wide BH but not Bonferroni (threshold 0.05/76 = 6.58 x 10^-4), whereas the residual-placement finding (gin-residual > MLP, p_raw = 4.03 x 10^-4) survives both. See the key claims table below and the note that follows it.
 
 ### Key claims under investigation-wide correction
 
@@ -94,6 +94,6 @@ Results at different configurations (deeper architectures, batch normalisation, 
 | Non-significant (null results reported) | 29 | 38% |
 | **Total comparisons** | **76** | **100%** |
 
-The three "Significant at ..." rows are nested subsets, not disjoint categories — every Bonferroni-significant comparison is also BH-significant — so they are not additive. The mutually exclusive partition of the 76 comparisons is **significant at per-hypothesis BH (47)** plus **non-significant (29)** = 76.
+These rows are not additive. The 22 Bonferroni-significant comparisons are a strict subset of both BH-significant sets — every Bonferroni-significant comparison is also BH-significant. The per-hypothesis and investigation-wide BH sets are **not** nested in each other, however: each contains 47 comparisons, but their membership differs by one comparison (the 1-for-1 swap described in §2), so equal counts do not imply identical sets. The mutually exclusive partition is therefore stated per procedure: under per-hypothesis BH, **significant (47)** plus **non-significant (29)** = 76 (the investigation-wide partition is likewise 47 + 29, over a membership that differs by that one swap).
 
 No selective reporting. All 76 comparisons are documented in their respective hypothesis documents and JSON artifacts. Negative results are given identical formatting and statistical treatment as positive results.
