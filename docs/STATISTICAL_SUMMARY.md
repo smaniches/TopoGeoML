@@ -30,7 +30,7 @@ Applying Benjamini-Hochberg across all 76 raw p-values at alpha=0.05:
 | Comparisons significant at investigation-wide BH (alpha=0.05) | 47/76 (62%) |
 | Comparisons surviving Bonferroni (alpha=0.05/76 = 6.58 x 10^-4) | 22/76 (29%) |
 
-Per-hypothesis and investigation-wide BH agree at 47/76 significant; the global correction removes no additional comparison. Not all primary claims survive Bonferroni: the NCI1 Hodge-residual > MLP comparison (p_raw = 3.38 x 10^-3) survives investigation-wide BH but not Bonferroni (threshold 0.05/76 = 6.58 x 10^-4), whereas the residual-placement finding (gin-residual > MLP, p_raw = 4.03 x 10^-4) survives both. See the key claims table below and the note that follows it.
+Per-hypothesis and investigation-wide BH each yield 47/76 significant; the totals match, but the two procedures are not nested — the global correction drops one borderline NCI1 hodge-residual-vs-MLP comparison (p_raw = 4.49 x 10^-2) and promotes one MUTAG ablation comparison (hodge-classifier vs hodge-deep-residual, p_raw = 2.16 x 10^-2), so the significant membership differs by one comparison even though the count is unchanged. Not all primary claims survive Bonferroni: the NCI1 Hodge-residual > MLP comparison (p_raw = 3.38 x 10^-3) survives investigation-wide BH but not Bonferroni (threshold 0.05/76 = 6.58 x 10^-4), whereas the residual-placement finding (gin-residual > MLP, p_raw = 4.03 x 10^-4) survives both. See the key claims table below and the note that follows it.
 
 ### Key claims under investigation-wide correction
 
