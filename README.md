@@ -28,7 +28,7 @@ Differentiable persistent-homology layers, Hodge message passing, and a benchmar
 
 [![CI](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-0.0.2--beta-green)](#status)
+[![Version](https://img.shields.io/badge/version-0.0.3--beta-green)](#status)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20365817.svg)](https://doi.org/10.5281/zenodo.20365817)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -135,7 +135,7 @@ Per-arm result (full report in `notebooks/results/nci1_hodge_ablation_30seeds.md
 
 > On NCI1 at 30 seeds × 10 epochs × hidden_dim=32, a one-layer Hodge MP classifier with a symmetrically-normalised Laplacian AND an identity residual connection strictly outperforms a no-topology MLP baseline of matched capacity (median Δ = +0.086, paired Wilcoxon p_BH = 4.83 × 10⁻³, rank-biserial r = +0.533, BCa 95% CI on Hodge accuracy: [0.581, 0.625]).
 
-> ⚠️ **Regime caveat.** This is a *matched-capacity, fixed-architecture* comparison, not a benchmark-performance claim. The MLP baseline sits at 0.523 and the Hodge arm at 0.609 — both ~20 pp below the ~0.80+ that properly-tuned GNNs reach on NCI1. The result says only "at ~1.4k parameters and one layer, the residual architecture extracts more signal than a same-capacity MLP." Crucially, H008c below shows a normalised-*adjacency* operator with the same external residual does this *slightly better* than the Hodge Laplacian — so this is **not** evidence that topology per se helps.
+> ⚠️ **Regime caveat.** This is a *matched-capacity, fixed-architecture* comparison, not a benchmark-performance claim. The MLP baseline sits at 0.523 and the Hodge arm at 0.609 — both ~20 pp below the ~0.80+ that properly-tuned GNNs reach on NCI1. The result says only "at ~1.4k parameters and one layer, the residual architecture extracts more signal than a same-capacity MLP." Crucially, H008c shows a normalised-*adjacency* operator with the same external residual does this *slightly better* than the Hodge Laplacian — so this is **not** evidence that topology per se helps.
 
 **Surprising cross-dataset twist.** The residual variant — which *lost* to MLP on MUTAG (p_BH = 0.019) and *matched* on PROTEINS (p_BH = 0.339) — **wins** on NCI1. The residual's contribution scales positively with dataset size at this architectural class. The cross-dataset behaviour table:
 
