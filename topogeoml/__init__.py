@@ -1,11 +1,11 @@
 """
-TopoGeomML — topology-aware geometric machine learning.
+TopoGeoML — topology-aware geometric machine learning.
 
 A Python-first research and engineering stack connecting persistent homology,
 higher-order topological domains, and geometric deep learning into reproducible
 ML pipelines.
 
-v0.0.1 public surface:
+v0.0.3 public surface:
     Core:
         PersistenceDiagram, DiagramProvenance, RipsFiltration,
         PersistenceImageVectorizer, BettiCurveVectorizer,

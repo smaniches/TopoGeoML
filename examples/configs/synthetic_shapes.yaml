@@ -1,4 +1,4 @@
-# TopoGeomML v0.0.1 — synthetic shapes experiment
+# TopoGeoML v0.0.1 — synthetic shapes experiment
 #
 # Run with:
 #   python examples/run_experiment.py examples/configs/synthetic_shapes.yaml

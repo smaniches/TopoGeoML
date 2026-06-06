@@ -18,7 +18,7 @@ TopoGeoML is a preregistered research investigation into whether Hodge decomposi
 
 4. **The NCI1 advantage does not transfer to MUTAG or PROTEINS** at the tested configuration (1-layer, hidden_dim=32, 10-20 epochs, no batch normalisation).
 
-5. **L_1 (edge-level Hodge Laplacian) is untested on triangle-rich data at statistical rigor.** NCI1 has no triangles (L_1 degenerates to the down-Laplacian). COLLAB (mean 9,290 triangles per graph) showed a directionally strong smoke result (+14.8 pp, 1 seed) but the full experiment has not completed due to compute constraints.
+5. **L_1 (edge-level Hodge Laplacian) is untested on triangle-rich data at statistical rigor.** NCI1 is triangle-sparse (96% of graphs have 0 triangles), so L_1 effectively degenerates to the down-Laplacian. COLLAB (mean 9,290 triangles per graph) showed a directionally strong smoke result (+14.8 pp, 1 seed) but the full experiment has not completed due to compute constraints.
 
 ### What is not claimed
 

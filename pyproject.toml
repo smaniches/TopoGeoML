@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "topogeoml"
-version = "0.0.3"
+dynamic = ["version"]
 description = "Preregistered topology-aware machine learning research toolkit: differentiable persistent homology, Hodge Laplacian message passing, and statistically defensible benchmarking on graph classification (MUTAG, PROTEINS, NCI1)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -95,6 +95,9 @@ bench = [
 Homepage = "https://github.com/smaniches/TopoGeoML"
 Repository = "https://github.com/smaniches/TopoGeoML"
 Issues = "https://github.com/smaniches/TopoGeoML/issues"
+
+[tool.hatch.version]
+path = "topogeoml/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["topogeoml"]

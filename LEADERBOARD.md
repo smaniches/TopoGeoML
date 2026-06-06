@@ -157,7 +157,7 @@ The discipline of the table:
 | Interpretation | The Hodge arm's symmetric Laplacian normalisation provides training stability that unnormalised GIN/GAT aggregation lacks under the tested capacity constraints. This is an architectural interaction finding, not a theoretical expressiveness claim. |
 | Per-seed report | `notebooks/results/h008_nci1_gin_gat_30seeds.md` |
 | Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-008-gin-gat-comparison.md` (H28/H29/H30/H31/H32) |
-| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-baseline gat-baseline mlp-baseline --seeds 0..29 --n-epochs 10` |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-baseline gat-baseline mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
 | First shipped in | This commit |
 
 ---
@@ -173,7 +173,7 @@ The discipline of the table:
 | Interpretation | The Hodge advantage on NCI1 is not attributable to degree normalisation alone. The operative architectural difference involves the spectral operator (Laplacian vs adjacency), the weight-propagation interaction order, or the residual placement. |
 | Per-seed report | `notebooks/results/h008b_nci1_gin_normalised_30seeds.md` |
 | Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-008b-gin-normalised.md` (H33/H34/H35) |
-| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-normalised gin-baseline mlp-baseline --seeds 0..29 --n-epochs 10` |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-normalised gin-baseline mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
 
 ---
 
@@ -188,7 +188,7 @@ The discipline of the table:
 | Interpretation | The operative architectural element is the external residual (`act(prop @ W + b) + h`), which preserves projected features through propagation. The choice of spectral operator (high-pass Hodge vs low-pass adjacency) is secondary. This refutes the strong "topology helps graph classification" hypothesis at the tested configuration. |
 | Per-seed report | `notebooks/results/h008c_nci1_gin_residual_30seeds.md` |
 | Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-008c-gin-residual.md` (H36/H37/H38) |
-| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-residual gin-normalised mlp-baseline --seeds 0..29 --n-epochs 10` |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-residual gin-normalised mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
 
 ---
 
