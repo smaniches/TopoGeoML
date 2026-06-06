@@ -30,7 +30,7 @@ Applying Benjamini-Hochberg across all 76 raw p-values at alpha=0.05:
 | Comparisons significant at investigation-wide BH (alpha=0.05) | 47/76 (62%) |
 | Comparisons surviving Bonferroni (alpha=0.05/76 = 6.58 x 10^-4) | 22/76 (29%) |
 
-Per-hypothesis and investigation-wide BH agree at 47/76 significant; the global correction removes no additional comparison. Not all primary claims survive Bonferroni: the NCI1 Hodge-residual > MLP comparison (p_raw = 3.38 x 10^-3) survives investigation-wide BH but not Bonferroni (threshold 0.05/76 = 6.58 x 10^-4), whereas the residual-placement finding (gin-residual > MLP, p_raw = 4.03 x 10^-4) survives both. See the §2 table below and the note that follows it.
+Per-hypothesis and investigation-wide BH agree at 47/76 significant; the global correction removes no additional comparison. Not all primary claims survive Bonferroni: the NCI1 Hodge-residual > MLP comparison (p_raw = 3.38 x 10^-3) survives investigation-wide BH but not Bonferroni (threshold 0.05/76 = 6.58 x 10^-4), whereas the residual-placement finding (gin-residual > MLP, p_raw = 4.03 x 10^-4) survives both. See the key claims table below and the note that follows it.
 
 ### Key claims under investigation-wide correction
 
@@ -93,5 +93,7 @@ Results at different configurations (deeper architectures, batch normalisation, 
 | Significant at Bonferroni | 22 | 29% |
 | Non-significant (null results reported) | 29 | 38% |
 | **Total comparisons** | **76** | **100%** |
+
+The three "Significant at ..." rows are nested subsets, not disjoint categories — every Bonferroni-significant comparison is also BH-significant — so they are not additive. The mutually exclusive partition of the 76 comparisons is **significant at per-hypothesis BH (47)** plus **non-significant (29)** = 76.
 
 No selective reporting. All 76 comparisons are documented in their respective hypothesis documents and JSON artifacts. Negative results are given identical formatting and statistical treatment as positive results.
