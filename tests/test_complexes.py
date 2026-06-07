@@ -117,10 +117,23 @@ def test_chain_complex_identity_two_triangles_sharing_edge() -> None:
 # ---------- Hodge Laplacian ----------
 
 
-def test_hodge_laplacian_symmetric_psd() -> None:
-    """L_k is symmetric positive semi-definite."""
-    sc = SimplicialComplex(facets=[(0, 1, 2)])
-    for k in range(3):
+@pytest.mark.parametrize(
+    "facets",
+    [
+        # Minimal/degenerate facet: a single filled triangle.
+        [(0, 1, 2)],
+        # Non-degenerate general complex: two filled triangles glued along edge
+        # (1,2), giving a shared face and genuine off-diagonal structure in
+        # L_0/L_1/L_2 (4 vertices, 5 edges, 2 triangles).
+        [(0, 1, 2), (1, 2, 3)],
+    ],
+)
+def test_hodge_laplacian_symmetric_psd(facets: list[tuple[int, ...]]) -> None:
+    """L_k is symmetric positive semi-definite for general (non-degenerate) complexes."""
+    sc = SimplicialComplex(facets=facets)
+    # max_dim is derived from the complex (not hardcoded) so the test cannot
+    # silently under-cover a dimension if the facets change.
+    for k in range(sc.max_dim + 1):
         L = hodge_laplacian(sc, k).toarray()
         # Symmetric.
         np.testing.assert_allclose(L, L.T, atol=1e-12)

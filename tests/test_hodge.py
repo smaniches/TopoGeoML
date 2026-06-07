@@ -37,12 +37,25 @@ def test_normalize_hodge_laplacian_is_symmetric() -> None:
 
 
 def test_sparse_scipy_to_torch_round_trip() -> None:
-    """Converted torch sparse tensor should preserve values."""
+    """Converted torch sparse tensor should preserve values.
+
+    The float32 path round-trips to float32 precision; the float64 path must
+    preserve full precision with NO intermediate float32 truncation. The float64
+    case uses a value not representable in float32 (1.0 + 1e-12) and asserts
+    exact equality (atol=0), so it fails if a float32 intermediate is reintroduced.
+    """
     arr = np.array([[1.0, 0.0, 2.0], [0.0, 0.0, 0.0], [3.0, 0.0, 4.0]], dtype=np.float64)
     sparse = sp.csr_matrix(arr)
-    t = sparse_scipy_to_torch(sparse, dtype=torch.float32)
-    dense_back = t.to_dense().numpy()
-    np.testing.assert_allclose(dense_back, arr.astype(np.float32))
+    t32 = sparse_scipy_to_torch(sparse, dtype=torch.float32)
+    np.testing.assert_allclose(t32.to_dense().numpy(), arr.astype(np.float32))
+
+    # float64: full precision preserved, exactly.
+    val = 1.0 + 1e-12  # not representable in float32; survives only in float64
+    assert np.float32(val) == np.float32(1.0)  # confirms float32 would truncate
+    arr64 = np.array([[val, 0.0], [0.0, np.pi]], dtype=np.float64)
+    t64 = sparse_scipy_to_torch(sp.csr_matrix(arr64), dtype=torch.float64)
+    assert t64.dtype == torch.float64
+    np.testing.assert_array_equal(t64.to_dense().numpy(), arr64)
 
 
 def test_hodge_layer_forward_shape() -> None:

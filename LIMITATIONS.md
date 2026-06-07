@@ -1,6 +1,6 @@
-# Limitations of TopoGeoML v0.0.2
+# Limitations of TopoGeoML v0.0.3
 
-This document lists what TopoGeoML v0.0.2 **does not do**, what it does **only partially**, and the **failure modes** the user should expect. Honest accounting is part of the contract: every claim in the codebase must name its validation, and every absence must be named here.
+This document lists what TopoGeoML v0.0.3 **does not do**, what it does **only partially**, and the **failure modes** the user should expect. Honest accounting is part of the contract: every claim in the codebase must name its validation, and every absence must be named here.
 
 If you hit a behavior that is not listed here and is not what the docstring promises, that is a bug — open an issue.
 
@@ -149,7 +149,7 @@ Status updated to reflect work since the initial v0.0.1 cut.
 
 ## 5. How to read the version
 
-`v0.0.1-alpha` is the deliberate signal: pre-stable. **APIs may change without notice.** Pin exact versions in any downstream project, and re-test before upgrading.
+`0.0.3` (a `0.x` release) is the deliberate signal: pre-stable. **APIs may change without notice.** Pin exact versions in any downstream project, and re-test before upgrading.
 
 The semantics of the upcoming versions are deliberately narrower than the v0.0.1 cut promised:
 
