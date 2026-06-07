@@ -50,7 +50,7 @@ def load_pool(results_dir: Path = RESULTS_DIR) -> list[PooledComparison]:
             pool.append(
                 PooledComparison(
                     source=path.name,
-                    dataset=entry.get("dataset", ""),
+                    dataset=entry.get("dataset") or path.name,
                     comparison=Comparison(
                         arm_a_name=entry["arm_a_name"],
                         arm_b_name=entry["arm_b_name"],
@@ -105,13 +105,18 @@ def main() -> None:
     # into multiple hypothesis families is ONE distinct comparison. The
     # investigation-wide FDR is computed over the distinct set (primary); the
     # full pool with re-reports is reported alongside for transparency.
+    # Key on the EXACT raw p-value: the re-reports are byte-identical floats, so
+    # exact equality de-duplicates them without rounding fragility (verified: no
+    # two distinct comparisons are within 1e-10 but unequal). The dataset falls
+    # back to the source filename when absent, so a missing field never silently
+    # merges comparisons across files.
     seen: set[tuple[str, tuple[str, ...], float]] = set()
     distinct: list[PooledComparison] = []
     for pc in pool:
         key = (
             pc.dataset,
             tuple(sorted([pc.comparison.arm_a_name, pc.comparison.arm_b_name])),
-            round(pc.comparison.p_value_raw, 10),
+            pc.comparison.p_value_raw,
         )
         if key not in seen:
             seen.add(key)
