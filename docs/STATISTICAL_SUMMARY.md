@@ -58,7 +58,7 @@ At n=30 seeds, the investigation has 80% power to detect effects with rank-biser
 
 ## 4. Post-Hoc Hypothesis Generation
 
-H001-H007 were designed sequentially: each hypothesis's design was informed by the prior hypothesis's outcome. H008-H010 were designed after seeing H001-H007 results. While each hypothesis was preregistered (committed to git before execution), the hypothesis *selection* was data-driven.
+H001-H007 were designed sequentially: each hypothesis's design was informed by the prior hypothesis's outcome. H008-H010 were designed after seeing H001-H007 results, and H011 (with its COLLAB follow-up H011b) was designed after H001-H010 — H011 to test higher-order L₁ structure once H008-c had shown the L₀ operator choice was secondary, and H011b after H011's degenerate NCI1 result. While each hypothesis was preregistered (committed to git before execution), the hypothesis *selection* was data-driven.
 
 This is legitimate sequential testing (Pocock 1977; O'Brien & Fleming 1979), not p-hacking, provided:
 1. Each hypothesis was committed before its experiment ran (verified by git timestamps)

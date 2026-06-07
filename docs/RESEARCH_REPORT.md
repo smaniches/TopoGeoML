@@ -314,7 +314,7 @@ The full codebase, all experiment artifacts (per-seed JSON reports), and all pre
 
 ## 6. Reproduction
 
-Complete reproduction instructions are available in [`REPRODUCING.md`](../REPRODUCING.md) at the repository root.
+Complete reproduction instructions are available in [`REPRODUCING.md`](https://github.com/smaniches/TopoGeoML/blob/main/REPRODUCING.md) at the repository root.
 
 ### Per-hypothesis artifact locations:
 
