@@ -12,7 +12,7 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 - Claims are extracted from README.md as of the current commit.
 - Each claim must have a JSON artifact in `notebooks/results/` or a CI command that produces it.
 - Tolerances account for hardware-specific floating-point variation (see [REPRODUCING.md](https://github.com/smaniches/TopoGeoML/blob/main/REPRODUCING.md) §Expected Numerical Variation).
-- "Survives global BH" indicates whether the claim's p-value survives investigation-wide Benjamini-Hochberg correction across all 76 comparisons (see [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md)).
+- "Survives global BH" indicates whether the claim's p-value survives investigation-wide Benjamini-Hochberg correction across the 59 distinct comparisons (of 76 total computed; see [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md)).
 
 ---
 
@@ -35,7 +35,7 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 | Artifact key | `pairwise_comparisons[hodge-mp-residual vs mlp-baseline]` |
 | Reproduce | `python -m benchmarks.hodge --datasets nci1 --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
 | Expected | median_diff: 0.086 +/- 0.005; p_BH: 4.83e-3 +/- factor of 2 |
-| Survives global BH | Yes (rank 29/76, threshold 1.91e-2) |
+| Survives global BH | Yes (rank 22/59, threshold 1.86e-2) |
 | Survives Bonferroni | No (threshold 6.58e-4) |
 | Limitation | One dataset (NCI1), one configuration (1-layer, hidden_dim=32, 10 epochs). Does not replicate on MUTAG or PROTEINS at this configuration. Subsequent ablation (H008-c) showed the operative factor is the external residual, not the Hodge Laplacian. |
 
