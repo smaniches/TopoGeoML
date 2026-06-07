@@ -6,11 +6,11 @@ TopoGeoML is a preregistered research investigation into whether Hodge decomposi
 
 ## Investigation summary
 
-14 preregistered hypotheses (H001-H011b) with 53 falsifiable sub-predictions, tested across 4 datasets (MUTAG, PROTEINS, NCI1, COLLAB), 11 model variants, and 76 pairwise statistical comparisons.
+14 preregistered hypotheses (H001-H011b) with 53 falsifiable sub-predictions, tested across 4 datasets (MUTAG, PROTEINS, NCI1, COLLAB), 11 model variants, and 59 distinct pairwise statistical comparisons (76 computed in total, including 17 baseline re-reports across hypothesis families).
 
 ### Findings
 
-1. **Topology-aware message passing with external residual outperforms MLP on NCI1 by 8-10 pp.** The Hodge-residual-vs-MLP comparison is significant at per-hypothesis BH (p_BH = 4.83e-3, within the H003 ablation family) and survives investigation-wide Benjamini-Hochberg correction (rank 29/76, threshold 1.91e-2) but not Bonferroni (threshold 6.58e-4). *Regime-bound:* this is a matched-capacity comparison (best arm 0.609 vs MLP 0.523, both ~20 pp below the ~0.80+ that properly-trained GNNs reach on NCI1; GIN/GAT collapse to class prior under the same protocol). It isolates architectural mechanism at fixed capacity and is not a benchmark-performance claim.
+1. **Topology-aware message passing with external residual outperforms MLP on NCI1 by 8-10 pp.** The Hodge-residual-vs-MLP comparison is significant at per-hypothesis BH (p_BH = 4.83e-3, within the H003 ablation family) and survives investigation-wide Benjamini-Hochberg correction over the 59 distinct comparisons (rank 22/59, threshold 1.86e-2) but not Bonferroni (threshold 0.05/59 = 8.47e-4). *Regime-bound:* this is a matched-capacity comparison (best arm 0.609 vs MLP 0.523, both ~20 pp below the ~0.80+ that properly-trained GNNs reach on NCI1; GIN/GAT collapse to class prior under the same protocol). It isolates architectural mechanism at fixed capacity and is not a benchmark-performance claim.
 
 2. **The external residual connection is the operative architectural factor.** The choice of propagation operator (Hodge Laplacian, normalised adjacency, or learned sheaf) is secondary. All three operators perform comparably once the external residual is present; all collapse to class prior without it.
 
@@ -36,7 +36,7 @@ TopoGeoML is a preregistered research investigation into whether Hodge decomposi
 | Type checking | mypy strict enforced in CI |
 | Lint | ruff, all checks passing |
 | DOI | [10.5281/zenodo.20365817](https://doi.org/10.5281/zenodo.20365817) |
-| Statistical analysis | Investigation-wide BH-FDR across 76 comparisons ([docs/STATISTICAL_SUMMARY.md](docs/STATISTICAL_SUMMARY.md)) |
+| Statistical analysis | Investigation-wide BH-FDR across 59 distinct comparisons (76 computed; [docs/STATISTICAL_SUMMARY.md](docs/STATISTICAL_SUMMARY.md)) |
 | Preregistration | 14 hypothesis documents with git-timestamped commit history |
 | Negative results | 37% of comparisons are non-significant; all reported |
 

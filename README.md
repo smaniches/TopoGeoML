@@ -131,7 +131,7 @@ Per-arm result (full report in `notebooks/results/nci1_hodge_ablation_30seeds.md
 | `hodge-mp-deep-residual` (H3) | 0.603 [0.594, 0.623] | 1.18 × 10⁻² | beats MLP by 8.0 pp |
 | `mlp-baseline` | 0.523 [0.513, 0.566] | — | control |
 
-Under investigation-wide BH across all 76 comparisons, the `hodge-mp-residual` vs MLP result is rank 29/76 (threshold 1.91 × 10⁻²) — significant, but not Bonferroni-significant (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md) §2).
+Under investigation-wide BH across the 59 distinct comparisons (of 76 total computed; the investigation-wide FDR is computed over the distinct set), the `hodge-mp-residual` vs MLP result is rank 22/59 (threshold 1.86 × 10⁻²) — significant, but not Bonferroni-significant (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md) §2).
 
 **Defensible claim (the framework's one narrow strict positive-difference real-data result):**
 

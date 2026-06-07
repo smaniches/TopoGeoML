@@ -5,7 +5,7 @@ files in ``notebooks/results/`` and recomputes, using the repository's own
 :func:`benchmarks.stats.benjamini_hochberg`, the investigation-wide statistics
 reported in ``docs/STATISTICAL_SUMMARY.md`` §2:
 
-  * the 76-comparison pool,
+  * the 59 distinct comparisons (primary) and the 76-with-re-reports pool,
   * the per-procedure counts (Benjamini-Hochberg vs Bonferroni),
   * the per-claim rank and Benjamini-Hochberg critical value used by the
     "Key claims under investigation-wide correction" table.
@@ -34,9 +34,10 @@ ALPHA = 0.05
 
 @dataclass(frozen=True)
 class PooledComparison:
-    """A single pooled comparison with its source file for provenance."""
+    """A single pooled comparison with its source file + dataset for provenance."""
 
     source: str
+    dataset: str
     comparison: Comparison
 
 
@@ -49,6 +50,7 @@ def load_pool(results_dir: Path = RESULTS_DIR) -> list[PooledComparison]:
             pool.append(
                 PooledComparison(
                     source=path.name,
+                    dataset=entry.get("dataset") or path.name,
                     comparison=Comparison(
                         arm_a_name=entry["arm_a_name"],
                         arm_b_name=entry["arm_b_name"],
@@ -81,39 +83,75 @@ def rank_and_threshold(p_raw: float, p_values: list[float], alpha: float = ALPHA
     return rank, (rank / m) * alpha
 
 
+def summarize(comparisons: list[Comparison], label: str) -> None:
+    """Print BH / Bonferroni / non-significant counts for one comparison pool."""
+    p_values = [c.p_value_raw for c in comparisons]
+    m = len(comparisons)
+    n_bh = benjamini_hochberg(comparisons, alpha=ALPHA).n_significant_after_bh
+    bonferroni_threshold = ALPHA / m
+    n_bonferroni = sum(1 for p in p_values if p < bonferroni_threshold)
+    print(
+        f"  {label}: m={m}; BH {n_bh}/{m}; "
+        f"Bonferroni (alpha/{m}={bonferroni_threshold:.2e}) {n_bonferroni}/{m}; "
+        f"non-significant {m - n_bh}/{m}"
+    )
+
+
 def main() -> None:
     pool = load_pool()
     comparisons = [pc.comparison for pc in pool]
-    p_values = [c.p_value_raw for c in comparisons]
-    m = len(comparisons)
 
-    family = benjamini_hochberg(comparisons, alpha=ALPHA)
-    n_bh = family.n_significant_after_bh
-    bonferroni_threshold = ALPHA / m
-    n_bonferroni = sum(1 for p in p_values if p < bonferroni_threshold)
-    n_nonsignificant = m - n_bh
+    # De-duplicate: the same (dataset, unordered arm-pair, raw p-value) carried
+    # into multiple hypothesis families is ONE distinct comparison. The
+    # investigation-wide FDR is computed over the distinct set (primary); the
+    # full pool with re-reports is reported alongside for transparency.
+    # Key on the EXACT raw p-value: the re-reports are byte-identical floats, so
+    # exact equality de-duplicates them without rounding fragility (verified: no
+    # two distinct comparisons are within 1e-10 but unequal). The dataset falls
+    # back to the source filename when absent, so a missing field never silently
+    # merges comparisons across files.
+    seen: set[tuple[str, tuple[str, ...], float]] = set()
+    distinct: list[PooledComparison] = []
+    for pc in pool:
+        key = (
+            pc.dataset,
+            tuple(sorted([pc.comparison.arm_a_name, pc.comparison.arm_b_name])),
+            pc.comparison.p_value_raw,
+        )
+        if key not in seen:
+            seen.add(key)
+            distinct.append(pc)
+    distinct_comparisons = [pc.comparison for pc in distinct]
+    distinct_p_values = [c.p_value_raw for c in distinct_comparisons]
+    m = len(distinct_comparisons)
 
     n_files = len(list(RESULTS_DIR.glob("*.json")))
-    print(f"Pool size: {m} comparisons across {n_files} JSON files")
-    print(f"Significant at investigation-wide BH (alpha={ALPHA}): {n_bh}/{m}")
-    print(f"Survives Bonferroni (alpha/{m} = {bonferroni_threshold:.2e}): {n_bonferroni}/{m}")
-    print(f"Non-significant (BH): {n_nonsignificant}/{m}")
+    print(f"Result files: {n_files}")
+    print(
+        f"Total computed: {len(comparisons)}; distinct: {m} "
+        f"({len(comparisons) - m} exact re-reports removed)"
+    )
+    print("Investigation-wide FDR:")
+    summarize(distinct_comparisons, "distinct (PRIMARY)")
+    summarize(comparisons, "full (with re-reports)")
     print()
 
     # The four claims tabulated in docs/STATISTICAL_SUMMARY.md §2, identified
-    # by (source file, arm A, arm B) so the lookup is exact.
+    # by (source file, arm A, arm B) so the lookup is exact. Ranks/thresholds
+    # are computed over the DISTINCT (primary) pool.
     claims = [
         ("Hodge-residual > MLP on NCI1 (H003)", "nci1_hodge_ablation_30seeds.json", "hodge-mp-residual", "mlp-baseline"),
         ("gin-residual > MLP on NCI1 (H008-c)", "h008c_nci1_gin_residual_30seeds.json", "gin-residual", "mlp-baseline"),
         ("Hodge-residual > GIN on NCI1 (H008)", "h008_nci1_gin_gat_30seeds.json", "hodge-mp-residual", "gin-baseline"),
         ("gin-residual > gin-normalised on NCI1 (H008-c)", "h008c_nci1_gin_residual_30seeds.json", "gin-residual", "gin-normalised"),
     ]
+    bonferroni_threshold = ALPHA / m
     largest_passing_rank = max(
-        (k for k, p in enumerate(sorted(p_values), start=1) if p <= (k / m) * ALPHA),
+        (k for k, p in enumerate(sorted(distinct_p_values), start=1) if p <= (k / m) * ALPHA),
         default=0,
     )
 
-    print("Key claims under investigation-wide correction:")
+    print("Key claims under investigation-wide correction (ranks over the distinct pool):")
     header = f"{'Claim':<48} {'p_raw':>12} {'rank':>7} {'BH thr':>11} {'BH':>4} {'Bonf':>5}"
     print(header)
     for label, source, arm_a, arm_b in claims:
@@ -124,7 +162,7 @@ def main() -> None:
             and pc.comparison.arm_b_name == arm_b
         )
         p_raw = match.comparison.p_value_raw
-        rank, threshold = rank_and_threshold(p_raw, p_values)
+        rank, threshold = rank_and_threshold(p_raw, distinct_p_values)
         survives_bh = "Yes" if rank <= largest_passing_rank else "No"
         survives_bonferroni = "Yes" if p_raw < bonferroni_threshold else "No"
         print(
