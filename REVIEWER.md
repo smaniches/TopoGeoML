@@ -58,7 +58,7 @@ Expected: topology watchdog fires no later than the loss watchdog on all seeds. 
 Each empirical claim maps to a JSON artifact and reproduction command:
 
 - [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) — every README claim with evidence path, command, and tolerance
-- [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md) — investigation-wide FDR analysis (76 comparisons)
+- [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md) — investigation-wide FDR analysis (59 distinct comparisons; 76 total computed)
 - [`LEADERBOARD.md`](LEADERBOARD.md) — per-claim status table
 - [`REPRODUCING.md`](REPRODUCING.md) — full reproduction guide
 

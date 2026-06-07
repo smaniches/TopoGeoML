@@ -51,7 +51,7 @@ Quality floor: 497 tests, 100% line coverage with full dependencies, mypy strict
 
 - **Preregistration.** Each hypothesis was committed to git with falsifiable sub-predictions and a pre-specified outcome decision tree *before* the experiment ran.
 - **Statistics.** 30 seeds per experiment, paired Wilcoxon signed-rank with Benjamini–Hochberg FDR control, BCa bootstrap confidence intervals; investigation-wide correction across the 59 distinct comparisons (76 computed in total).
-- **Negative results shipped.** 37% of comparisons are non-significant and are reported with identical formatting to the positive ones.
+- **Negative results shipped.** 28 of the 59 distinct comparisons (47%; 38% of the 76 total) are non-significant and are reported with identical formatting to the positive ones.
 
 ---
 
