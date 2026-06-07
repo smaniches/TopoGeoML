@@ -36,8 +36,8 @@ Per-hypothesis and investigation-wide BH each yield 47/76 significant; the total
 
 | Claim | p_raw | Rank | BH threshold | Survives global BH | Survives Bonferroni |
 |---|---|---|---|---|---|
-| Hodge-residual > MLP on NCI1 (H003) | 3.38 x 10^-3 | 28/76 | 1.84 x 10^-2 | Yes | No |
-| gin-residual > MLP on NCI1 (H008-c) | 4.03 x 10^-4 | 17/76 | 1.12 x 10^-2 | Yes | Yes |
+| Hodge-residual > MLP on NCI1 (H003) | 3.38 x 10^-3 | 29/76 | 1.91 x 10^-2 | Yes | No |
+| gin-residual > MLP on NCI1 (H008-c) | 4.03 x 10^-4 | 18/76 | 1.18 x 10^-2 | Yes | Yes |
 | Hodge-residual > GIN on NCI1 (H008) | 2.12 x 10^-6 | 6/76 | 3.95 x 10^-3 | Yes | Yes |
 | gin-residual > gin-normalised on NCI1 (H008-c) | 1.73 x 10^-6 | 2/76 | 1.32 x 10^-3 | Yes | Yes |
 

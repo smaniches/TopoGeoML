@@ -10,7 +10,7 @@ TopoGeoML is a preregistered research investigation into whether Hodge decomposi
 
 ### Findings
 
-1. **Topology-aware message passing with external residual outperforms MLP on NCI1 by 8-10 pp.** This result survives investigation-wide Benjamini-Hochberg correction (p_BH = 4.05e-3) but not Bonferroni (threshold 6.58e-4). *Regime-bound:* this is a matched-capacity comparison (best arm 0.609 vs MLP 0.523, both ~20 pp below the ~0.80+ that properly-trained GNNs reach on NCI1; GIN/GAT collapse to class prior under the same protocol). It isolates architectural mechanism at fixed capacity and is not a benchmark-performance claim.
+1. **Topology-aware message passing with external residual outperforms MLP on NCI1 by 8-10 pp.** The Hodge-residual-vs-MLP comparison is significant at per-hypothesis BH (p_BH = 4.83e-3, within the H003 ablation family) and survives investigation-wide Benjamini-Hochberg correction (rank 29/76, threshold 1.91e-2) but not Bonferroni (threshold 6.58e-4). *Regime-bound:* this is a matched-capacity comparison (best arm 0.609 vs MLP 0.523, both ~20 pp below the ~0.80+ that properly-trained GNNs reach on NCI1; GIN/GAT collapse to class prior under the same protocol). It isolates architectural mechanism at fixed capacity and is not a benchmark-performance claim.
 
 2. **The external residual connection is the operative architectural factor.** The choice of propagation operator (Hodge Laplacian, normalised adjacency, or learned sheaf) is secondary. All three operators perform comparably once the external residual is present; all collapse to class prior without it.
 
