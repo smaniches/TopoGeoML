@@ -38,7 +38,7 @@ TopoGeoML is a preregistered research investigation into whether Hodge decomposi
 | DOI | [10.5281/zenodo.20365817](https://doi.org/10.5281/zenodo.20365817) |
 | Statistical analysis | Investigation-wide BH-FDR across 59 distinct comparisons (76 computed; [docs/STATISTICAL_SUMMARY.md](docs/STATISTICAL_SUMMARY.md)) |
 | Preregistration | 14 hypothesis documents with git-timestamped commit history |
-| Negative results | 28 of 59 distinct comparisons (47%) are non-significant — 38% of the 76 total; all reported |
+| Negative results | 28 of 59 distinct comparisons (47%), and 29 of 76 total (38%), are non-significant; all reported |
 
 ## Open items
 
