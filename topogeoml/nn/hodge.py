@@ -78,9 +78,13 @@ def sparse_scipy_to_torch(
     """Convert a scipy sparse matrix to a torch sparse COO tensor."""
     coo = matrix.tocoo()
     indices = torch.from_numpy(np.vstack([coo.row, coo.col]).astype(np.int64))
-    # Cast directly to the requested dtype — no float32 intermediate, which would
-    # silently truncate precision for float64 callers (elite-code §1.3).
-    values = torch.from_numpy(coo.data).to(dtype)
+    # Standard float32/float64 data passes straight through (no float32
+    # intermediate — that would truncate precision for float64 callers,
+    # elite-code §1.3); any other input dtype that torch.from_numpy cannot wrap
+    # (e.g. np.longdouble, np.uint16) is normalised to float64 first, then the
+    # final .to(dtype) applies the caller's requested precision.
+    data = coo.data if coo.data.dtype in (np.float32, np.float64) else coo.data.astype(np.float64)
+    values = torch.from_numpy(np.ascontiguousarray(data)).to(dtype)
     shape = torch.Size(coo.shape)
     tensor = torch.sparse_coo_tensor(indices, values, shape).coalesce()
     if device is not None:
