@@ -291,7 +291,7 @@ def _render_markdown(results: list[SeedResult]) -> str:
             paired.append((r.loss_watchdog_step, r.topology_watchdog_step))
 
     lines = [
-        "# Does topology predict divergence before loss?",
+        "# Does the topology watchdog fire before the loss watchdog? (exploratory)",
         "",
         f"- Seeds attempted: {len(results)}",
         f"- Seeds with both watchdogs firing: {len(paired)}",
@@ -323,15 +323,25 @@ def _render_markdown(results: list[SeedResult]) -> str:
         # we surface the raw p-value verdict explicitly and call it
         # "uncorrected" so no one misreads the framework's family-correction
         # placeholder as a refutation.
-        verdict_raw = (
-            "significant (uncorrected)" if cmp.p_value_raw < 0.05
-            else "not_significant (uncorrected)"
-        )
-        # Tie floor disclosure: if every topology firing landed at the
-        # earliest possible probe step, surface that fact.
+        # If every topology firing landed at the earliest possible probe step
+        # (the baseline-window floor), the test is floor-limited: it can show
+        # only that topology is never slower than loss, not that it anticipates
+        # divergence. Report that as exploratory, not a positive verdict.
         topo_unique = np.unique(topo_arr)
+        at_floor = topo_unique.size == 1
+        if at_floor:
+            verdict_raw = (
+                "exploratory (floor-limited: directional Wilcoxon p<0.05, but "
+                "topology fires at its floor every seed and no no-overfitting "
+                "control has been run)"
+            )
+        else:
+            verdict_raw = (
+                "significant (uncorrected)" if cmp.p_value_raw < 0.05
+                else "not_significant (uncorrected)"
+            )
         floor_text = ""
-        if topo_unique.size == 1:
+        if at_floor:
             floor_text = (
                 f"\n**Floor-effect disclosure:** Every topology firing "
                 f"landed at step {int(topo_unique[0])} — the first step "
@@ -360,13 +370,17 @@ def _render_markdown(results: list[SeedResult]) -> str:
             f"tie: {n_ties}; loss earlier: {n_loss_earlier}",
             f"- **Verdict:** {verdict_raw}",
             "",
-            ("**Interpretation:** With ``p_raw < 0.05`` and the direction "
-             "count strictly skewed (topology never loses), the data "
-             "supports the ShapeOfLearningCallback claim *in the "
-             "direction tested*. A BCa CI that includes zero only means "
-             "the median magnitude is small (the median is set by the "
-             "tie count), not that the effect is absent — the Wilcoxon "
-             "rank test is the appropriate hypothesis test here."),
+            ("**Interpretation (exploratory, not a positive finding):** the "
+             "Wilcoxon test confirms the topology watchdog never fires "
+             "*later* than the loss watchdog (direction count strictly "
+             "skewed, ``p_raw < 0.05``). It does **not** establish that "
+             "topology *anticipates* divergence: when the topology watchdog "
+             "fires at its baseline-window floor in every seed (see "
+             "disclosure below) and every run overfits, the result shows "
+             "only that topology is never *slower* than loss. Establishing "
+             "anticipation requires a no-overfitting control — a run where "
+             "divergence should not be flagged at all — which has not been "
+             "performed."),
             floor_text,
             "",
         ])
