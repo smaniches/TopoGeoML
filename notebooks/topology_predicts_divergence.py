@@ -328,7 +328,16 @@ def _render_markdown(results: list[SeedResult]) -> str:
         # only that topology is never slower than loss, not that it anticipates
         # divergence. Report that as exploratory, not a positive verdict.
         topo_unique = np.unique(topo_arr)
-        at_floor = topo_unique.size == 1
+        # Verify the uniform firing step IS the baseline-window floor, rather
+        # than assuming any single shared step is the floor: floor =
+        # baseline_window x probe cadence. baseline_window is hardcoded to 3 in
+        # run(); the probe cadence is recovered from the snapshot count. So a
+        # run where every seed fired at a *later* shared step is NOT mislabelled
+        # as the floor (gemini review).
+        r0 = results[0]
+        probe_every = (r0.final_step + 1) // r0.n_topology_snapshots
+        floor_step = 3 * probe_every
+        at_floor = topo_unique.size == 1 and int(topo_unique[0]) == floor_step
         if at_floor:
             verdict_raw = (
                 "exploratory (floor-limited: directional Wilcoxon p<0.05, but "
