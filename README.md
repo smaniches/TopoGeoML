@@ -121,7 +121,7 @@ Reproduce: `python -m benchmarks.hodge --datasets proteins --seeds 0 1 2 3 4 5 6
 
 NCI1 benchmark (4110 chemical-compound graphs, 2 classes, Wale et al. 2008 via PyG TUDataset; **22× MUTAG's sample size, 3.7× PROTEINS'**). Same 5-arm ablation, 30 seeds × 10 epochs, matched-capacity. Preregistered as hypothesis 003 (`docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md`) BEFORE the result was known, with five sub-hypotheses (H8–H12) and an outcome decision tree.
 
-Per-arm result (full report in `notebooks/results/nci1_hodge_ablation_30seeds.md`):
+Per-arm result (full report in `notebooks/results/nci1_hodge_ablation_30seeds.md`; the `p_BH` column is per-family Benjamini-Hochberg within the H003 ablation. Under investigation-wide BH across all 76 comparisons, the `hodge-mp-residual` vs MLP result is rank 29/76, threshold 1.91 × 10⁻² — see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md) §2):
 
 | Arm | Median accuracy (95% BCa CI) | Wilcoxon p_BH vs MLP | Verdict |
 |---|---|---|---|
