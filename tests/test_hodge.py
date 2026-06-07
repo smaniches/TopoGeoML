@@ -45,6 +45,24 @@ def test_sparse_scipy_to_torch_round_trip() -> None:
     np.testing.assert_allclose(dense_back, arr.astype(np.float32))
 
 
+def test_sparse_scipy_to_torch_float64_no_precision_loss() -> None:
+    """float64 in -> float64 out with no intermediate float32 truncation.
+
+    Uses values that are NOT representable in float32 (the low-order bits would
+    be lost by any float32 round-trip), and asserts exact equality (atol=0) so
+    the test fails if a float32 intermediate cast is reintroduced.
+    """
+    val = 1.0 + 1e-12  # not representable in float32; survives only in float64
+    assert np.float32(val) == np.float32(1.0)  # confirms float32 would truncate
+    arr = np.array([[val, 0.0], [0.0, np.pi]], dtype=np.float64)
+    sparse = sp.csr_matrix(arr)
+    t = sparse_scipy_to_torch(sparse, dtype=torch.float64)
+    assert t.dtype == torch.float64
+    dense_back = t.to_dense().numpy()
+    # Exact equality: no precision lost anywhere in the conversion.
+    np.testing.assert_array_equal(dense_back, arr)
+
+
 def test_hodge_layer_forward_shape() -> None:
     sc = _make_triangle()
     layer = build_hodge_layer_from_complex(
