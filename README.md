@@ -54,7 +54,7 @@ See [`LIMITATIONS.md`](LIMITATIONS.md) for the full list of what does *not* work
 
 Every claim in the rest of this README is backed by an in-repo experiment or a literature citation, and every experiment is reproducible from the scripts in `notebooks/`. The full empirical record — including pending experiments and the discipline rules — lives in [`LEADERBOARD.md`](LEADERBOARD.md). **All accuracy numbers below are obtained in the constrained matched-capacity regime described in the [regime caveat](#status) above**; they isolate architectural mechanism at fixed capacity and are not benchmark-performance claims.
 
-### 1. Topology divergence score detects overfitting no later than a val-loss watchdog (positive)
+### 1. Topology divergence watchdog never fires later than a val-loss watchdog (exploratory — floor-limited, no control yet)
 
 A controlled overfitting regime on 200 examples of `sklearn.load_digits` (8×8 handwritten digits), 64-hidden MLP, Adam(lr=1e-2), 600 steps, 30 independent seeds. Two watchdogs run at the same 10-step probe cadence:
 - **loss watchdog** — fires when val_loss > 1.10 × running_min
@@ -69,7 +69,7 @@ Result (full report in `notebooks/results/topology_predicts_divergence_30seeds.m
 | Paired Wilcoxon p_raw | **5.77 × 10⁻⁴** |
 | BCa 95% CI on median advantage | [+0.0, +10.0] steps |
 
-The directional verdict is consistent across all 30 seeds — topology never fires *later* than loss. The magnitude is lower-bounded by the topology watchdog's baseline-window floor (every topology firing landed at step 30, the earliest possible step).
+The directional verdict is consistent across all 30 seeds — topology never fires *later* than loss (14 earlier, 16 tied at the same step, 0 later). **Why this is exploratory, not a positive finding:** the topology watchdog fired at step 30 — its *earliest possible* step (the baseline window must fill first) — in every one of the 30 seeds, and all 30 runs overfit (train loss → 0). Because it fires at its floor every time, the data establish only that topology is never *slower* than the loss watchdog; they do **not** establish that topology *anticipates* divergence. A no-overfitting control — a run where divergence should not be flagged at all — has not been performed, so a genuine falsification test of "topology predicts divergence" does not yet exist. We therefore report this as exploratory and inconclusive.
 
 Reproduce: `python notebooks/topology_predicts_divergence.py --n-seeds 30`.
 

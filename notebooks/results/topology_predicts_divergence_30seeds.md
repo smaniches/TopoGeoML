@@ -1,4 +1,4 @@
-# Does topology predict divergence before loss?
+# Does the topology watchdog fire before the loss watchdog? (exploratory)
 
 - Seeds attempted: 30
 - Seeds with both watchdogs firing: 30
@@ -12,9 +12,9 @@
 - **BCa 95% CI on median advantage:** [+0.0, +10.0] steps
 - **Paired Wilcoxon (uncorrected):** p_raw = 5.771e-04, rank-biserial r = +1.000
 - **Direction count:** topology earlier: 14; tie: 16; loss earlier: 0
-- **Verdict:** significant (uncorrected)
+- **Verdict:** exploratory (floor-limited: directional Wilcoxon p<0.05, but topology fires at its floor every seed and no no-overfitting control has been run)
 
-**Interpretation:** With ``p_raw < 0.05`` and the direction count strictly skewed (topology never loses), the data supports the ShapeOfLearningCallback claim *in the direction tested*. A BCa CI that includes zero only means the median magnitude is small (the median is set by the tie count), not that the effect is absent — the Wilcoxon rank test is the appropriate hypothesis test here.
+**Interpretation (exploratory, not a positive finding):** the Wilcoxon test confirms the topology watchdog never fires *later* than the loss watchdog (direction count strictly skewed, ``p_raw < 0.05``). It does **not** establish that topology *anticipates* divergence: when the topology watchdog fires at its baseline-window floor in every seed (see disclosure below) and every run overfits, the result shows only that topology is never *slower* than loss. Establishing anticipation requires a no-overfitting control — a run where divergence should not be flagged at all — which has not been performed.
 
 **Floor-effect disclosure:** Every topology firing landed at step 30 — the first step at which the topology watchdog's baseline window is full. The Wilcoxon test's directional verdict is trustworthy (every paired comparison points the same way), but the magnitude estimate is censored from below; the true topology-fires-earlier advantage may be larger than reported. Re-run with ``--probe-every`` smaller or a larger baseline window in the callback to escape the floor.
 
