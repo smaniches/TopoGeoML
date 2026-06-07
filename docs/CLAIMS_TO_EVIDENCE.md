@@ -11,7 +11,7 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 
 - Claims are extracted from README.md as of the current commit.
 - Each claim must have a JSON artifact in `notebooks/results/` or a CI command that produces it.
-- Tolerances account for hardware-specific floating-point variation (see [REPRODUCING.md](../REPRODUCING.md) §Expected Numerical Variation).
+- Tolerances account for hardware-specific floating-point variation (see [REPRODUCING.md](https://github.com/smaniches/TopoGeoML/blob/main/REPRODUCING.md) §Expected Numerical Variation).
 - "Survives global BH" indicates whether the claim's p-value survives investigation-wide Benjamini-Hochberg correction across all 76 comparisons (see [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md)).
 
 ---
@@ -62,7 +62,7 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 | Evidence (H008) | `notebooks/results/h008_nci1_gin_gat_30seeds.json` — GIN/GAT without external residual collapse to class prior |
 | Evidence (H008-b) | `notebooks/results/h008b_nci1_gin_normalised_30seeds.json` — normalised GIN without external residual also collapses |
 | Evidence (H008-c) | `notebooks/results/h008c_nci1_gin_residual_30seeds.json` — gin-residual (with external residual) achieves 0.629 vs Hodge 0.609 |
-| Reproduce | See [REPRODUCING.md](../REPRODUCING.md) §H008, §H008-b, §H008-c |
+| Reproduce | See [REPRODUCING.md](https://github.com/smaniches/TopoGeoML/blob/main/REPRODUCING.md) §H008, §H008-b, §H008-c |
 | Limitation | Tested at one capacity point (1-layer, 32 hidden). Standard GIN/GAT with batch normalisation and multiple layers were not tested. |
 
 ---
@@ -73,7 +73,7 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 |---|---|
 | Evidence | `notebooks/results/h006_{mutag,proteins,nci1}_constant_30seeds.json` |
 | Artifact key | Hodge accuracy vs class prior per dataset |
-| Reproduce | See [REPRODUCING.md](../REPRODUCING.md) §H006 |
+| Reproduce | See [REPRODUCING.md](https://github.com/smaniches/TopoGeoML/blob/main/REPRODUCING.md) §H006 |
 | Expected | MUTAG: gap +0.098, p = 4.53e-6; PROTEINS: gap +0.088, p = 1.41e-4; NCI1: gap +0.071, p = 1.93e-5 |
 | Survives global BH | Yes (all three) |
 | Limitation | These p-values are from the Hodge-vs-class-prior comparison within the H006 resolver, not the Hodge-vs-MLP comparison in the raw JSON. The class prior is the theoretical baseline (majority-class accuracy), not the MLP's constant-feature accuracy. |

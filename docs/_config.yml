@@ -15,6 +15,7 @@ baseurl: "/TopoGeoML"
 
 plugins:
   - jekyll-remote-theme
+  - jekyll-sitemap
 
 # With a REMOTE theme, Jekyll does not load the theme's own layout defaults,
 # so apply the just-the-docs "default" layout (sidebar nav + search) to every
