@@ -16,14 +16,14 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 
 ---
 
-## Claim 1: "497 tests; 100% line coverage on the `topogeoml` package with torch installed"
+## Claim 1: "500 tests; 100% line and 100% branch coverage on the `topogeoml` package with torch installed"
 
 | Field | Value |
 |---|---|
-| Evidence | `pytest --cov=topogeoml` (with `pip install -e ".[all]"`) reports 100% line coverage on the importable `topogeoml` package. |
-| Artifact | CI reports coverage on every push. |
-| Tolerance | Exact: 497 test functions as counted by `grep -c "def test_" tests/*.py`. |
-| Limitation | CI installs `.[dev]` (no torch), so `topogeoml/nn/` code paths are not exercised in CI and package coverage is below 100% in that environment. With torch installed (`pip install -e ".[all]"`), the `topogeoml` package reaches 100% line coverage. `__init__.py` files are omitted per `pyproject.toml [tool.coverage.run]`. The `benchmarks/` research harness is **not** at 100% (see Claim 6). Coverage is reported in CI but not gated, because the torch-less CI environment cannot reach 100% on the package. |
+| Evidence | `pytest --cov=topogeoml --cov-branch` (with `pip install -e ".[all]"`) reports 100% line **and** 100% branch coverage on the importable `topogeoml` package. |
+| Artifact | CI reports coverage on every push. The dedicated full-deps `coverage-gate` job (`.github/workflows/ci.yml`, Python 3.11 / ubuntu) installs `.[all]` (torch CPU wheels) and runs `pytest -m "not gpu" --cov=topogeoml --cov-branch --cov-fail-under=100`, failing the build below 100%. |
+| Tolerance | Exact: 500 test functions as counted by `grep -c "def test_" tests/*.py`. |
+| Limitation | The default `test` CI job installs `.[dev]` (no torch), so `topogeoml/nn/` code paths are import-skipped and package coverage is below 100% in that job (reported, not gated there). The separate `coverage-gate` job installs `.[all]` and **does** gate the package at 100% line + 100% branch under `--cov-branch`. `__init__.py` files are omitted per `pyproject.toml [tool.coverage.run]`. The `benchmarks/` research harness is **not** at 100% and is deliberately outside the gated scope (the gate is `--cov=topogeoml`; see Claim 6). |
 
 ---
 
@@ -85,9 +85,9 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 | Field | Value |
 |---|---|
 | Evidence | `pytest --cov=topogeoml --cov=benchmarks --cov-report=term` |
-| Library (`topogeoml`) | **100% line coverage** with torch installed (`pip install -e ".[all]"`). Verified module-by-module: every `topogeoml/*` file reports 0 missed lines. |
+| Library (`topogeoml`) | **100% line and 100% branch coverage** with torch installed (`pip install -e ".[all]"`, `--cov-branch`). Verified module-by-module: every `topogeoml/*` file reports 0 missed lines and 0 partial branches. Enforced by the `coverage-gate` CI job at `--cov-fail-under=100`. |
 | Benchmark harness (`benchmarks`) | **Not 100%.** With `[all]` (torch + torch-geometric + GUDHI) the combined `topogeoml+benchmarks` line coverage is ~93%. The gap splits two ways: (a) the larger share is in cross-backend modules (`cli.py`, `axes/speed.py`, `axes/stability.py`, `backends/torch_topological.py`, `benchmarks/runner.py`) whose tests skip without the `torch-topological` backend (the `bench` extra); (b) a residual ~82 lines are in the hodge analysis modules (`hodge/datasets.py`, `hodge/h006_analysis.py`, `hodge/h007_analysis.py`, `hodge/runner.py`) that are genuinely partial within tests that *do* run, and would **not** be recovered by any backend install. We could not install `torch-topological` on Python 3.11–3.13 in our environment (its `giotto-ph` dependency has no compatible wheel), so the exact post-`bench` figure was not measured here; the (b) lines remain regardless. |
-| Limitation | The historical "100% on `topogeoml` and `benchmarks`" claim is **stale** and is not currently reproducible: the `benchmarks/` harness is below 100% even with the full optional stack. The library package itself remains at 100%. Closing the remaining `benchmarks/` gap is tracked as research-harness debt, not a release blocker. CI installs `.[dev]` (no torch) and reports coverage without gating it. |
+| Limitation | The historical "100% on `topogeoml` and `benchmarks`" claim is **stale** and is not currently reproducible: the `benchmarks/` harness is below 100% even with the full optional stack. The library package itself is at 100% line + 100% branch and is the gated scope. Closing the remaining `benchmarks/` gap is tracked as research-harness debt, not a release blocker. The default `test` CI job installs `.[dev]` (no torch) and reports coverage without gating it; the separate `coverage-gate` job installs `.[all]` and gates the package (only) at 100% line + branch. |
 
 ---
 
