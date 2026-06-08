@@ -19,8 +19,8 @@ def _reconfigure_stdout_utf8() -> None:  # pragma: no cover
     """
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
-        if reconfigure is not None:
-            with contextlib.suppress(ValueError, OSError):
+        if callable(reconfigure):
+            with contextlib.suppress(ValueError, OSError, TypeError):
                 reconfigure(encoding="utf-8")
 
 
@@ -96,7 +96,14 @@ def main(argv: list[str] | None = None) -> int:  # pragma: no cover
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary_path:
         Path(summary_path).write_text(md, encoding="utf-8")
-    print(md)
+    # File artifacts are already persisted; if UTF-8 reconfiguration was not
+    # supported (e.g. a redirected cp1252 stream), fall back to a lossy encode
+    # so the run never crashes at the final console print.
+    try:
+        print(md)
+    except UnicodeEncodeError:
+        encoding = sys.stdout.encoding or "utf-8"
+        print(md.encode(encoding, errors="replace").decode(encoding))
     return 0
 
 

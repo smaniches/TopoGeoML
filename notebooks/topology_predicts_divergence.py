@@ -54,6 +54,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import json
+import os
 import sys
 import time
 from dataclasses import asdict, dataclass
@@ -446,8 +447,8 @@ def _reconfigure_stdout_utf8() -> None:
     """
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
-        if reconfigure is not None:
-            with contextlib.suppress(ValueError, OSError):
+        if callable(reconfigure):
+            with contextlib.suppress(ValueError, OSError, TypeError):
                 reconfigure(encoding="utf-8")
 
 
@@ -511,13 +512,19 @@ def main(argv: list[str] | None = None) -> int:
         args.markdown.parent.mkdir(parents=True, exist_ok=True)
         args.markdown.write_text(md, encoding="utf-8")
 
-    import os
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary_path:
         Path(summary_path).write_text(md, encoding="utf-8")
 
+    # File artifacts are already persisted; if UTF-8 reconfiguration was not
+    # supported (e.g. a redirected cp1252 stream), fall back to a lossy encode
+    # so the run never crashes at the final console print.
     print()
-    print(md)
+    try:
+        print(md)
+    except UnicodeEncodeError:
+        encoding = sys.stdout.encoding or "utf-8"
+        print(md.encode(encoding, errors="replace").decode(encoding))
 
     return 0
 
