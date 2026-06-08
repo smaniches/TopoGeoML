@@ -20,7 +20,7 @@ Output complexes always satisfy the chain identity ∂_{k-1} ∘ ∂_k = 0
 from __future__ import annotations
 
 import itertools
-from typing import Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import networkx as nx
 import numpy as np
@@ -28,9 +28,18 @@ from numpy.typing import NDArray
 
 from topogeoml.core.complexes import SimplicialComplex
 
-# networkx >= 3.5 makes ``nx.Graph`` generic; parametrise to keep mypy strict
-# happy across versions (node payloads are untyped here, hence ``Any``).
-GraphLike: TypeAlias = "nx.Graph[Any] | NDArray[np.floating]"
+# networkx >= 3.5 makes ``nx.Graph`` generic, but the runtime class is not
+# subscriptable in current releases (e.g. 3.6.1). Keep the subscripted form
+# for mypy --strict (disallow_any_generics) under TYPE_CHECKING, and a plain,
+# runtime-evaluable union otherwise so that ``typing.get_type_hints`` on the
+# public functions below does not raise ``TypeError: type 'Graph' is not
+# subscriptable``. Node payloads are untyped here, hence ``Any``.
+if TYPE_CHECKING:
+    GraphLike: TypeAlias = "nx.Graph[Any] | NDArray[np.floating]"
+    NxGraph: TypeAlias = "nx.Graph[Any]"
+else:
+    GraphLike = nx.Graph | NDArray[np.floating]
+    NxGraph = nx.Graph
 
 
 def graph_to_clique_complex(
@@ -98,7 +107,7 @@ def graph_to_clique_complex(
     return SimplicialComplex(facets=facets)
 
 
-def _coerce_to_graph(graph: GraphLike) -> nx.Graph[Any]:
+def _coerce_to_graph(graph: GraphLike) -> NxGraph:
     """Accept either a networkx graph or a square adjacency ndarray."""
     if isinstance(graph, nx.Graph):
         return graph

@@ -7,6 +7,7 @@ The discipline of the table:
 - **Positive** = strict improvement; p_BH < 0.01 AND BCa CI on the difference strictly above zero.
 - **Equality** = p_BH ≥ 0.05 OR CI overlaps zero; method is *not significantly worse* but not significantly better either.
 - **Negative** = strict regression; the comparison method underperforms the baseline at p_BH < 0.05 with CI strictly below zero.
+- **Exploratory** = a directional signal exists but the design cannot yet support a positive/negative conclusion (e.g. a censored magnitude with no negative control). Reported for transparency; not counted as a confirmed claim.
 - **Pending** = experiment is running or queued; results will land in a future PR.
 
 > **Important — read before citing: capacity regime.** Every accuracy number below is obtained under a deliberately constrained *matched-capacity* protocol (1 layer, hidden_dim=32, 10–20 epochs, no batch normalisation, ~1.4–2.3k parameters per arm). This isolates architectural *mechanism* at fixed capacity. It is **not** a benchmark-performance comparison: absolute accuracies (0.50–0.79) sit well below literature SOTA (e.g. properly-trained GNNs reach ~0.80+ on NCI1), and under this protocol the standard GNN baselines (GIN, GAT) collapse to the class prior (0.500) on NCI1. Phrases like "outperforms GIN/GAT" mean "at equal, severely-limited capacity" — **not** "is a better graph classifier." The investigation's *primary* finding is negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (Claim 11 / H008c).
@@ -17,12 +18,12 @@ The discipline of the table:
 
 | Field | Value |
 |---|---|
-| Status | **Positive (directional)** |
+| Status | **Exploratory (directional only — floor-limited, no negative control)** |
 | Domain | Training-loop monitoring |
 | Setup | 200-sample `sklearn.load_digits`, 64-hidden MLP, Adam(lr=1e-2), 600 steps, 30 independent seeds |
 | Comparison | `ShapeOfLearningCallback.divergence_score` (`topogeoml.training`) vs textbook val-loss-ratio watchdog (val_loss > 1.10 × running_min) |
 | Headline numbers | Direction count: 14 topology earlier / 16 tie / 0 loss earlier; rank-biserial r = +1.000; paired Wilcoxon p_raw = **5.77 × 10⁻⁴**; BCa 95% CI on median advantage = [+0.0, +10.0] steps |
-| Caveat | Magnitude floor-censored — every topology firing landed at step 30, the earliest possible step given a 3-snapshot baseline window. The directional verdict is robust; the magnitude is a lower bound. |
+| Why exploratory, not positive | The topology watchdog fired at step 30 — its *earliest possible* step given the 3-snapshot baseline window — in every one of the 30 seeds, and all 30 runs overfit (train loss → 0). The data therefore establish only that topology is never *slower* than the loss watchdog; they do **not** establish that it *anticipates* divergence. No no-overfitting (negative) control has been run, so a genuine falsification test does not yet exist. Reported here for transparency, not counted as a confirmed claim. |
 | Per-seed report | `notebooks/results/topology_predicts_divergence_30seeds.md` |
 | Preregistered? | No (PR #11 was opportunistic) |
 | Reproduce | `python notebooks/topology_predicts_divergence.py --n-seeds 30` |
