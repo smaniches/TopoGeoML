@@ -56,6 +56,9 @@ wandb/
 mlruns/
 artifacts/
 
+# Generated benchmark output (default --output of `python -m benchmarks.hodge`)
+benchmarks/hodge/leaderboard/current.json
+
 # Submission / scratch
 scratch/
 submissions/

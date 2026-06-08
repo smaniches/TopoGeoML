@@ -52,7 +52,7 @@ nav_external_links:
   - title: "Reproduction guide"
     url: "https://github.com/smaniches/TopoGeoML/blob/main/REPRODUCING.md"
   - title: "DOI (Zenodo)"
-    url: "https://doi.org/10.5281/zenodo.20365817"
+    url: "https://doi.org/10.5281/zenodo.20564298"
 
 # Styled callouts (degrade gracefully to blockquotes if unsupported)
 callouts:
