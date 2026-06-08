@@ -478,7 +478,8 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
                 total_loss = total_loss - persistence_entropy_loss(dgm)
             elif self.loss_type == "betti_regularization":  # pragma: no branch
                 # The constructor validates loss_type into exactly these three
-                # values, so the false edge of this elif is unreachable.
+                # values; the false edge is a defensive guard, reachable only
+                # if a caller mutates self.loss_type to an invalid value.
                 target = self.target_betti.get(k, 0)
                 total_loss = total_loss + betti_regularization_loss(dgm, target)
 

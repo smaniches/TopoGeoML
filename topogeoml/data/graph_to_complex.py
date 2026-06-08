@@ -84,8 +84,9 @@ def graph_to_clique_complex(
         if len(verts) <= max_dim + 1:
             key = tuple(verts)
             if key not in seen:  # pragma: no branch
-                # nx.find_cliques yields distinct maximal cliques, so a small
-                # clique is never seen twice; the false edge is a dedup guard.
+                # nx.find_cliques yields distinct maximal cliques; a maximal
+                # clique with len <= max_dim + 1 is not a subset of any other,
+                # so it cannot collide here. Defensive dedup guard.
                 facets.append(key)
                 seen.add(key)
         else:
