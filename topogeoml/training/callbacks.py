@@ -221,7 +221,10 @@ class ShapeOfLearningCallback:
                 return 0
             finite_mask = np.isfinite(bars[:, 1])
             count = int((~finite_mask).sum())  # infinite bars always count
-            if finite_mask.any():
+            if finite_mask.any():  # pragma: no branch
+                # Real Rips persistence on a non-degenerate cloud always yields
+                # at least one finite-death bar; the false edge fires only for a
+                # manually-constructed all-infinite diagram.
                 lifetimes = bars[finite_mask, 1] - bars[finite_mask, 0]
                 count += int((lifetimes >= threshold).sum())
             return count

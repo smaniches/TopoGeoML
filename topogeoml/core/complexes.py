@@ -190,17 +190,18 @@ def is_chain_complex(
         if complex_.n_simplices(k) == 0 or complex_.n_simplices(k - 1) == 0:
             continue
         d_k = complex_.boundary_matrix(k)
-        if k >= 1 and complex_.n_simplices(k - 1) > 0:
-            d_km1 = complex_.boundary_matrix(k - 1)
-            if d_km1.shape[0] > 0:
-                product = d_km1 @ d_k
-                # Frobenius norm of a sparse matrix.
-                frob = float(np.sqrt(product.multiply(product).sum()))
-                if frob > tol:  # pragma: no cover
-                    # Reachable only when the boundary-matrix implementation
-                    # is broken (e.g. wrong sign convention) — the bench's
-                    # correctness axis would catch this in a separate path.
-                    return False
+        # The line-190 `continue` plus `range(1, ...)` already guarantee
+        # ``k >= 1`` and ``n_simplices(k - 1) > 0`` here, so no extra guard.
+        d_km1 = complex_.boundary_matrix(k - 1)
+        if d_km1.shape[0] > 0:
+            product = d_km1 @ d_k
+            # Frobenius norm of a sparse matrix.
+            frob = float(np.sqrt(product.multiply(product).sum()))
+            if frob > tol:  # pragma: no cover
+                # Reachable only when the boundary-matrix implementation
+                # is broken (e.g. wrong sign convention) — the bench's
+                # correctness axis would catch this in a separate path.
+                return False
     return True
 
 

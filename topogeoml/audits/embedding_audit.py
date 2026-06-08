@@ -157,7 +157,10 @@ def audit_embedding(
         inf_mask = ~np.isfinite(deaths)
         finite_mask = ~inf_mask
         significant = int(inf_mask.sum())
-        if finite_mask.any():
+        if finite_mask.any():  # pragma: no branch
+            # Real Rips persistence on n >= 2 points always yields at least one
+            # finite-death bar, so the false edge fires only for a manually
+            # constructed all-infinite diagram.
             lifetimes = deaths[finite_mask] - finite_births[finite_mask]
             significant += int((lifetimes >= threshold).sum())
         return significant

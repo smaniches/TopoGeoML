@@ -265,7 +265,9 @@ def sliding_window_topology_features(
             denom = 1.0
 
         for k in range(n_dims):
-            if k < len(diagrams):
+            if k < len(diagrams):  # pragma: no branch
+                # ripser(maxdim=K) returns exactly K + 1 == n_dims diagrams, so
+                # k is always in range; the false edge is a defensive guard.
                 dgm = diagrams[k]
                 if cfg.scale_normalize and dgm.shape[0] > 0:
                     dgm = dgm.copy()

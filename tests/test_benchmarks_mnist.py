@@ -29,6 +29,22 @@ from benchmarks.datasets.mnist_topology import (
 )
 
 
+def _has_torchvision() -> bool:
+    try:
+        import torchvision  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+# ``MNISTPointCloud.generate`` loads ``torchvision.datasets.MNIST`` (it is only
+# in the ``[bench]`` extra, not ``[all]``), so the generate-path tests need a
+# real torchvision import even when MNIST itself is monkeypatched away.
+requires_torchvision = pytest.mark.skipif(
+    not _has_torchvision(), reason="torchvision not installed (in the [bench] extra)"
+)
+
+
 class TestDigitToPointCloud:
     def test_normalizes_to_unit_bounding_box(self) -> None:
         img = np.zeros((28, 28), dtype=np.float64)
@@ -177,6 +193,7 @@ class _FakeMNIST:
         return len(self._images)
 
 
+@requires_torchvision
 class TestMNISTPointCloudGenerate:
     def test_generate_with_faked_torchvision(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import torchvision.datasets as tvd

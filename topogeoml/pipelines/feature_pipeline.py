@@ -272,10 +272,11 @@ class TopologyFeaturePipeline(BaseEstimator, TransformerMixin):  # type: ignore[
                 continue
             if cloud.shape[0] == cloud.shape[1] and np.allclose(np.diag(cloud), 0.0):
                 # Likely precomputed distance matrix: take max off-diagonal.
+                # The line-271 `continue` guarantees shape[0] >= 2, so a square
+                # matrix here has at least two off-diagonal entries.
                 off_diag = cloud[~np.eye(cloud.shape[0], dtype=bool)]
-                if off_diag.size > 0:
-                    d = float(np.max(off_diag))
-                    max_d = max(max_d, d)
+                d = float(np.max(off_diag))
+                max_d = max(max_d, d)
             else:
                 # Bounding box diagonal as a cheap O(n*d) upper bound on max pair.
                 bbox_diag = float(np.linalg.norm(cloud.max(axis=0) - cloud.min(axis=0)))
