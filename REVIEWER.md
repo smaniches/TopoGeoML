@@ -43,15 +43,34 @@ ruff check topogeoml tests benchmarks scripts notebooks
 
 Expected: all checks passed.
 
-## 5. Reproduce one result (5 minutes)
+## 5. Reproduce one result (~2 minutes)
 
-The fastest reproducible claim is the topology-divergence callback (Claim 1 in LEADERBOARD.md). Requires full dependencies (`.[all]`):
+The primary finding is **negative** — encoding topological structure via the Hodge
+Laplacian confers no unique advantage once an external residual connection is present
+(see [`docs/index.md`](docs/index.md) and [`STATUS.md`](STATUS.md)). The narrow positive
+lead is on **NCI1** (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not
+Bonferroni; regime-bound — see the caveat in the README).
+
+The fastest way to exercise the exact code path behind those findings is a short smoke of
+the Hodge benchmark CLI (the full NCI1 headline is the same command at scale; see
+[`REPRODUCING.md`](REPRODUCING.md) §H003). Requires full dependencies (`.[all]`):
 
 ```bash
-python notebooks/topology_predicts_divergence.py --n-seeds 5
+# ~2 min: 3 seeds x 5 epochs on MUTAG (188 graphs). Smoke of the real
+# benchmarks.hodge code path; not the full headline result.
+python -m benchmarks.hodge --datasets mutag --seeds 0 1 2 --n-epochs 5
 ```
 
-Expected: topology watchdog fires no later than the loss watchdog on all seeds. Full 30-seed reproduction takes ~2 minutes.
+Expected: a Markdown comparison table is printed and a JSON artifact is written to
+`benchmarks/hodge/leaderboard/current.json`. The full headline (NCI1, 30 seeds,
+10 epochs, ~2 h CPU) is documented in [`REPRODUCING.md`](REPRODUCING.md) §H003.
+
+> The topology-divergence watchdog
+> (`python notebooks/topology_predicts_divergence.py --n-seeds 30`, ~15 min CPU)
+> is reproducible too, but it is **exploratory (floor-limited, no control yet)**, not a
+> headline claim — the topology watchdog fires at its earliest possible step every seed,
+> so the data show only that it is never *slower* than the loss watchdog, not that it
+> anticipates divergence (see README §1).
 
 ## 6. Inspect the evidence chain
 

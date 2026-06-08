@@ -52,6 +52,7 @@ Per seed: ~30 s on CPU (the topology probe is the bottleneck).
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sys
 import time
@@ -435,7 +436,32 @@ def _build_argparser() -> argparse.ArgumentParser:
     return parser
 
 
+def _reconfigure_stdout_utf8() -> None:
+    """Best-effort switch of stdout/stderr to UTF-8.
+
+    The per-seed log and markdown report use non-ASCII glyphs (Delta, ...).
+    On a cp1252 Windows console a bare ``print`` raises ``UnicodeEncodeError``.
+    ``reconfigure`` exists on standard ``TextIOWrapper`` streams (Python 3.7+);
+    a redirected or wrapped stream may lack it, so the call is guarded.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            with contextlib.suppress(ValueError, OSError):
+                reconfigure(encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
+    # When invoked as ``python notebooks/topology_predicts_divergence.py`` the
+    # script directory (``notebooks/``) is on sys.path[0] but the repo root is
+    # not, so ``from benchmarks.stats import ...`` (used in _render_markdown)
+    # fails with ModuleNotFoundError on a fresh clone. Put the repo root on the
+    # path so the documented invocation works regardless of cwd.
+    repo_root = str(Path(__file__).resolve().parent.parent)
+    if repo_root not in sys.path:
+        sys.path.insert(0, repo_root)
+    _reconfigure_stdout_utf8()
+
     parser = _build_argparser()
     args = parser.parse_args(argv)
     if args.smoke:
@@ -468,9 +494,9 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     md = _render_markdown(results)
-    print()
-    print(md)
 
+    # Persist all file artifacts before any console print so a console
+    # encoding failure can never lose results.
     payload: dict[str, Any] = {
         "config": {
             k: (str(v) if isinstance(v, Path) else v)
@@ -483,12 +509,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.markdown is not None:
         args.markdown.parent.mkdir(parents=True, exist_ok=True)
-        args.markdown.write_text(md)
+        args.markdown.write_text(md, encoding="utf-8")
 
     import os
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary_path:
-        Path(summary_path).write_text(md)
+        Path(summary_path).write_text(md, encoding="utf-8")
+
+    print()
+    print(md)
 
     return 0
 

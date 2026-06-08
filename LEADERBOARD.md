@@ -216,7 +216,7 @@ The discipline of the table:
 | CI workflows | 8 (4 test matrix + 2 CodeQL + benchmark-hodge + experiment runner) — all green on main |
 | Registered model arms | 9 (5 Hodge/MLP + GIN + GIN-normalised + GIN-residual + GAT) |
 | Lockfile / Dockerfile | None — deliberate; library is a research toolkit, not a deployment artefact |
-| DOI | [10.5281/zenodo.20365817](https://doi.org/10.5281/zenodo.20365817) |
+| DOI | [10.5281/zenodo.20564298](https://doi.org/10.5281/zenodo.20564298) |
 
 ---
 

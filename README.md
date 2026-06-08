@@ -29,7 +29,7 @@ Differentiable persistent-homology layers, Hodge message passing, and a benchmar
 [![CI](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
 [![Version](https://img.shields.io/badge/version-0.0.3--beta-green)](#status)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20365817.svg)](https://doi.org/10.5281/zenodo.20365817)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20564298.svg)](https://doi.org/10.5281/zenodo.20564298)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ---
@@ -344,11 +344,11 @@ Coverage is 100% on `topogeoml/` and `benchmarks/`. Torch-gated tests skip clean
 
 ## Roadmap
 
-**v0.0.2 (current).** Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 497 tests, 100% line coverage with full dependencies, type-checked with mypy strict in CI.
+**v0.0.3 (current).** The current package and citable version (a packaging/CI release over v0.0.2; no new empirical results). Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 497 tests, 100% line coverage with full dependencies, type-checked with mypy strict in CI.
 
-**v0.0.3 (next).** Cross-domain validation (DD, COLLAB, social-network benchmarks). DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). Continued mechanism ablation (spectral vs spatial operator isolation). The bar remains paired Wilcoxon p < 0.01 after BH correction.
+**Next.** Cross-domain validation (DD, COLLAB, social-network benchmarks). DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). Continued mechanism ablation (spectral vs spatial operator isolation). The bar remains paired Wilcoxon p < 0.01 after BH correction.
 
-**v0.1 and later.** Cross-domain validation (social networks, citation graphs). Cross-PLM experiments (ProtT5, SaProt embeddings as node features). Feature-interaction ablations with controlled dimensionality sweeps. Conditional on the v0.0.3 empirical results determining which direction has the most signal.
+**v0.1 and later.** Cross-domain validation (social networks, citation graphs). Cross-PLM experiments (ProtT5, SaProt embeddings as node features). Feature-interaction ablations with controlled dimensionality sweeps. Conditional on the empirical results above determining which direction has the most signal.
 
 ---
 
@@ -359,14 +359,14 @@ Coverage is 100% on `topogeoml/` and `benchmarks/`. Torch-gated tests skip clean
   author       = {Maniches, Santiago},
   title        = {TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification},
   year         = {2026},
-  version      = {0.0.2},
-  doi          = {10.5281/zenodo.20365817},
-  url          = {https://doi.org/10.5281/zenodo.20365817},
+  version      = {0.0.3},
+  doi          = {10.5281/zenodo.20564298},
+  url          = {https://doi.org/10.5281/zenodo.20564298},
   orcid        = {0009-0005-6480-1987}
 }
 ```
 
-A machine-readable citation is available in [`CITATION.cff`](CITATION.cff) (GitHub renders a "Cite this repository" button from it). DOI: [10.5281/zenodo.20365817](https://doi.org/10.5281/zenodo.20365817).
+A machine-readable citation is available in [`CITATION.cff`](CITATION.cff) (GitHub renders a "Cite this repository" button from it). DOI: [10.5281/zenodo.20564298](https://doi.org/10.5281/zenodo.20564298).
 
 ---
 
