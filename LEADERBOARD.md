@@ -9,7 +9,7 @@ The discipline of the table:
 - **Negative** = strict regression; the comparison method underperforms the baseline at p_BH < 0.05 with CI strictly below zero.
 - **Pending** = experiment is running or queued; results will land in a future PR.
 
-> ⚠️ **Read-before-citing — capacity regime.** Every accuracy number below is obtained under a deliberately constrained *matched-capacity* protocol (1 layer, hidden_dim=32, 10–20 epochs, no batch normalisation, ~1.4–2.3k parameters per arm). This isolates architectural *mechanism* at fixed capacity. It is **not** a benchmark-performance comparison: absolute accuracies (0.50–0.79) sit well below literature SOTA (e.g. properly-trained GNNs reach ~0.80+ on NCI1), and under this protocol the standard GNN baselines (GIN, GAT) collapse to the class prior (0.500) on NCI1. Phrases like "outperforms GIN/GAT" mean "at equal, severely-limited capacity" — **not** "is a better graph classifier." The investigation's *primary* finding is negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (Claim 11 / H008c).
+> **Important — read before citing: capacity regime.** Every accuracy number below is obtained under a deliberately constrained *matched-capacity* protocol (1 layer, hidden_dim=32, 10–20 epochs, no batch normalisation, ~1.4–2.3k parameters per arm). This isolates architectural *mechanism* at fixed capacity. It is **not** a benchmark-performance comparison: absolute accuracies (0.50–0.79) sit well below literature SOTA (e.g. properly-trained GNNs reach ~0.80+ on NCI1), and under this protocol the standard GNN baselines (GIN, GAT) collapse to the class prior (0.500) on NCI1. Phrases like "outperforms GIN/GAT" mean "at equal, severely-limited capacity" — **not** "is a better graph classifier." The investigation's *primary* finding is negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (Claim 11 / H008c).
 
 ---
 
@@ -210,11 +210,11 @@ The discipline of the table:
 | Metric | Value |
 |---|---|
 | Total tests | 497 |
-| Coverage on `topogeoml/` and `benchmarks/` | **100%** |
+| Coverage | **100% line** on the `topogeoml/` package (full deps); `benchmarks/` harness ~93% (cross-backend tests need the `bench` extra) |
 | Ruff clean across `topogeoml tests benchmarks scripts notebooks` | Yes |
 | Mypy strict on `topogeoml/` | **0 errors** |
 | CI workflows | 8 (4 test matrix + 2 CodeQL + benchmark-hodge + experiment runner) — all green on main |
-| Registered model arms | 9 (5 Hodge/MLP + GIN + GIN-normalised + GIN-residual + GAT) |
+| Registered model arms | 11 (4 Hodge + MLP + GIN + GIN-normalised + GIN-residual + GAT + sheaf-residual + L1-Hodge-residual) |
 | Lockfile / Dockerfile | None — deliberate; library is a research toolkit, not a deployment artefact |
 | DOI | [10.5281/zenodo.20564298](https://doi.org/10.5281/zenodo.20564298) |
 

@@ -32,7 +32,7 @@ TopoGeoML is a preregistered research investigation into whether Hodge decomposi
 | Metric | Value |
 |---|---|
 | Tests | 497 |
-| Coverage | 100% line coverage with full dependencies (`.[all]`); reported but not gated in CI (torch-less environment) |
+| Coverage | 100% line coverage on the `topogeoml` package with full dependencies (`.[all]`); the `benchmarks/` research harness is ~93% (cross-backend tests need the `bench` extra). Reported but not gated in CI (torch-less environment). |
 | Type checking | mypy strict enforced in CI |
 | Lint | ruff, all checks passing |
 | DOI | [10.5281/zenodo.20564298](https://doi.org/10.5281/zenodo.20564298) |

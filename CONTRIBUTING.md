@@ -47,7 +47,7 @@ The following floor is enforced:
 - **No Python sample loops** for numerical computation (construction loops permitted)
 - **Reproducible RNG:** `random_state=42` / `np.random.default_rng(42)` or seed passed explicitly
 - **Provenance dict** on every fit + every benchmark cell
-- **100% coverage** on `topogeoml/` and `benchmarks/` (enforced by CI)
+- **100% line coverage** on the `topogeoml/` package with full dependencies; the `benchmarks/` research harness is high but below 100% (cross-backend tests need the `bench` extra). Coverage is reported by CI, not gated.
 - **ruff clean** across all source directories
 - **Every empirical claim** must point to either a literature citation or an in-repo experiment
 
@@ -98,7 +98,7 @@ docs/hypotheses/HYPOTHESIS-NNN-description.md (commit hash: ...)
 ## Pull request checklist
 
 - [ ] CI green (ruff + pytest + coverage)
-- [ ] 100% coverage maintained on `topogeoml/` and `benchmarks/`
+- [ ] 100% line coverage maintained on the `topogeoml/` package (with full dependencies); no regression in `benchmarks/` harness coverage
 - [ ] If empirical: preregistered hypothesis doc committed before results
 - [ ] If empirical: LEADERBOARD.md updated with the new claim
 - [ ] If empirical: per-seed JSON + Markdown report in `notebooks/results/`

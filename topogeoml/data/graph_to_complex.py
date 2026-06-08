@@ -20,7 +20,7 @@ Output complexes always satisfy the chain identity ∂_{k-1} ∘ ∂_k = 0
 from __future__ import annotations
 
 import itertools
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 import networkx as nx
 import numpy as np
@@ -28,7 +28,9 @@ from numpy.typing import NDArray
 
 from topogeoml.core.complexes import SimplicialComplex
 
-GraphLike: TypeAlias = nx.Graph | NDArray[np.floating]
+# networkx >= 3.5 makes ``nx.Graph`` generic; parametrise to keep mypy strict
+# happy across versions (node payloads are untyped here, hence ``Any``).
+GraphLike: TypeAlias = "nx.Graph[Any] | NDArray[np.floating]"
 
 
 def graph_to_clique_complex(
@@ -93,7 +95,7 @@ def graph_to_clique_complex(
     return SimplicialComplex(facets=facets)
 
 
-def _coerce_to_graph(graph: GraphLike) -> nx.Graph:
+def _coerce_to_graph(graph: GraphLike) -> nx.Graph[Any]:
     """Accept either a networkx graph or a square adjacency ndarray."""
     if isinstance(graph, nx.Graph):
         return graph
