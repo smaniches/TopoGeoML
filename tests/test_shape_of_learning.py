@@ -200,3 +200,93 @@ def test_detach_removes_hook() -> None:
     # Hook removed — further on_step calls should raise RuntimeError
     with pytest.raises(RuntimeError, match="captured no activation"):
         cb.on_step(0, loss=0.5)
+
+
+def test_detach_is_idempotent() -> None:
+    """Calling detach() when no hook is attached is a no-op, not an error.
+
+    Exercises the false branch of ``if self._hook_handle is not None`` in
+    ``detach()``: the second call sees a ``None`` handle and returns cleanly.
+    """
+    model = TinyMLP()
+    cb = make_callback(model, every_n_steps=1)
+    cb.detach()
+    assert cb._hook_handle is None
+    # Second detach: handle is already None — must not raise.
+    cb.detach()
+    assert cb._hook_handle is None
+
+
+def test_non_tensor_layer_output_yields_no_activation() -> None:
+    """A hooked layer that returns a non-Tensor captures nothing.
+
+    The forward hook only records ``output`` when it ``isinstance`` a
+    ``torch.Tensor`` (the false branch leaves ``_captured_activation`` as
+    ``None``), so probing such a layer must surface the documented
+    ``RuntimeError`` rather than a silent garbage snapshot.
+    """
+
+    class TupleLayer(nn.Module):
+        def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+            return (x, x)  # deliberately non-Tensor output
+
+    class ModelWithTupleLayer(nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.fc1 = nn.Linear(4, 8)
+            self.tup = TupleLayer()
+
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
+            h = self.fc1(x)
+            self.tup(h)  # hook on `tup` observes a tuple, not a Tensor
+            return h
+
+    model = ModelWithTupleLayer()
+    probe = torch.randn(10, 4, dtype=torch.float32)
+    cb = ShapeOfLearningCallback(
+        model=model,
+        probe_inputs=probe,
+        layer_name="tup",
+        every_n_steps=1,
+        max_probe_points=10,
+        max_homology_dim=0,
+        seed=42,
+    )
+    try:
+        with pytest.raises(RuntimeError, match="captured no activation"):
+            cb.on_step(0, loss=0.5)
+    finally:
+        cb.detach()
+
+
+def test_alert_fires_on_first_snapshot_without_prior_loss_history() -> None:
+    """An alert raised on the very first snapshot has an empty loss history.
+
+    With ``baseline_window=1`` and ``divergence_threshold=0.0`` the first
+    ``on_step`` computes divergence ``0.0`` (baseline queue starts empty),
+    which clears the threshold and fires the alert while only one snapshot
+    exists. ``self.snapshots[-2:-1]`` is then empty, exercising the false
+    branch of ``if prev_losses`` so ``loss_delta`` defaults to ``0.0``.
+    """
+    model = TinyMLP()
+    alerts: list[DivergenceAlert] = []
+    probe = torch.randn(40, 4, dtype=torch.float32)
+    cb = ShapeOfLearningCallback(
+        model=model,
+        probe_inputs=probe,
+        layer_name="relu",
+        every_n_steps=1,
+        max_probe_points=40,
+        max_homology_dim=0,
+        baseline_window=1,
+        divergence_threshold=0.0,
+        on_alert=lambda alert: alerts.append(alert),
+        seed=42,
+    )
+    snapshot = cb.on_step(0, loss=0.5)
+    cb.detach()
+
+    assert snapshot is not None
+    assert len(alerts) == 1, "alert must fire on the first zero-divergence step"
+    assert alerts[0].step == 0
+    assert alerts[0].loss_delta == 0.0  # no prior losses to diff against

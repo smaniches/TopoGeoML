@@ -48,3 +48,41 @@ jobs:
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
+
+  # Full-dependency coverage gate. The `test` job above installs only `.[dev]`,
+  # so the torch / torch-geometric modules (nn/diff_ph, nn/cubical_diff_ph,
+  # nn/hodge, training/callbacks) are import-skipped and never gated there.
+  # This job installs `.[all]` — torch CPU wheels install cleanly on the GitHub
+  # runners, and no test is `gpu`-marked — then runs the FULL suite with branch
+  # coverage and fails below the genuinely-achieved package total. A single
+  # interpreter is sufficient: line/branch coverage of this pure-Python logic is
+  # OS- and version-independent.
+  coverage-gate:
+    name: Full-deps coverage gate (Python 3.11 / ubuntu-latest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install package + all extras (torch CPU wheels)
+        run: |
+          python -m pip install --upgrade pip
+          # CPU-only torch keeps the install lean (no CUDA payload on the runner).
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[all]"
+
+      - name: Run FULL test suite with branch-coverage gate
+        # `-m "not gpu"` is explicit-by-design: there are currently zero
+        # gpu-marked tests, so this changes nothing today but keeps the gate
+        # honest if a GPU-only test is added later.
+        run: >
+          pytest -m "not gpu"
+          --cov=topogeoml --cov-branch
+          --cov-report=term
+          --cov-fail-under=100

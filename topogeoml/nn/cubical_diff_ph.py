@@ -386,7 +386,9 @@ class CubicalTopologyLoss(nn.Module):  # type: ignore[misc]
     ) -> torch.Tensor:
         loss = torch.zeros((), dtype=dtype, device=device)
         for k, target in self.target_betti.items():
-            if k < len(diagrams):
+            if k < len(diagrams):  # pragma: no branch
+                # max_dim == max(target_betti) and cubical_diagram_torch returns
+                # max_dim + 1 diagrams, so every key is in range; defensive edge.
                 loss = loss + betti_matching_loss(
                     diagrams[k],
                     target_n_bars=target,
