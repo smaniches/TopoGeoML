@@ -5,26 +5,27 @@ Probes the topology of model activations at regular intervals during
 training. Detects representational divergence — structural change in the
 learned representation that precedes (or contradicts) the training loss.
 
-Empirical claim (and what supports it)
---------------------------------------
+Exploratory finding (directional only — what it does and does not show)
+-----------------------------------------------------------------------
 On a controlled overfitting regime (200-sample ``sklearn.load_digits``,
 MLP with 64 hidden units, Adam, LR=1e-2, 600 steps, 30 independent
 seeds), the topology divergence score fires *no later than* a textbook
-val-loss-ratio watchdog, and in 14 of 30 seeds fires 10-30 steps
-earlier (rank-biserial r = +1.000; paired Wilcoxon p_raw = 5.77e-04;
-BCa 95% CI on the median advantage = [0, 10] steps — the CI lower
-bound is set by the topology baseline-window floor at step 30, not by
-a lack of effect).
+val-loss-ratio watchdog (14 of 30 seeds earlier, 16 tied, 0 later;
+rank-biserial r = +1.000; paired Wilcoxon p_raw = 5.77e-04).
 
-The full empirical report (per-seed table + statistical analysis) is
-in ``notebooks/results/topology_predicts_divergence_30seeds.md``;
+This is reported as **exploratory and inconclusive**, not as a positive
+finding. The topology watchdog fired at step 30 — its earliest possible
+step given the 3-snapshot baseline window — in every one of the 30
+seeds, and all 30 runs overfit (train loss to 0). Because it fires at
+its floor every time, the data establish only that topology is never
+*slower* than the loss watchdog; they do not establish that it
+*anticipates* divergence. No no-overfitting (negative) control has been
+run, so a genuine falsification test does not yet exist.
+
+The full per-seed report is in
+``notebooks/results/topology_predicts_divergence_30seeds.md``;
 reproduce with ``python notebooks/topology_predicts_divergence.py
 --n-seeds 30``.
-
-The floor effect (every topology firing landing at step 30 — the
-earliest step its baseline window allows) means the magnitude is
-censored from below. The directional verdict (topology never loses)
-is robust; the magnitude estimate is a lower bound.
 
 Usage
 -----

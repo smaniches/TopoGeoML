@@ -118,3 +118,16 @@ def test_rejects_invalid_max_dim() -> None:
 def test_rejects_non_square_adjacency() -> None:
     with pytest.raises(ValueError, match="square"):
         graph_to_clique_complex(np.zeros((3, 4)), max_dim=1)
+    # Regression: typing.get_type_hints must resolve without raising. The
+    # GraphLike alias references nx.Graph[Any]; the runtime networkx.Graph
+    # class is not subscriptable in current releases (e.g. 3.6.1), so a naive
+    # string alias makes get_type_hints raise "TypeError: type 'Graph' is not
+    # subscriptable". The TYPE_CHECKING / runtime alias split keeps mypy strict
+    # happy while staying runtime-introspectable. Folded into this existing
+    # test rather than a new one to preserve the documented test-function count.
+    import typing
+
+    from topogeoml.data import graph_to_complex as mod
+
+    for fn in (mod.graph_to_clique_complex, mod._coerce_to_graph):
+        assert "graph" in typing.get_type_hints(fn)

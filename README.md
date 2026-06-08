@@ -191,7 +191,7 @@ Reproduce all mechanism experiments: see [`REPRODUCING.md`](REPRODUCING.md).
 | Hodge Laplacian + MP layer | `topogeoml.nn.hodge` | done | One round of `activation(L @ X @ W + b)`; minimal SCN building block |
 | **Differentiable PH (Rips)** | `topogeoml.nn.diff_ph` | done | autograd through critical-edge indexing (Hofer 2017, Carrière 2021) |
 | **Differentiable PH (cubical)** | `topogeoml.nn.cubical_diff_ph` | done | autograd through critical-pixel indexing; `CubicalTopologyLoss(nn.Module)` for image-segmentation training (Clough 2020-style) |
-| Topology-divergence callback | `topogeoml.training.ShapeOfLearningCallback` | done | empirically validated — see evidence section above |
+| Topology-divergence callback | `topogeoml.training.ShapeOfLearningCallback` | done | implemented; the divergence-vs-loss comparison is exploratory (floor-limited, no negative control) — see the empirical evidence section above |
 | Signal analysis | `topogeoml.signal.{delay_embedding,sliding_window}` | done | Takens embedding + windowed topology features |
 | Embedding audit | `topogeoml.audits.audit_embedding` | prototype | heuristic significance threshold; calibrated noise floor pending |
 | **Benchmark framework** | `benchmarks/` | done | 4 backends × 4 axes (correctness/stability/speed/optimization); cross-backend tests need the `bench` extra |

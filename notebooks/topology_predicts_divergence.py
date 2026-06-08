@@ -340,9 +340,18 @@ def _render_markdown(results: list[SeedResult]) -> str:
         probe_every = (r0.final_step + 1) // r0.n_topology_snapshots
         floor_step = 3 * probe_every
         at_floor = topo_unique.size == 1 and int(topo_unique[0]) == floor_step
+        # Describe the directional Wilcoxon result from the actual p-value
+        # rather than hardcoding "p<0.05": a floor-limited run whose paired
+        # test is not significant (e.g. all pairs tie) must not be reported as
+        # "directional Wilcoxon p<0.05" (codex review).
+        wilcoxon_phrase = (
+            "directional Wilcoxon p<0.05"
+            if cmp.p_value_raw < 0.05
+            else "directional Wilcoxon not significant (p>=0.05)"
+        )
         if at_floor:
             verdict_raw = (
-                "exploratory (floor-limited: directional Wilcoxon p<0.05, but "
+                f"exploratory (floor-limited: {wilcoxon_phrase}, but "
                 "topology fires at its floor every seed and no no-overfitting "
                 "control has been run)"
             )
@@ -382,16 +391,23 @@ def _render_markdown(results: list[SeedResult]) -> str:
             f"- **Verdict:** {verdict_raw}",
             "",
             ("**Interpretation (exploratory, not a positive finding):** the "
-             "Wilcoxon test confirms the topology watchdog never fires "
-             "*later* than the loss watchdog (direction count strictly "
-             "skewed, ``p_raw < 0.05``). It does **not** establish that "
-             "topology *anticipates* divergence: when the topology watchdog "
-             "fires at its baseline-window floor in every seed (see "
-             "disclosure below) and every run overfits, the result shows "
-             "only that topology is never *slower* than loss. Establishing "
-             "anticipation requires a no-overfitting control — a run where "
-             "divergence should not be flagged at all — which has not been "
-             "performed."),
+             "direction count is "
+             + ("strictly skewed toward topology, and the paired Wilcoxon is "
+                "significant before correction (``p_raw < 0.05``)"
+                if cmp.p_value_raw < 0.05
+                else "in topology's favour, but the paired Wilcoxon is not "
+                     "significant before correction (``p_raw >= 0.05``)")
+             + ". Even where the direction is consistent, this does **not** "
+             "establish that topology *anticipates* divergence: "
+             + ("when the topology watchdog fires at its baseline-window "
+                "floor in every seed (see disclosure below) and every run "
+                "overfits, "
+                if at_floor
+                else "without a no-overfitting control, ")
+             + "the result shows only that topology is never *slower* than "
+             "loss. Establishing anticipation requires a no-overfitting "
+             "control — a run where divergence should not be flagged at all "
+             "— which has not been performed."),
             floor_text,
             "",
         ])

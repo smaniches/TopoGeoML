@@ -94,6 +94,8 @@ bench = [
 [project.urls]
 Homepage = "https://github.com/smaniches/TopoGeoML"
 Repository = "https://github.com/smaniches/TopoGeoML"
+Documentation = "https://smaniches.github.io/TopoGeoML/"
+Changelog = "https://github.com/smaniches/TopoGeoML/blob/main/CHANGELOG.md"
 Issues = "https://github.com/smaniches/TopoGeoML/issues"
 
 [tool.hatch.version]
