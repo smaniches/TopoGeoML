@@ -19,13 +19,14 @@ pip install -e ".[all]"
 
 ```bash
 # With full dependencies (torch installed):
-pytest --cov=topogeoml --cov=benchmarks
+pytest --cov=topogeoml --cov-branch          # gated package: 100% line + branch
+pytest --cov=topogeoml --cov=benchmarks      # incl. research harness (~93%)
 
 # Without torch (dev-only install):
 pytest
 ```
 
-Expected: with full dependencies (`pip install -e ".[all]"`), the `topogeoml` package reaches 100% line coverage. The `benchmarks/` research harness is ~93% line: the cross-backend tests skip without the `torch-topological` backend (the `bench` extra), and a few hodge-analysis paths are partially covered (see [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claim 6). Without torch (dev-only install), torch-dependent tests skip cleanly and package coverage is partial (nn/ code paths not exercised).
+Expected: with full dependencies (`pip install -e ".[all]"`), the `topogeoml` package reaches 100% line and 100% branch coverage (enforced by the full-deps `coverage-gate` CI job at `--cov-fail-under=100`). The `benchmarks/` research harness is ~93% line: the cross-backend tests skip without the `torch-topological` backend (the `bench` extra), and a few hodge-analysis paths are partially covered (see [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claim 6). Without torch (dev-only install), torch-dependent tests skip cleanly and package coverage is partial (nn/ code paths not exercised).
 
 ## 3. Type check (30 seconds)
 

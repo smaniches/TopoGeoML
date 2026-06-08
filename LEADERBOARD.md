@@ -209,8 +209,8 @@ The discipline of the table:
 
 | Metric | Value |
 |---|---|
-| Total tests | 497 |
-| Coverage | **100% line** on the `topogeoml/` package (full deps); `benchmarks/` harness ~93% (cross-backend tests need the `bench` extra) |
+| Total tests | 500 |
+| Coverage | **100% line and 100% branch** on the `topogeoml/` package (full deps), gated in CI (`--cov-branch --cov-fail-under=100`); `benchmarks/` harness ~93% (cross-backend tests need the `bench` extra), outside the gated scope |
 | Ruff clean across `topogeoml tests benchmarks scripts notebooks` | Yes |
 | Mypy strict on `topogeoml/` | **0 errors** |
 | CI workflows | 8 (4 test matrix + 2 CodeQL + benchmark-hodge + experiment runner) — all green on main |
