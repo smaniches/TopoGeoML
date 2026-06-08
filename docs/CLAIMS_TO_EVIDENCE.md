@@ -16,14 +16,14 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 
 ---
 
-## Claim 1: "497 tests, 100% line coverage when run with full dependencies"
+## Claim 1: "497 tests; 100% line coverage on the `topogeoml` package with torch installed"
 
 | Field | Value |
 |---|---|
-| Evidence | `pytest --cov=topogeoml --cov=benchmarks` (with `pip install -e ".[all]"`) |
-| Artifact | CI reports coverage on every push; 100% requires full dependencies including torch |
-| Tolerance | Exact: 497 test functions as counted by `grep -c "def test_" tests/*.py` |
-| Limitation | CI installs `.[dev]` (no torch), so `topogeoml/nn/` code paths are not exercised in CI and coverage is below 100% in that environment. 100% coverage is achieved when torch is installed (`pip install -e ".[all]"`). `__init__.py` files are omitted per `pyproject.toml [tool.coverage.run]`. Coverage is reported in CI but not gated because the torch-less CI environment cannot achieve 100%. |
+| Evidence | `pytest --cov=topogeoml` (with `pip install -e ".[all]"`) reports 100% line coverage on the importable `topogeoml` package. |
+| Artifact | CI reports coverage on every push. |
+| Tolerance | Exact: 497 test functions as counted by `grep -c "def test_" tests/*.py`. |
+| Limitation | CI installs `.[dev]` (no torch), so `topogeoml/nn/` code paths are not exercised in CI and package coverage is below 100% in that environment. With torch installed (`pip install -e ".[all]"`), the `topogeoml` package reaches 100% line coverage. `__init__.py` files are omitted per `pyproject.toml [tool.coverage.run]`. The `benchmarks/` research harness is **not** at 100% (see Claim 6). Coverage is reported in CI but not gated, because the torch-less CI environment cannot reach 100% on the package. |
 
 ---
 
@@ -80,13 +80,14 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 
 ---
 
-## Claim 6: "100% coverage on the library and benchmark framework"
+## Claim 6: Coverage on the library and the benchmark harness
 
 | Field | Value |
 |---|---|
-| Evidence | `pytest --cov=topogeoml --cov=benchmarks --cov-fail-under=100` (requires `pip install -e ".[all]"`) |
-| Reproduce | Locally with full dependencies: `pip install -e ".[all]" && pytest --cov=topogeoml --cov=benchmarks --cov-fail-under=100` |
-| Limitation | This gate is enforceable only with full dependencies (including torch). CI installs `.[dev]` (no torch) and reports coverage without gating it. The 100% claim applies to the full-dependency environment only. |
+| Evidence | `pytest --cov=topogeoml --cov=benchmarks --cov-report=term` |
+| Library (`topogeoml`) | **100% line coverage** with torch installed (`pip install -e ".[all]"`). Verified module-by-module: every `topogeoml/*` file reports 0 missed lines. |
+| Benchmark harness (`benchmarks`) | **Not 100%.** With `[all]` (torch + torch-geometric + GUDHI) the combined `topogeoml+benchmarks` line coverage is ~93%. The gap splits two ways: (a) the larger share is in cross-backend modules (`cli.py`, `axes/speed.py`, `axes/stability.py`, `backends/torch_topological.py`, `benchmarks/runner.py`) whose tests skip without the `torch-topological` backend (the `bench` extra); (b) a residual ~82 lines are in the hodge analysis modules (`hodge/datasets.py`, `hodge/h006_analysis.py`, `hodge/h007_analysis.py`, `hodge/runner.py`) that are genuinely partial within tests that *do* run, and would **not** be recovered by any backend install. We could not install `torch-topological` on Python 3.11–3.13 in our environment (its `giotto-ph` dependency has no compatible wheel), so the exact post-`bench` figure was not measured here; the (b) lines remain regardless. |
+| Limitation | The historical "100% on `topogeoml` and `benchmarks`" claim is **stale** and is not currently reproducible: the `benchmarks/` harness is below 100% even with the full optional stack. The library package itself remains at 100%. Closing the remaining `benchmarks/` gap is tracked as research-harness debt, not a release blocker. CI installs `.[dev]` (no torch) and reports coverage without gating it. |
 
 ---
 

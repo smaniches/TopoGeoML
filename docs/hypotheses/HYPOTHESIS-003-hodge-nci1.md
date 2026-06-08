@@ -94,7 +94,7 @@ Full report: `notebooks/results/nci1_hodge_ablation_30seeds.md`.
 |---|---|---|---|
 | combinatorial L | 0.506 [0.501, 0.511] | **2.6 × 10⁻⁴** | loses 1.7 pp |
 | symm L̃ (H1) | 0.516 [0.511, 0.523] | 0.253 | matches MLP |
-| **symm L̃ + residual (H2)** | **0.609 [0.581, 0.625]** | **4.83 × 10⁻³** | **BEATS MLP by 8.6 pp** ✅ |
+| **symm L̃ + residual (H2)** | **0.609 [0.581, 0.625]** | **4.83 × 10⁻³** | **BEATS MLP by 8.6 pp** |
 | symm L̃ + 2L + residual (H3) | 0.603 [0.594, 0.623] | 1.18 × 10⁻² | beats MLP by 8.0 pp (just above 0.01 floor) |
 | mlp-baseline | 0.523 [0.513, 0.566] | — | control |
 

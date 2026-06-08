@@ -482,15 +482,21 @@ class TestRunner:
         # With n=2 seeds we cannot conclude significance.
         assert cmp["kind"] in ("not_significant", "underpowered")
 
-    def test_runner_full_ablation_produces_five_reports(self) -> None:
-        """End-to-end smoke for the full hypothesis-001 ablation matrix:
-        5 models × 1 dataset (MUTAG) × 2 seeds × 2 epochs. The runner
-        emits 5 reports and C(5,2) = 10 pairwise comparisons."""
+    def test_runner_full_ablation_produces_one_report_per_model(self) -> None:
+        """End-to-end smoke for the full ablation matrix: every registered
+        (available) model × 1 dataset (MUTAG) × 2 seeds × 2 epochs. The
+        runner emits one report per model and C(n, 2) pairwise comparisons.
+        Counts are derived from the registry so the test does not drift as
+        new ablation arms are added."""
+        import math
+
+        from benchmarks.hodge.models import REGISTERED as MODELS
         from benchmarks.hodge.runner import run
 
+        n_models = sum(1 for m in MODELS.values() if m.available())
         result = run(dataset_names=["mutag"], seeds=[0, 1], n_epochs=2)
-        assert len(result.reports) == 5
-        assert len(result.pairwise_comparisons) == 10
+        assert len(result.reports) == n_models
+        assert len(result.pairwise_comparisons) == math.comb(n_models, 2)
 
     def test_max_graphs_caps_dataset_per_seed(self) -> None:
         """Hypothesis 004 mechanism test: ``max_graphs=N`` subsamples
