@@ -1,3 +1,15 @@
+# Run Experiment — MANUAL, long-running research job.
+#
+# This is a manually triggered (workflow_dispatch only) research run, NOT a CI gate.
+# A full sweep (e.g. h011b_collab across many seeds) is a long research computation
+# that can legitimately exceed GitHub's hosted-runner time limit. A cancelled or
+# incomplete run here is EXPECTED — it is NOT a CI failure and NOT a repo defect.
+#
+# This workflow is intentionally excluded from the CI gate: it never runs unattended
+# (no push/schedule triggers) and its result does not block merges or releases.
+# Do not treat a timed-out run as something to "fix" by reducing the experiment's
+# scope or parameters — that would alter the research.
+
 name: Run Experiment
 
 permissions:
