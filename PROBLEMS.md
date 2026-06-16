@@ -2,7 +2,7 @@
 
 A persistent, honest record of defects caught and corrected, self-corrections to
 early framing, process gaps and how they were closed, and work deferred without a
-timeline. This file is maintained alongside `CHANGELOG.md`: the changelog records
+timeline. This file is maintained alongside [`CHANGELOG.md`](CHANGELOG.md): the changelog records
 what shipped; this file records what was wrong, what is still open, and what we
 chose not to do. Modeled on the companion `homology-cliff/PROBLEMS.md`.
 
@@ -19,7 +19,7 @@ chose not to do. Modeled on the companion `homology-cliff/PROBLEMS.md`.
    construction into `__init__` so parameters are owned by the module and seen by
    the optimizer. Two regression tests were added to prevent recurrence (they assert
    the layer's parameters appear in `.parameters()` and that gradients flow to them).
-   Recorded in `CHANGELOG.md` (0.0.2 → Fixed).
+   Recorded in [`CHANGELOG.md`](CHANGELOG.md) (0.0.2 → Fixed).
 
 2. **"Topology beats MLP" was over-claimed on MUTAG, then refuted on PROTEINS
    (PR #15, PR #16).** A single-dataset MUTAG result is not evidence of a general
@@ -31,7 +31,7 @@ chose not to do. Modeled on the companion `homology-cliff/PROBLEMS.md`.
    and only on the larger NCI1 dataset (hypothesis 003, p_BH = 4.83 × 10⁻³). The
    residual variant's verdict actually **inverts** between datasets — it underperforms
    MLP on MUTAG (p_BH = 0.019) and beats it on NCI1 — which is itself reported rather
-   than hidden. Recorded in `CHANGELOG.md` (0.0.2 → Added — empirical results).
+   than hidden. Recorded in [`CHANGELOG.md`](CHANGELOG.md) (0.0.2 → Added — empirical results).
 
 3. **Topology-divergence claim demoted from a result to exploratory.** The
    `ShapeOfLearningCallback.divergence_score` comparison was reconciled to
@@ -39,12 +39,12 @@ chose not to do. Modeled on the companion `homology-cliff/PROBLEMS.md`.
    control; the investigation-wide multiple-comparison correction (FDR over the full
    set of distinct comparisons) was applied as the primary analysis rather than
    reporting only the favorable subset. Recorded in the recent reconciliation history
-   on `main` (PRs #45, #46) and in `LEADERBOARD.md`.
+   on `main` (PRs #45, #46) and in [`LEADERBOARD.md`](LEADERBOARD.md).
 
 ## Process / CI gaps, and how they were closed
 
 1. **mypy was clean locally but not gated in CI (deferral now closed).** At v0.0.2,
-   `CHANGELOG.md` recorded `mypy topogeoml: 0 errors (CI enforcement deferred to a
+   [`CHANGELOG.md`](CHANGELOG.md) recorded `mypy topogeoml: 0 errors (CI enforcement deferred to a
    separate PR pending constrained-env reproduction)`. That deferral has since been
    closed: `.github/workflows/ci.yml` runs `mypy topogeoml` as a **hard, gating**
    step (no `continue-on-error`), and `pyproject.toml` sets `[tool.mypy] strict =
@@ -66,7 +66,7 @@ chose not to do. Modeled on the companion `homology-cliff/PROBLEMS.md`.
 ## Things deferred (no implementation timeline)
 
 These are recorded so the absence of a feature is never mistaken for an oversight.
-From `CHANGELOG.md` (0.0.2 → Deferred indefinitely):
+From [`CHANGELOG.md`](CHANGELOG.md) (0.0.2 → Deferred indefinitely):
 
 - PH metric cascade (Euclidean → Spectral → Fermat)
 - TopoNetX integration for non-simplicial complexes
@@ -81,7 +81,7 @@ From `CHANGELOG.md` (0.0.2 → Deferred indefinitely):
 TopoGeoML is a pre-1.0 research toolkit. Its headline empirical claim (residual +
 symmetric-normalised Hodge message passing strictly beats a matched-capacity MLP on
 NCI1, p_BH = 4.83 × 10⁻³) is preregistered, FDR-corrected, and reproducible from
-`REPRODUCING.md`. The framework also owns its null and negative results (the MUTAG
+[`REPRODUCING.md`](REPRODUCING.md). The framework also owns its null and negative results (the MUTAG
 advantage did not replicate on PROTEINS; the residual variant's verdict inverts
 across datasets), one corrected critical training bug, and a list of features it has
 chosen not to build. Type-checking and a 100% branch-coverage gate are enforced in
