@@ -5,6 +5,33 @@ All notable changes to TopoGeoML will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] — 2026-06-16
+
+Hardening and quality release on the v0.0.3 library. No new empirical results and no
+change to any reported claim; the published artifact now carries the post-0.0.3
+correctness and quality fixes that previously lived only on `main`. The citable DOI is
+now the **concept DOI** (`10.5281/zenodo.20365816`), which always resolves to the latest version.
+
+### Fixed
+
+- **Float64-safe sparse conversion** in `topogeoml.nn.hodge.sparse_scipy_to_torch`: standard float32/float64 data now passes through without a float32 intermediate (which truncated precision for float64 callers); any other input dtype is normalised to float64 before the caller's requested precision is applied (#44).
+
+### Changed
+
+- **Coverage gate tightened** to 100% line *and* 100% branch coverage on the `topogeoml` package under full dependencies, enforced in CI (#50).
+- Runtime-introspectable type hints; `mypy --strict` and stale-test cleanups (#49, #52).
+- Divergence claim reconciled to exploratory wording and the reproduction-script verdict gated; discoverability metadata (project URLs) added (#52).
+- `is_chain_complex` guard simplified — the loop bounds already guarantee the checked condition; behaviour unchanged (#44).
+
+### Added
+
+- `PROBLEMS.md` — persistent self-audit log of known issues and their resolutions (#54).
+
+### Quality gates for v0.0.4
+- `ruff` / `black`: clean; `mypy --strict topogeoml`: 0 errors.
+- `pytest` (full dependencies): 100% line and 100% branch coverage on `topogeoml`, gated in CI.
+- All CI workflows on `main` green.
+
 ## [0.0.3] — 2026-06-05
 
 Packaging/distribution release — no library or result changes.
