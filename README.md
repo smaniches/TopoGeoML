@@ -28,8 +28,8 @@ Differentiable persistent-homology layers, Hodge message passing, and a benchmar
 
 [![CI](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-0.0.3--beta-green)](#status)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20564298.svg)](https://doi.org/10.5281/zenodo.20564298)
+[![Version](https://img.shields.io/badge/version-0.0.4--beta-green)](#status)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20365816.svg)](https://doi.org/10.5281/zenodo.20365816)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ---
@@ -344,7 +344,7 @@ Coverage is 100% line **and** 100% branch on the `topogeoml/` package (with torc
 
 ## Roadmap
 
-**v0.0.3 (current).** The current package and citable version (a packaging/CI release over v0.0.2; no new empirical results). Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 500 tests; 100% line and 100% branch coverage on the `topogeoml` package with full dependencies, gated in CI (the `benchmarks/` harness is below 100%); type-checked with mypy strict in CI.
+**v0.0.4 (current).** The current package and citable version — a hardening/quality release over v0.0.3 (float64-safe sparse conversion, a 100% line-and-branch coverage gate, and type-hint / doc-honesty fixes); no new empirical results. Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 500 tests; 100% line and 100% branch coverage on the `topogeoml` package with full dependencies, gated in CI (the `benchmarks/` harness is below 100%); type-checked with mypy strict in CI.
 
 **Next.** Cross-domain validation (DD, COLLAB, social-network benchmarks). DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). Continued mechanism ablation (spectral vs spatial operator isolation). The bar remains paired Wilcoxon p < 0.01 after BH correction.
 
@@ -359,14 +359,14 @@ Coverage is 100% line **and** 100% branch on the `topogeoml/` package (with torc
   author       = {Maniches, Santiago},
   title        = {TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification},
   year         = {2026},
-  version      = {0.0.3},
-  doi          = {10.5281/zenodo.20564298},
-  url          = {https://doi.org/10.5281/zenodo.20564298},
+  version      = {0.0.4},
+  doi          = {10.5281/zenodo.20365816},
+  url          = {https://doi.org/10.5281/zenodo.20365816},
   orcid        = {0009-0005-6480-1987}
 }
 ```
 
-A machine-readable citation is available in [`CITATION.cff`](CITATION.cff) (GitHub renders a "Cite this repository" button from it). DOI: [10.5281/zenodo.20564298](https://doi.org/10.5281/zenodo.20564298).
+A machine-readable citation is available in [`CITATION.cff`](CITATION.cff) (GitHub renders a "Cite this repository" button from it). DOI: [10.5281/zenodo.20365816](https://doi.org/10.5281/zenodo.20365816).
 
 ---
 

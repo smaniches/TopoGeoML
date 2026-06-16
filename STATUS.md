@@ -35,7 +35,7 @@ TopoGeoML is a preregistered research investigation into whether Hodge decomposi
 | Coverage | 100% line **and** 100% branch coverage on the `topogeoml` package with full dependencies (`.[all]`), enforced by the full-deps `coverage-gate` CI job (`--cov-branch --cov-fail-under=100`); the `benchmarks/` research harness is ~93% (cross-backend tests need the `bench` extra) and is intentionally outside the gated scope (gate is `--cov=topogeoml`). |
 | Type checking | mypy strict enforced in CI |
 | Lint | ruff, all checks passing |
-| DOI | [10.5281/zenodo.20564298](https://doi.org/10.5281/zenodo.20564298) |
+| DOI | [10.5281/zenodo.20365816](https://doi.org/10.5281/zenodo.20365816) |
 | Statistical analysis | Investigation-wide BH-FDR across 59 distinct comparisons (76 computed; [docs/STATISTICAL_SUMMARY.md](docs/STATISTICAL_SUMMARY.md)) |
 | Preregistration | 14 hypothesis documents with git-timestamped commit history |
 | Negative results | 28 of 59 distinct comparisons (47%), and 29 of 76 total (38%), are non-significant; all reported |

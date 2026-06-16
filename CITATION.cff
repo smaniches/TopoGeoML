@@ -2,12 +2,12 @@ cff-version: 1.2.0
 message: "If you use this software or its empirical findings, please cite it as below."
 type: software
 title: "TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification"
-version: 0.0.3
-date-released: "2026-06-06"
+version: 0.0.4
+date-released: "2026-06-16"
 license: MIT
-doi: "10.5281/zenodo.20564298"
+doi: "10.5281/zenodo.20365816"
 repository-code: "https://github.com/smaniches/TopoGeoML"
-url: "https://doi.org/10.5281/zenodo.20564298"
+url: "https://doi.org/10.5281/zenodo.20365816"
 authors:
   - family-names: Maniches
     given-names: Santiago
@@ -26,5 +26,5 @@ abstract: >-
   neural network classification. Systematic mechanism elimination
   (sample size, feature density, graph topology) narrows the positive NCI1
   claim (+8.6 pp, p_BH = 4.83e-3) to an architecture-data complementarity
-  interaction. Includes 497 tests, 100% coverage, and statistically
+  interaction. Includes 500 tests, 100% line and branch coverage, and statistically
   defensible reporting (BCa bootstrap, paired Wilcoxon, BH-FDR).

@@ -75,8 +75,8 @@ Code, reproduction commands, and the full leaderboard live in the [GitHub reposi
   author  = {Maniches, Santiago},
   title   = {TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification},
   year    = {2026},
-  version = {0.0.3},
-  doi     = {10.5281/zenodo.20564298},
-  url     = {https://doi.org/10.5281/zenodo.20564298}
+  version = {0.0.4},
+  doi     = {10.5281/zenodo.20365816},
+  url     = {https://doi.org/10.5281/zenodo.20365816}
 }
 ```
