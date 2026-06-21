@@ -385,14 +385,22 @@ def betti_regularization_loss(
         Minimum lifetime to count as a "real" component (filters noise).
     """
     lifetimes = finite_lifetimes(diagram)
+    # Essential (infinite-death) bars are permanent components; count all of
+    # them up front, not just one. A thresholded H_0 diagram can carry several
+    # essential bars (one per surviving component), so a hardcoded "+1" would
+    # undercount.
+    n_essential = int(torch.isinf(diagram[:, 1]).sum().item())
     if lifetimes.numel() == 0:
+        # All bars are essential (infinite lifetime) -- e.g. a fully truncated
+        # H_0 diagram where every point is its own component. An infinite
+        # lifetime is not differentiable and there is no finite bar to shrink,
+        # so this loss has no signal to contribute regardless of how far
+        # n_essential exceeds the target: it is exactly 0. Reducing the component
+        # count in this regime requires acting on the distance matrix, not a
+        # truncated diagram.
         return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
     # Sort descending: most prominent first
     sorted_lifetimes, _ = lifetimes.sort(descending=True)
-    # Essential (infinite-death) bars are permanent components; count all of
-    # them, not just one. A thresholded H_0 diagram can carry several essential
-    # bars (one per surviving component), so a hardcoded "+1" would undercount.
-    n_essential = int(torch.isinf(diagram[:, 1]).sum().item())
     significant = sorted_lifetimes[sorted_lifetimes > prominence_threshold]
     n_real = n_essential + significant.numel()
     if n_real <= target_n_components:

@@ -24,7 +24,7 @@ Methods
     third moment). Second-order accurate and transformation-respecting
     under monotone reparameterization; the gold-standard
     nonparametric interval for non-normal sampling distributions.
-  * ``block`` (Künsch 1989; Politis & Romano 1994) — non-overlapping
+  * ``block`` (Künsch 1989; Politis & Romano 1994) — overlapping
     moving-block bootstrap for serially-correlated samples (e.g.
     timing measurements with thermal drift or warm-cache effects).
     The block length defaults to ``ceil(n^{1/3})`` per Hall, Horowitz
@@ -106,7 +106,7 @@ class BootstrapMethod(StrEnum):
     #: acceleration ``a``. Second-order accurate.
     BCA = "bca"
 
-    #: Non-overlapping moving-block bootstrap (Künsch 1989) for
+    #: Overlapping moving-block bootstrap (Künsch 1989) for
     #: serially-correlated samples. Block length defaults to
     #: ``ceil(n^{1/3})`` per Hall–Horowitz–Jing 1995.
     BLOCK = "block"
@@ -293,7 +293,7 @@ def _block_bootstrap_distribution(
     block_length: int,
     rng: np.random.Generator,
 ) -> NDArray[np.float64]:
-    """Non-overlapping moving-block bootstrap distribution (Künsch 1989).
+    """Overlapping moving-block bootstrap distribution (Künsch 1989).
 
     The sample is divided into ``n_blocks = ceil(n / block_length)``
     overlapping blocks, one starting at each valid position. Each
@@ -356,7 +356,7 @@ def bootstrap_ci(
           Second-order accurate; preferred for skewed sampling
           distributions.
         - ``block`` (Künsch 1989): moving-block bootstrap with
-          non-overlapping reseating, for serially-correlated samples
+          overlapping reseating, for serially-correlated samples
           (e.g. timing measurements with thermal drift).
     confidence_level : float in (0, 1)
         Two-sided interval coverage.

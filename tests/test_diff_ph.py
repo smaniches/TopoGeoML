@@ -222,6 +222,22 @@ def test_betti_regularization_shrinks_least_prominent_excess() -> None:
     assert abs(loss.item() - 0.8) < 1e-9
 
 
+def test_betti_regularization_all_essential_returns_zero() -> None:
+    """An all-essential H0 diagram (no finite bars) yields zero loss even with
+    more components than target (Codex review on PR #56).
+
+    A fully truncated H0 diagram leaves every point its own component: all bars
+    are essential (death=inf). Essential lifetimes are infinite and not
+    differentiable, and there is no finite bar to shrink, so this loss has no
+    signal to contribute -- the correct value is exactly 0, not a missed penalty.
+    """
+    diagram = torch.tensor(
+        [[0.0, float("inf")], [0.0, float("inf")], [0.0, float("inf")]],
+        dtype=torch.float64,
+    )
+    assert betti_regularization_loss(diagram, target_n_components=1).item() == 0.0
+
+
 # --- TopologyRegularizer module ---
 
 def test_regularizer_module_forward() -> None:

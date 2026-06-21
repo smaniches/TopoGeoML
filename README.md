@@ -320,7 +320,7 @@ Three interval methods are supported: percentile (Efron 1979), BCa (Efron 1987),
 
 The package enforces the following floor:
 
-- Explicit `float64` dtype on every numerical array
+- Explicit `float64` dtype on every NumPy numerical array; torch layers follow torch's `float32` default and preserve `float64` when the caller requests it
 - No Python sample loops for numerical computation (construction loops permitted)
 - `random_state=42` / `np.random.default_rng(42)` for reproducible RNG
 - Provenance metadata (model, seed, platform, dependency versions) on every benchmark cell
