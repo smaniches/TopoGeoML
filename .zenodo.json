@@ -1,6 +1,6 @@
 {
   "title": "TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification",
-  "description": "Preregistered research program investigating Hodge decomposition for graph neural network classification. Seven hypotheses (H001-H007) with 27+ falsifiable sub-predictions systematically investigate candidate mechanisms (sample size, feature density, graph topology) for the observed NCI1 positive claim (+8.6 pp, p_BH = 4.83e-3). Includes differentiable persistent homology, Hodge Laplacian message passing, 500 tests with 100% line and branch coverage, BCa bootstrap CIs, paired Wilcoxon signed-rank tests with BH-FDR correction, and honest reporting of null results alongside confirmed positive differences.",
+  "description": "Preregistered research program investigating Hodge decomposition for graph neural network classification. Seven hypotheses (H001-H007) with 27+ falsifiable sub-predictions systematically investigate candidate mechanisms (sample size, feature density, graph topology) for the observed NCI1 positive claim (+8.6 pp, p_BH = 4.83e-3). Includes differentiable persistent homology, Hodge Laplacian message passing, 504 tests with 100% line and branch coverage, BCa bootstrap CIs, paired Wilcoxon signed-rank tests with BH-FDR correction, and honest reporting of null results alongside confirmed positive differences.",
   "creators": [
     {
       "name": "Maniches, Santiago",
@@ -20,7 +20,7 @@
   "license": {"id": "MIT"},
   "upload_type": "software",
   "access_right": "open",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "related_identifiers": [
     {
       "identifier": "10.5281/zenodo.20365816",
@@ -28,7 +28,7 @@
       "scheme": "doi"
     },
     {
-      "identifier": "10.5281/zenodo.20564298",
+      "identifier": "10.5281/zenodo.20719956",
       "relation": "isNewVersionOf",
       "scheme": "doi"
     },
