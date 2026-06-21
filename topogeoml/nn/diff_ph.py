@@ -186,7 +186,11 @@ def rips_diagram_torch(
     max_dim : int
         Highest homology dimension (default 1: H_0 and H_1).
     max_edge_length : float, optional
-        Maximum edge length passed to ripser.
+        Maximum edge length passed to ripser. Must NOT truncate the H_0
+        filtration: a value below the largest minimum-spanning-tree edge
+        weight drops finite H_0 bars that the differentiable MST path cannot
+        reconstruct, so it raises ``NotImplementedError``. Use
+        ``topogeoml.core.filtrations.RipsFiltration`` for thresholded diagrams.
 
     Returns
     -------
@@ -228,22 +232,32 @@ def rips_diagram_torch(
     dtype = torch.float64  # §1.3: explicit dtype
 
     # --- H_0 diagram ---
+    # H_0 persistence is the minimum spanning tree: each of the n-1 MST edges
+    # merges two components (a finite bar with birth 0 and death = edge length)
+    # and one component survives forever (the single essential bar). A
+    # `max_edge_length` truncates the filtration: an MST edge longer than the
+    # threshold never merges within it, so its component stays essential and
+    # ripser reports it as an additional infinite H_0 bar. Reconstruct that
+    # exactly — keep only the MST edges that die at or below the threshold as
+    # finite bars, and emit one essential (infinite) bar per surviving
+    # component (n - n_h0_finite of them). With no threshold this reduces to
+    # n-1 finite bars plus a single essential bar, unchanged.
     critical_edges_h0 = _critical_edges_h0(D_np)
-    n_h0_finite = len(critical_edges_h0)  # n - 1 finite bars + 1 infinite
+    if max_edge_length is not None:
+        thresh = float(max_edge_length)
+        critical_edges_h0 = [
+            (i, j) for (i, j) in critical_edges_h0 if float(D_np[i, j]) <= thresh
+        ]
+    n_h0_finite = len(critical_edges_h0)
+    n_h0_infinite = n - n_h0_finite  # essential components at the threshold
 
-    births_h0 = torch.zeros(n_h0_finite + 1, dtype=dtype, device=device)
-
+    births_h0 = torch.zeros(n_h0_finite + n_h0_infinite, dtype=dtype, device=device)
+    infinite_h0 = torch.full((n_h0_infinite,), torch.inf, dtype=dtype, device=device)
     if n_h0_finite > 0:
         deaths_finite = torch.stack([D_torch[i, j] for i, j in critical_edges_h0])
-        deaths_h0 = torch.cat([
-            deaths_finite,
-            torch.tensor([torch.inf], dtype=dtype, device=device),
-        ])
-    else:  # pragma: no cover
-        # Reached only for a degenerate point cloud (n=1, single point) where
-        # ripser emits an empty H_0 finite-bar set. The diff-PH layer is not
-        # meaningful at n=1 and is gated upstream.
-        deaths_h0 = torch.tensor([torch.inf], dtype=dtype, device=device)
+        deaths_h0 = torch.cat([deaths_finite, infinite_h0])
+    else:
+        deaths_h0 = infinite_h0
 
     diagrams.append(torch.stack([births_h0, deaths_h0], dim=1))
 
@@ -371,18 +385,34 @@ def betti_regularization_loss(
         Minimum lifetime to count as a "real" component (filters noise).
     """
     lifetimes = finite_lifetimes(diagram)
+    # Essential (infinite-death) bars are permanent components; count all of
+    # them up front, not just one. A thresholded H_0 diagram can carry several
+    # essential bars (one per surviving component), so a hardcoded "+1" would
+    # undercount.
+    n_essential = int(torch.isinf(diagram[:, 1]).sum().item())
     if lifetimes.numel() == 0:
+        # All bars are essential (infinite lifetime) -- e.g. a fully truncated
+        # H_0 diagram where every point is its own component. An infinite
+        # lifetime is not differentiable and there is no finite bar to shrink,
+        # so this loss has no signal to contribute regardless of how far
+        # n_essential exceeds the target: it is exactly 0. Reducing the component
+        # count in this regime requires acting on the distance matrix, not a
+        # truncated diagram.
         return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
     # Sort descending: most prominent first
     sorted_lifetimes, _ = lifetimes.sort(descending=True)
-    # Include the "infinite" component implicitly (it has ∞ lifetime)
-    # Real components = 1 (infinite bar) + significant finite bars
     significant = sorted_lifetimes[sorted_lifetimes > prominence_threshold]
-    n_real = 1 + significant.numel()  # +1 for the persistent infinite H_0 component
+    n_real = n_essential + significant.numel()
     if n_real <= target_n_components:
         return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
-    # Penalize excess bars: push them toward zero lifetime
-    excess = sorted_lifetimes[:max(0, n_real - target_n_components)]
+    # Essential bars already fill part of the target budget; the remainder is for
+    # finite bars. Keep the most prominent finite (significant) bars within that
+    # remaining budget and penalize only the LEAST prominent excess -- pushing the
+    # noise bars toward zero lifetime, never the prominent bars we want to retain.
+    # (`significant` is a prefix of the descending-sorted lifetimes, so its tail
+    # is the least prominent excess.)
+    n_keep_finite = max(0, target_n_components - n_essential)
+    excess = significant[n_keep_finite:]
     return excess.sum()
 
 

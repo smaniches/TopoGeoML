@@ -187,6 +187,57 @@ def test_betti_regularization_penalizes_excess() -> None:
     assert loss.item() > 0.0
 
 
+def test_betti_regularization_counts_multiple_essential_bars() -> None:
+    """Every essential (infinite-death) bar is a permanent component.
+
+    A thresholded H_0 diagram can carry several essential bars (one per
+    surviving component). With two essential bars and one prominent finite
+    bar, beta_0 = 3. A hardcoded "+1 essential" would read beta_0 = 2 and
+    miss the excess against target 2.
+    """
+    diagram = torch.tensor(
+        [[0.0, 0.9], [0.0, float("inf")], [0.0, float("inf")]],
+        dtype=torch.float64,
+    )
+    # 2 essential + 1 significant finite == 3 -> matches target -> no penalty.
+    assert betti_regularization_loss(diagram, target_n_components=3).item() == 0.0
+    # 3 > target 2 -> positive penalty (the old hardcoded +1 wrongly returned 0).
+    assert betti_regularization_loss(diagram, target_n_components=2).item() > 0.0
+
+
+def test_betti_regularization_shrinks_least_prominent_excess() -> None:
+    """Excess finite bars beyond the budget are the LEAST prominent; the most
+    prominent within budget are preserved (Codex review on PR #56).
+
+    Two essential bars + finite [0.9, 0.8], target 3: the budget keeps one
+    finite bar (0.9) and shrinks only the 0.8, so the loss is 0.8 -- not 0.9.
+    Penalizing the prominent 0.9 would push the feature we want to keep toward
+    the diagonal.
+    """
+    diagram = torch.tensor(
+        [[0.0, 0.9], [0.0, 0.8], [0.0, float("inf")], [0.0, float("inf")]],
+        dtype=torch.float64,
+    )
+    loss = betti_regularization_loss(diagram, target_n_components=3)
+    assert abs(loss.item() - 0.8) < 1e-9
+
+
+def test_betti_regularization_all_essential_returns_zero() -> None:
+    """An all-essential H0 diagram (no finite bars) yields zero loss even with
+    more components than target (Codex review on PR #56).
+
+    A fully truncated H0 diagram leaves every point its own component: all bars
+    are essential (death=inf). Essential lifetimes are infinite and not
+    differentiable, and there is no finite bar to shrink, so this loss has no
+    signal to contribute -- the correct value is exactly 0, not a missed penalty.
+    """
+    diagram = torch.tensor(
+        [[0.0, float("inf")], [0.0, float("inf")], [0.0, float("inf")]],
+        dtype=torch.float64,
+    )
+    assert betti_regularization_loss(diagram, target_n_components=1).item() == 0.0
+
+
 # --- TopologyRegularizer module ---
 
 def test_regularizer_module_forward() -> None:
