@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this software or its empirical findings, please cite it as below."
 type: software
 title: "TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification"
-version: 0.0.4
-date-released: "2026-06-16"
+version: 0.0.5
+date-released: "2026-06-21"
 license: MIT
 doi: "10.5281/zenodo.20365816"
 repository-code: "https://github.com/smaniches/TopoGeoML"

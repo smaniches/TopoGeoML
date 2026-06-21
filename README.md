@@ -28,7 +28,7 @@ Differentiable persistent-homology layers, Hodge message passing, and a benchmar
 
 [![CI](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-0.0.4--beta-green)](#status)
+[![Version](https://img.shields.io/badge/version-0.0.5--beta-green)](#status)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20365816.svg)](https://doi.org/10.5281/zenodo.20365816)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -36,7 +36,7 @@ Differentiable persistent-homology layers, Hodge message passing, and a benchmar
 
 ## Status
 
-**A research investigation with a primarily negative headline result, plus a working toolkit.** The library is internally consistent (500 tests; 100% line and 100% branch coverage on the `topogeoml` package when run with full dependencies, gated in CI; the `benchmarks/` research harness is below 100% — see [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claim 6), type-checked with mypy in strict mode, and statistically validated with investigation-wide FDR control (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md)).
+**A research investigation with a primarily negative headline result, plus a working toolkit.** The library is internally consistent (504 tests; 100% line and 100% branch coverage on the `topogeoml` package when run with full dependencies, gated in CI; the `benchmarks/` research harness is below 100% — see [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claim 6), type-checked with mypy in strict mode, and statistically validated with investigation-wide FDR control (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md)).
 
 **Primary finding (negative).** Across 14 preregistered hypotheses (H001–H011b, 53 falsifiable sub-predictions), encoding topological structure via the Hodge Laplacian does **not** confer a unique advantage for graph classification on any tested dataset. Once an external residual connection is present, a normalised *adjacency* operator matches or exceeds the Hodge Laplacian; on NCI1, without that residual both fall to near the class prior (~0.51 vs a 0.50 prior), while on MUTAG and PROTEINS the no-residual arms still sit above it. The operative architectural factor is the residual connection, not the topology (see H008c).
 
@@ -333,7 +333,7 @@ The package enforces the following floor:
 ## Testing
 
 ```bash
-pytest                          # 500 tests
+pytest                          # 504 tests
 pytest -m "not slow"            # skip slow tests
 pytest --cov=topogeoml --cov=benchmarks  # with coverage
 ```
@@ -344,7 +344,7 @@ Coverage is 100% line **and** 100% branch on the `topogeoml/` package (with torc
 
 ## Roadmap
 
-**v0.0.4 (current).** The current package and citable version — a hardening/quality release over v0.0.3 (float64-safe sparse conversion, a 100% line-and-branch coverage gate, and type-hint / doc-honesty fixes); no new empirical results. Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 500 tests; 100% line and 100% branch coverage on the `topogeoml` package with full dependencies, gated in CI (the `benchmarks/` harness is below 100%); type-checked with mypy strict in CI.
+**v0.0.5 (current).** The current package and citable version — a correctness and reviewer-driven precision release over v0.0.4 (scale-invariant Hodge isolated-simplex normalization, a corrected differentiable Rips H0 reconstruction under `max_edge_length`, full essential-bar counting in the Betti regularization loss, a real cubical-complex `gradcheck` test, and statistical-claim doc-honesty fixes); no new empirical results. Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 504 tests; 100% line and 100% branch coverage on the `topogeoml` package with full dependencies, gated in CI (the `benchmarks/` harness is below 100%); type-checked with mypy strict in CI.
 
 **Next.** Cross-domain validation (DD, COLLAB, social-network benchmarks). DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). Continued mechanism ablation (spectral vs spatial operator isolation). The bar remains paired Wilcoxon p < 0.01 after BH correction.
 
@@ -359,7 +359,7 @@ Coverage is 100% line **and** 100% branch on the `topogeoml/` package (with torc
   author       = {Maniches, Santiago},
   title        = {TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification},
   year         = {2026},
-  version      = {0.0.4},
+  version      = {0.0.5},
   doi          = {10.5281/zenodo.20365816},
   url          = {https://doi.org/10.5281/zenodo.20365816},
   orcid        = {0009-0005-6480-1987}

@@ -7,14 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.0.5] — 2026-06-21
+
 ### Fixed
 
-- **Hodge Laplacian normalization for isolated simplices** (`topogeoml.nn.hodge.normalize_hodge_laplacian`): a degree-0 (isolated) simplex now follows the standard symmetric-normalization convention `D^{-1/2}_ii = 0` instead of `1/sqrt(epsilon)` (~1e3). The former `epsilon` floor also biased *every* positive-degree diagonal by ~5e-7; normalized values now equal the exact `epsilon -> 0` limit. Consequence: output shifts by ~5e-7 on connected complexes (a correctness improvement, not a regression) and isolated rows/columns are now exactly zero. The `epsilon` keyword is retained for API compatibility.
+- **Hodge Laplacian normalization for isolated simplices** (`topogeoml.nn.hodge.normalize_hodge_laplacian`): a degree-0 (isolated) simplex now follows the standard symmetric-normalization convention `D^{-1/2}_ii = 0` instead of `1/sqrt(epsilon)` (~1e3). The discriminator is `degree > 0` (scale-invariant), so a small but genuinely positive degree is normalized rather than zeroed; only an exactly-zero degree is treated as isolated. The former `epsilon` floor also biased *every* positive-degree diagonal by ~5e-7; normalized values now equal the exact `epsilon -> 0` limit, so output shifts by ~5e-7 on connected complexes (a correctness improvement, not a regression). The `epsilon` keyword is retained for API compatibility.
 - **Differentiable Rips H0 under `max_edge_length`** (`topogeoml.nn.diff_ph.rips_diagram_torch`): the H0 reconstruction assumed `n-1` finite bars from the full-matrix MST, producing a silently-incorrect diagram when `max_edge_length` truncated the filtration. It now keeps only the MST edges that die at or below the threshold as finite bars and emits one essential bar per surviving component, matching ripser's H0 diagram exactly; the default (unbounded) path is unchanged.
+- **Betti regularization loss** (`topogeoml.nn.diff_ph.betti_regularization_loss`): counts every essential (infinite-death) bar as a permanent component instead of assuming exactly one, and penalizes the *least* prominent excess finite bars (preserving the most prominent within the target budget) rather than the most prominent. An all-essential diagram returns zero explicitly, since infinite lifetimes are not differentiable and there is no finite bar to shrink.
+- **Block-bootstrap label** (`benchmarks/stats.py`): corrected "non-overlapping" to "overlapping" — the implementation draws a block start at every valid position (the overlapping moving-block bootstrap, Kunsch 1989), as the docstring body and the computed estimator already reflect.
 
 ### Added
 
 - A real `torch.autograd.gradcheck` test for `cubical_diagram_torch` (analytical gradients vs. finite differences), replacing a docstring claim of gradcheck coverage that did not previously exist in the test suite.
+
+### Changed
+
+- Scoped the README "float64 dtype on every numerical array" claim to NumPy arrays; torch layers follow torch's float32 default and preserve float64 when the caller requests it.
 
 ## [0.0.4] — 2026-06-16
 
