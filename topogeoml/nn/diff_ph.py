@@ -397,8 +397,14 @@ def betti_regularization_loss(
     n_real = n_essential + significant.numel()
     if n_real <= target_n_components:
         return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
-    # Penalize excess bars: push them toward zero lifetime
-    excess = sorted_lifetimes[:max(0, n_real - target_n_components)]
+    # Essential bars already fill part of the target budget; the remainder is for
+    # finite bars. Keep the most prominent finite (significant) bars within that
+    # remaining budget and penalize only the LEAST prominent excess -- pushing the
+    # noise bars toward zero lifetime, never the prominent bars we want to retain.
+    # (`significant` is a prefix of the descending-sorted lifetimes, so its tail
+    # is the least prominent excess.)
+    n_keep_finite = max(0, target_n_components - n_essential)
+    excess = significant[n_keep_finite:]
     return excess.sum()
 
 

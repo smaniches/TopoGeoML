@@ -205,6 +205,23 @@ def test_betti_regularization_counts_multiple_essential_bars() -> None:
     assert betti_regularization_loss(diagram, target_n_components=2).item() > 0.0
 
 
+def test_betti_regularization_shrinks_least_prominent_excess() -> None:
+    """Excess finite bars beyond the budget are the LEAST prominent; the most
+    prominent within budget are preserved (Codex review on PR #56).
+
+    Two essential bars + finite [0.9, 0.8], target 3: the budget keeps one
+    finite bar (0.9) and shrinks only the 0.8, so the loss is 0.8 -- not 0.9.
+    Penalizing the prominent 0.9 would push the feature we want to keep toward
+    the diagonal.
+    """
+    diagram = torch.tensor(
+        [[0.0, 0.9], [0.0, 0.8], [0.0, float("inf")], [0.0, float("inf")]],
+        dtype=torch.float64,
+    )
+    loss = betti_regularization_loss(diagram, target_n_components=3)
+    assert abs(loss.item() - 0.8) < 1e-9
+
+
 # --- TopologyRegularizer module ---
 
 def test_regularizer_module_forward() -> None:
