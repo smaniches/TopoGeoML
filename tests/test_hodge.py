@@ -54,6 +54,23 @@ def test_normalize_hodge_laplacian_isolated_simplex_row_is_zero() -> None:
     np.testing.assert_array_equal(L_norm[:, iso], 0.0)
 
 
+def test_normalize_hodge_laplacian_preserves_small_positive_degree() -> None:
+    """A small but strictly positive degree must be normalized, not zeroed.
+
+    Symmetric normalization is scale invariant, so the discriminator is
+    degree > 0, not an absolute floor: a lightly weighted simplex with degree
+    far below any fixed epsilon (here 1e-15) must still get 1/sqrt(deg). An
+    absolute-floor cutoff would wrongly zero its whole row/column.
+    """
+    import scipy.sparse as sp
+
+    w = 1e-15  # below the old 1e-12 cutoff, but genuinely positive
+    L = sp.csr_matrix(np.array([[w, -w], [-w, w]], dtype=np.float64))
+    L_norm = normalize_hodge_laplacian(L).toarray()
+    # D^{-1/2} L D^{-1/2} = (1/w) * L = [[1, -1], [-1, 1]] (not all-zero).
+    np.testing.assert_allclose(L_norm, [[1.0, -1.0], [-1.0, 1.0]], atol=1e-9)
+
+
 def test_normalize_hodge_laplacian_block_diagonal_decomposes() -> None:
     """A disconnected (block-diagonal) complex normalizes to the block-diagonal
     of its components' normalized Laplacians.

@@ -75,12 +75,15 @@ def normalize_hodge_laplacian(
     """
     L = sp.csr_matrix(L)
     diag = np.asarray(L.diagonal(), dtype=np.float64)
-    # D^{-1/2}_ii = 1/sqrt(diag_ii) for positive degree, 0 for isolated simplices
-    # (degree 0). Computing the reciprocal only on the nonzero entries avoids a
-    # spurious divide-by-zero warning on the zero-degree rows.
+    # D^{-1/2}_ii = 1/sqrt(diag_ii) for every strictly positive degree, 0 only for
+    # isolated simplices (degree exactly 0). Symmetric normalization is scale
+    # invariant, so a small positive degree (e.g. a lightly weighted simplex) must
+    # still be normalized, not zeroed — the discriminator is degree > 0, not an
+    # absolute floor. Computing the reciprocal only on the positive entries avoids
+    # a spurious divide-by-zero warning on the zero-degree rows.
     d_inv_sqrt = np.zeros_like(diag)
-    nonzero = diag > 1e-12
-    d_inv_sqrt[nonzero] = 1.0 / np.sqrt(diag[nonzero])
+    positive = diag > 0.0
+    d_inv_sqrt[positive] = 1.0 / np.sqrt(diag[positive])
     D_inv_sqrt = sp.diags(d_inv_sqrt)
     return (D_inv_sqrt @ L @ D_inv_sqrt).tocsr()
 

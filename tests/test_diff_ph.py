@@ -187,6 +187,24 @@ def test_betti_regularization_penalizes_excess() -> None:
     assert loss.item() > 0.0
 
 
+def test_betti_regularization_counts_multiple_essential_bars() -> None:
+    """Every essential (infinite-death) bar is a permanent component.
+
+    A thresholded H_0 diagram can carry several essential bars (one per
+    surviving component). With two essential bars and one prominent finite
+    bar, beta_0 = 3. A hardcoded "+1 essential" would read beta_0 = 2 and
+    miss the excess against target 2.
+    """
+    diagram = torch.tensor(
+        [[0.0, 0.9], [0.0, float("inf")], [0.0, float("inf")]],
+        dtype=torch.float64,
+    )
+    # 2 essential + 1 significant finite == 3 -> matches target -> no penalty.
+    assert betti_regularization_loss(diagram, target_n_components=3).item() == 0.0
+    # 3 > target 2 -> positive penalty (the old hardcoded +1 wrongly returned 0).
+    assert betti_regularization_loss(diagram, target_n_components=2).item() > 0.0
+
+
 # --- TopologyRegularizer module ---
 
 def test_regularizer_module_forward() -> None:

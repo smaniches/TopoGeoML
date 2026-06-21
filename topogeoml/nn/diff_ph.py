@@ -389,10 +389,12 @@ def betti_regularization_loss(
         return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
     # Sort descending: most prominent first
     sorted_lifetimes, _ = lifetimes.sort(descending=True)
-    # Include the "infinite" component implicitly (it has ∞ lifetime)
-    # Real components = 1 (infinite bar) + significant finite bars
+    # Essential (infinite-death) bars are permanent components; count all of
+    # them, not just one. A thresholded H_0 diagram can carry several essential
+    # bars (one per surviving component), so a hardcoded "+1" would undercount.
+    n_essential = int(torch.isinf(diagram[:, 1]).sum().item())
     significant = sorted_lifetimes[sorted_lifetimes > prominence_threshold]
-    n_real = 1 + significant.numel()  # +1 for the persistent infinite H_0 component
+    n_real = n_essential + significant.numel()
     if n_real <= target_n_components:
         return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
     # Penalize excess bars: push them toward zero lifetime
