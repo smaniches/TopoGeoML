@@ -36,6 +36,46 @@ def test_normalize_hodge_laplacian_is_symmetric() -> None:
     np.testing.assert_allclose(L_norm, L_norm.T, atol=1e-12)
 
 
+def test_normalize_hodge_laplacian_isolated_simplex_row_is_zero() -> None:
+    """An isolated 0-simplex (degree 0) must normalize to an all-zero row.
+
+    The symmetric normalization sets D^{-1/2}_ii = 0 for degree-0 simplices,
+    so the corresponding row/column of the normalized Laplacian is exactly 0
+    — not ~1/sqrt(epsilon) times an (already zero) row.
+    """
+    # Two vertices joined by an edge, plus a third isolated vertex (facet (3,)).
+    sc = SimplicialComplex(facets=[(0, 1), (3,)])
+    L0 = hodge_laplacian(sc, 0)
+    diag = np.asarray(L0.diagonal(), dtype=np.float64)
+    iso = int(np.argmin(diag))  # the degree-0 vertex
+    assert diag[iso] == 0.0
+    L_norm = normalize_hodge_laplacian(L0).toarray()
+    np.testing.assert_array_equal(L_norm[iso, :], 0.0)
+    np.testing.assert_array_equal(L_norm[:, iso], 0.0)
+
+
+def test_normalize_hodge_laplacian_block_diagonal_decomposes() -> None:
+    """A disconnected (block-diagonal) complex normalizes to the block-diagonal
+    of its components' normalized Laplacians.
+
+    Two disjoint edges give a block-diagonal L_0; normalizing the whole must
+    equal normalizing each block independently and stacking them.
+    """
+    sc_full = SimplicialComplex(facets=[(0, 1), (2, 3)])
+    sc_a = SimplicialComplex(facets=[(0, 1)])
+    sc_b = SimplicialComplex(facets=[(2, 3)])
+
+    full = normalize_hodge_laplacian(hodge_laplacian(sc_full, 0)).toarray()
+    block_a = normalize_hodge_laplacian(hodge_laplacian(sc_a, 0)).toarray()
+    block_b = normalize_hodge_laplacian(hodge_laplacian(sc_b, 0)).toarray()
+
+    expected = np.block([
+        [block_a, np.zeros((2, 2))],
+        [np.zeros((2, 2)), block_b],
+    ])
+    np.testing.assert_allclose(full, expected, atol=1e-12)
+
+
 def test_sparse_scipy_to_torch_round_trip() -> None:
     """Converted torch sparse tensor should preserve values.
 

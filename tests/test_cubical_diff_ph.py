@@ -158,6 +158,47 @@ class TestGradientFlow:
 
 
 # ---------------------------------------------------------------------------
+# Autograd gradcheck against finite differences
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skipif(not _has_gudhi(), reason="gudhi not installed")
+class TestGradcheck:
+    def test_cubical_diagram_gradcheck(self) -> None:
+        """``torch.autograd.gradcheck`` of the H_1 bars against finite
+        differences.
+
+        The forward reconstructs each bar endpoint as an exact index into the
+        input image, so the analytic gradient is the indicator of the critical
+        pixel. gradcheck perturbs each pixel and compares to a central finite
+        difference. We use a fixed ring image with *distinct* pixel values so a
+        small perturbation never flips which vertex realizes a bar (which would
+        change the piecewise-linear branch and break the comparison), and
+        ``include_essential=False`` so no infinite-death bar enters the checked
+        output.
+        """
+        from topogeoml.nn.cubical_diff_ph import cubical_diagram_torch
+
+        # Ring with strictly distinct values: high, distinct border; low center.
+        img = torch.tensor([
+            [0.91, 0.80, 0.83, 0.78, 0.93],
+            [0.82, 0.97, 0.99, 0.96, 0.84],
+            [0.85, 0.98, 0.10, 0.95, 0.86],
+            [0.81, 0.94, 0.92, 0.90, 0.87],
+            [0.88, 0.77, 0.79, 0.76, 0.89],
+        ], dtype=torch.float64, requires_grad=True)
+
+        def h1_bars(x: torch.Tensor) -> torch.Tensor:
+            dgms = cubical_diagram_torch(x, max_dim=1, include_essential=False)
+            return dgms[1]
+
+        # Sanity: there is exactly one finite H_1 bar to check.
+        assert h1_bars(img).shape == (1, 2)
+        assert torch.autograd.gradcheck(
+            h1_bars, (img,), atol=1e-3, rtol=1e-3
+        )
+
+
+# ---------------------------------------------------------------------------
 # Loss helpers
 # ---------------------------------------------------------------------------
 

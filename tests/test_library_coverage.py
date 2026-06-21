@@ -366,6 +366,39 @@ class TestDiffPHCoverage:
         dgms = rips_diagram_torch(X, max_dim=1, max_edge_length=1.5)
         assert len(dgms) == 2
 
+    def test_rips_diagram_torch_h0_matches_ripser_under_truncation(self) -> None:
+        """A truncating ``max_edge_length`` keeps only MST edges that die at or
+        below the threshold as finite H_0 bars and emits one essential bar per
+        surviving component. Validated against ripser's own H_0 diagram."""
+        from ripser import ripser
+
+        from topogeoml.nn.diff_ph import pairwise_distances, rips_diagram_torch
+
+        # Collinear points at 0, 1, 3: MST edges have length 1.0 and 2.0.
+        # thresh=1.5 keeps the length-1 merge and leaves two components.
+        X = torch.tensor([[0.0], [1.0], [3.0]], dtype=torch.float64)
+        thresh = 1.5
+        mine = rips_diagram_torch(X, max_dim=0, max_edge_length=thresh)[0].detach().numpy()
+        D = pairwise_distances(X).detach().cpu().numpy()
+        ref = ripser(D, maxdim=0, distance_matrix=True, thresh=thresh)["dgms"][0]
+
+        mine_finite = sorted(float(d) for _, d in mine if np.isfinite(d))
+        ref_finite = sorted(float(d) for _, d in ref if np.isfinite(d))
+        assert np.allclose(mine_finite, ref_finite)  # finite deaths match ripser
+        assert int((~np.isfinite(mine[:, 1])).sum()) == int((~np.isfinite(ref[:, 1])).sum())
+        assert len(mine) == len(ref) == X.shape[0]
+
+    def test_rips_diagram_torch_h0_all_essential_when_fully_truncated(self) -> None:
+        """A ``max_edge_length`` below every MST edge leaves each point in its
+        own component: every H_0 bar is essential (birth 0, death inf)."""
+        from topogeoml.nn.diff_ph import rips_diagram_torch
+
+        X = torch.tensor([[0.0], [1.0], [3.0]], dtype=torch.float64)
+        h0 = rips_diagram_torch(X, max_dim=0, max_edge_length=0.5)[0]
+        assert h0.shape == (3, 2)
+        assert torch.all(h0[:, 0] == 0.0)
+        assert torch.all(torch.isinf(h0[:, 1]))
+
     def test_total_persistence_loss_empty_significant_returns_zero(self) -> None:
         """Line 309 — non-empty diagram, all bars below threshold → 0.0."""
         from topogeoml.nn.diff_ph import total_persistence_loss

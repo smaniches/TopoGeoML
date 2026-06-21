@@ -54,8 +54,19 @@ def normalize_hodge_laplacian(
     """
     Symmetric normalization L̃ = D^{-1/2} L D^{-1/2} where D = diag(deg).
 
-    For combinatorial Laplacians "degree" is the diagonal of L. Adding a small
-    epsilon to D prevents division by zero on isolated simplices (degree 0).
+    For combinatorial Laplacians "degree" is the diagonal of L. The standard
+    symmetric normalization sets D^{-1/2}_ii = 0 when the degree is 0, leaving
+    isolated simplices (whose Laplacian row is already all-zero) unchanged. We
+    apply that convention directly rather than perturbing the diagonal.
+
+    Parameters
+    ----------
+    L : sp.spmatrix
+        Combinatorial Hodge Laplacian (symmetric, PSD).
+    epsilon : float
+        Retained for API back-compatibility. Zero-degree simplices are handled
+        exactly via the D^{-1/2}_ii = 0 convention, so this argument no longer
+        participates in the normalization.
 
     Returns
     -------
@@ -64,8 +75,12 @@ def normalize_hodge_laplacian(
     """
     L = sp.csr_matrix(L)
     diag = np.asarray(L.diagonal(), dtype=np.float64)
-    # Elite standard §1.4: safe epsilon scaled to avoid biasing legitimate small values.
-    d_inv_sqrt = 1.0 / np.sqrt(diag + epsilon)
+    # D^{-1/2}_ii = 1/sqrt(diag_ii) for positive degree, 0 for isolated simplices
+    # (degree 0). Computing the reciprocal only on the nonzero entries avoids a
+    # spurious divide-by-zero warning on the zero-degree rows.
+    d_inv_sqrt = np.zeros_like(diag)
+    nonzero = diag > 1e-12
+    d_inv_sqrt[nonzero] = 1.0 / np.sqrt(diag[nonzero])
     D_inv_sqrt = sp.diags(d_inv_sqrt)
     return (D_inv_sqrt @ L @ D_inv_sqrt).tocsr()
 

@@ -5,6 +5,17 @@ All notable changes to TopoGeoML will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Hodge Laplacian normalization for isolated simplices** (`topogeoml.nn.hodge.normalize_hodge_laplacian`): a degree-0 (isolated) simplex now follows the standard symmetric-normalization convention `D^{-1/2}_ii = 0` instead of `1/sqrt(epsilon)` (~1e3). The former `epsilon` floor also biased *every* positive-degree diagonal by ~5e-7; normalized values now equal the exact `epsilon -> 0` limit. Consequence: output shifts by ~5e-7 on connected complexes (a correctness improvement, not a regression) and isolated rows/columns are now exactly zero. The `epsilon` keyword is retained for API compatibility.
+- **Differentiable Rips H0 under `max_edge_length`** (`topogeoml.nn.diff_ph.rips_diagram_torch`): the H0 reconstruction assumed `n-1` finite bars from the full-matrix MST, producing a silently-incorrect diagram when `max_edge_length` truncated the filtration. It now keeps only the MST edges that die at or below the threshold as finite bars and emits one essential bar per surviving component, matching ripser's H0 diagram exactly; the default (unbounded) path is unchanged.
+
+### Added
+
+- A real `torch.autograd.gradcheck` test for `cubical_diagram_torch` (analytical gradients vs. finite differences), replacing a docstring claim of gradcheck coverage that did not previously exist in the test suite.
+
 ## [0.0.4] — 2026-06-16
 
 Hardening and quality release on the v0.0.3 library. No new empirical results and no

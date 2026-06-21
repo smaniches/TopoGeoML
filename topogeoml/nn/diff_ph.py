@@ -186,7 +186,11 @@ def rips_diagram_torch(
     max_dim : int
         Highest homology dimension (default 1: H_0 and H_1).
     max_edge_length : float, optional
-        Maximum edge length passed to ripser.
+        Maximum edge length passed to ripser. Must NOT truncate the H_0
+        filtration: a value below the largest minimum-spanning-tree edge
+        weight drops finite H_0 bars that the differentiable MST path cannot
+        reconstruct, so it raises ``NotImplementedError``. Use
+        ``topogeoml.core.filtrations.RipsFiltration`` for thresholded diagrams.
 
     Returns
     -------
@@ -228,22 +232,32 @@ def rips_diagram_torch(
     dtype = torch.float64  # §1.3: explicit dtype
 
     # --- H_0 diagram ---
+    # H_0 persistence is the minimum spanning tree: each of the n-1 MST edges
+    # merges two components (a finite bar with birth 0 and death = edge length)
+    # and one component survives forever (the single essential bar). A
+    # `max_edge_length` truncates the filtration: an MST edge longer than the
+    # threshold never merges within it, so its component stays essential and
+    # ripser reports it as an additional infinite H_0 bar. Reconstruct that
+    # exactly — keep only the MST edges that die at or below the threshold as
+    # finite bars, and emit one essential (infinite) bar per surviving
+    # component (n - n_h0_finite of them). With no threshold this reduces to
+    # n-1 finite bars plus a single essential bar, unchanged.
     critical_edges_h0 = _critical_edges_h0(D_np)
-    n_h0_finite = len(critical_edges_h0)  # n - 1 finite bars + 1 infinite
+    if max_edge_length is not None:
+        thresh = float(max_edge_length)
+        critical_edges_h0 = [
+            (i, j) for (i, j) in critical_edges_h0 if float(D_np[i, j]) <= thresh
+        ]
+    n_h0_finite = len(critical_edges_h0)
+    n_h0_infinite = n - n_h0_finite  # essential components at the threshold
 
-    births_h0 = torch.zeros(n_h0_finite + 1, dtype=dtype, device=device)
-
+    births_h0 = torch.zeros(n_h0_finite + n_h0_infinite, dtype=dtype, device=device)
+    infinite_h0 = torch.full((n_h0_infinite,), torch.inf, dtype=dtype, device=device)
     if n_h0_finite > 0:
         deaths_finite = torch.stack([D_torch[i, j] for i, j in critical_edges_h0])
-        deaths_h0 = torch.cat([
-            deaths_finite,
-            torch.tensor([torch.inf], dtype=dtype, device=device),
-        ])
-    else:  # pragma: no cover
-        # Reached only for a degenerate point cloud (n=1, single point) where
-        # ripser emits an empty H_0 finite-bar set. The diff-PH layer is not
-        # meaningful at n=1 and is gated upstream.
-        deaths_h0 = torch.tensor([torch.inf], dtype=dtype, device=device)
+        deaths_h0 = torch.cat([deaths_finite, infinite_h0])
+    else:
+        deaths_h0 = infinite_h0
 
     diagrams.append(torch.stack([births_h0, deaths_h0], dim=1))
 
