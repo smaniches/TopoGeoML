@@ -76,6 +76,12 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.8",
     "hypothesis>=6.100",
+    # numpy 2.5 stubs use Python 3.12 `type` syntax; this repo still type-checks
+    # against python_version=3.11, so mypy rejects them. Pin numpy for the dev/
+    # type-check path only (runtime numpy above stays unconstrained). Remove this
+    # pin when the repo moves the mypy target to 3.12 or the stub compatibility
+    # issue is otherwise resolved.
+    "numpy<2.5",
 ]
 all = [
     "topogeoml[torch,higher-order,tda,api,dev]",
