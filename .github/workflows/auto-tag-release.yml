@@ -1,0 +1,77 @@
+name: Auto-tag Release
+
+# Removes the one manual step left in the release process: pushing the
+# vX.Y.Z tag after a version-bump PR merges to main. Everything else about
+# releasing is unchanged — the maintainer still authors the version bump and
+# the CHANGELOG entry by hand, in the same PR, exactly as before. This
+# workflow only reads what was already committed and pushes the tag that the
+# existing release.yml (build, PyPI publish, Sigstore sign, GitHub Release)
+# is triggered by.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  auto-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from topogeoml/_version.py
+        id: version
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -oP '(?<=^__version__ = ")[^"]+' topogeoml/_version.py || true)
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not extract __version__ from topogeoml/_version.py — not tagging."
+            exit 1
+          fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::notice::Version '$VERSION' is not a plain release version (X.Y.Z) — skipping auto-tag."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether the tag already exists
+        id: check_tag
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "::notice::$TAG already exists on origin — nothing to do."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify CHANGELOG documents this version
+        if: steps.version.outputs.skip != 'true' && steps.check_tag.outputs.exists != 'true'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          if ! grep -qF "## [$VERSION]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## [$VERSION]' section — refusing to tag an undocumented release."
+            exit 1
+          fi
+
+      - name: Create and push annotated tag
+        if: steps.version.outputs.skip != 'true' && steps.check_tag.outputs.exists != 'true'
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "$TAG"
+          git push origin "refs/tags/$TAG"
+          echo "### Tagged $TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "Pushed at $(git rev-parse HEAD). This triggers the Release workflow (build, PyPI publish, Sigstore sign, GitHub Release)." >> "$GITHUB_STEP_SUMMARY"

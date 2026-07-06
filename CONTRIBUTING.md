@@ -105,3 +105,21 @@ docs/hypotheses/HYPOTHESIS-NNN-description.md (commit hash: ...)
 - [ ] If empirical: LEADERBOARD.md updated with the new claim
 - [ ] If empirical: per-seed JSON + Markdown report in `notebooks/results/`
 - [ ] No selective reporting; negative results documented with the same rigour
+
+---
+
+## Releasing
+
+Cutting a release is still a hand-authored PR: bump `topogeoml/_version.py`
+(and the version references in `CITATION.cff`, `.zenodo.json`, `README.md`,
+`docs/index.md`, `LIMITATIONS.md`), and add the `## [X.Y.Z]` section to
+`CHANGELOG.md` describing what changed, following the existing entries'
+style and detail.
+
+Once that PR merges to `main`, `.github/workflows/auto-tag-release.yml`
+creates and pushes the `vX.Y.Z` tag automatically — no manual `git tag &&
+git push` step. It only tags when the version in `topogeoml/_version.py` is
+a plain `X.Y.Z` release version, the tag doesn't already exist, and
+`CHANGELOG.md` documents that version; otherwise it does nothing. The tag
+push triggers the existing `release.yml` (build, PyPI publish via Trusted
+Publishing, Sigstore signing, GitHub Release).
