@@ -120,6 +120,9 @@ Once that PR merges to `main`, `.github/workflows/auto-tag-release.yml`
 creates and pushes the `vX.Y.Z` tag automatically — no manual `git tag &&
 git push` step. It only tags when the version in `topogeoml/_version.py` is
 a plain `X.Y.Z` release version, the tag doesn't already exist, and
-`CHANGELOG.md` documents that version; otherwise it does nothing. The tag
-push triggers the existing `release.yml` (build, PyPI publish via Trusted
-Publishing, Sigstore signing, GitHub Release).
+`CHANGELOG.md` documents that version; otherwise it does nothing. It then
+explicitly dispatches the existing `release.yml` (build, PyPI publish via
+Trusted Publishing, Sigstore signing, GitHub Release) against that tag —
+a tag pushed by the workflow's own token does not fire `release.yml`'s
+`push: tags:` trigger on its own (GitHub suppresses workflow-triggered push
+events to prevent infinite recursion), so the explicit dispatch is required.
