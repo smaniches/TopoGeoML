@@ -1,12 +1,15 @@
 name: Auto-tag Release
 
-# Removes the one manual step left in the release process: pushing the
-# vX.Y.Z tag after a version-bump PR merges to main. Everything else about
-# releasing is unchanged — the maintainer still authors the version bump and
-# the CHANGELOG entry by hand, in the same PR, exactly as before. This
-# workflow only reads what was already committed and pushes the tag that the
-# existing release.yml (build, PyPI publish, Sigstore sign, GitHub Release)
-# is triggered by.
+# Removes the two manual steps left in the release process: pushing the
+# vX.Y.Z tag after a version-bump PR merges to main, and (because a tag
+# pushed by the default GITHUB_TOKEN does not trigger other workflows' push
+# events — GitHub's built-in anti-recursion guard) starting the release
+# workflow. Everything else about releasing is unchanged — the maintainer
+# still authors the version bump and the CHANGELOG entry by hand, in the
+# same PR, exactly as before. This workflow only reads what was already
+# committed, pushes the tag, and explicitly dispatches release.yml against
+# it (an API-triggered workflow_dispatch call is not subject to the same
+# guard as a push event, so this is the standard workaround).
 
 on:
   push:
@@ -14,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   auto-tag:
@@ -73,5 +77,19 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" -m "$TAG"
           git push origin "refs/tags/$TAG"
+
+      - name: Dispatch the Release workflow for the new tag
+        if: steps.version.outputs.skip != 'true' && steps.check_tag.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          # A tag pushed with GITHUB_TOKEN does not fire release.yml's
+          # `on: push: tags:` trigger (GitHub suppresses workflow-triggered
+          # push events to prevent infinite recursion). An explicit
+          # workflow_dispatch API call is a direct invocation, not a push
+          # event, so it isn't subject to that guard.
+          gh workflow run release.yml --ref "$TAG"
           echo "### Tagged $TAG" >> "$GITHUB_STEP_SUMMARY"
-          echo "Pushed at $(git rev-parse HEAD). This triggers the Release workflow (build, PyPI publish, Sigstore sign, GitHub Release)." >> "$GITHUB_STEP_SUMMARY"
+          echo "Pushed at $(git rev-parse HEAD) and dispatched the Release workflow against it (build, PyPI publish, Sigstore sign, GitHub Release)." >> "$GITHUB_STEP_SUMMARY"
