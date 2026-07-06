@@ -104,7 +104,13 @@ def sparse_scipy_to_torch(
     data = coo.data if coo.data.dtype in (np.float32, np.float64) else coo.data.astype(np.float64)
     values = torch.from_numpy(np.ascontiguousarray(data)).to(dtype)
     shape = torch.Size(coo.shape)
-    tensor = torch.sparse_coo_tensor(indices, values, shape).coalesce()
+    # The COO comes from a valid scipy sparse matrix, so its indices are
+    # already in-bounds and consistent. Declare that intent explicitly via
+    # torch's documented context manager: it matches torch's default (checks
+    # implicitly disabled) while silencing the UserWarning torch otherwise
+    # emits for every conversion. Scoped so no global state leaks out.
+    with torch.sparse.check_sparse_tensor_invariants(False):
+        tensor = torch.sparse_coo_tensor(indices, values, shape).coalesce()
     if device is not None:
         tensor = tensor.to(device)
     return tensor
