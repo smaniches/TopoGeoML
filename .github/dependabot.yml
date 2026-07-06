@@ -1,0 +1,27 @@
+version: 2
+updates:
+  # Python dependencies declared in pyproject.toml (core + optional extras).
+  # Range floors are intentional for a library; Dependabot proposes floor
+  # bumps as reviewable PRs rather than forcing pins.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+
+  # GitHub Actions. The workflows are SHA-pinned (see CI hardening in #58);
+  # Dependabot updates both the pinned SHA and its version comment.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"

@@ -2,6 +2,8 @@
 
 TopoGeoML is an active research project. Contributions that extend the empirical record, fix bugs, improve documentation, or reproduce existing results are welcome.
 
+By participating, you agree to abide by the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ---
 
 ## What's accepted
