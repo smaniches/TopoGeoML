@@ -186,11 +186,14 @@ def rips_diagram_torch(
     max_dim : int
         Highest homology dimension (default 1: H_0 and H_1).
     max_edge_length : float, optional
-        Maximum edge length passed to ripser. Must NOT truncate the H_0
-        filtration: a value below the largest minimum-spanning-tree edge
-        weight drops finite H_0 bars that the differentiable MST path cannot
-        reconstruct, so it raises ``NotImplementedError``. Use
-        ``topogeoml.core.filtrations.RipsFiltration`` for thresholded diagrams.
+        Maximum edge length (``thresh``) passed to ripser. A truncating
+        value — below the largest minimum-spanning-tree edge weight — is
+        handled correctly: the H_0 reconstruction keeps only the MST edges
+        that die at or below the threshold as finite bars and emits one
+        essential (infinite) bar per surviving component, matching ripser's
+        own H_0 diagram exactly. Gradients still flow through the surviving
+        finite bars. With no threshold (``None``) this reduces to n-1 finite
+        bars plus a single essential bar.
 
     Returns
     -------
