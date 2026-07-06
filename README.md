@@ -28,7 +28,7 @@ Differentiable persistent-homology layers, Hodge message passing, and a benchmar
 
 [![CI](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-0.0.5--beta-green)](#status)
+[![Version](https://img.shields.io/badge/version-0.0.6--beta-green)](#status)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20365816.svg)](https://doi.org/10.5281/zenodo.20365816)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -344,7 +344,9 @@ Coverage is 100% line **and** 100% branch on the `topogeoml/` package (with torc
 
 ## Roadmap
 
-**v0.0.5 (current).** The current package and citable version — a correctness and reviewer-driven precision release over v0.0.4 (scale-invariant Hodge isolated-simplex normalization, a corrected differentiable Rips H0 reconstruction under `max_edge_length`, full essential-bar counting in the Betti regularization loss, a real cubical-complex `gradcheck` test, and statistical-claim doc-honesty fixes); no new empirical results. Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 504 tests; 100% line and 100% branch coverage on the `topogeoml` package with full dependencies, gated in CI (the `benchmarks/` harness is below 100%); type-checked with mypy strict in CI.
+**v0.0.6 (current).** The current package and citable version — a documentation-accuracy and packaging-hygiene release over v0.0.5 (corrected `rips_diagram_torch` docstring that wrongly claimed a truncating `max_edge_length` raises `NotImplementedError`; removed the empty `topogeoml.services` package and the dropped `api` extra; reconciled stale test-count and hypothesis-count claims across the metadata files); no code-behaviour changes and no new empirical results.
+
+**v0.0.5.** A correctness and reviewer-driven precision release over v0.0.4 (scale-invariant Hodge isolated-simplex normalization, a corrected differentiable Rips H0 reconstruction under `max_edge_length`, full essential-bar counting in the Betti regularization loss, a real cubical-complex `gradcheck` test, and statistical-claim doc-honesty fixes); no new empirical results. Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 504 tests; 100% line and 100% branch coverage on the `topogeoml` package with full dependencies, gated in CI (the `benchmarks/` harness is below 100%); type-checked with mypy strict in CI.
 
 **Next.** Cross-domain validation (DD, COLLAB, social-network benchmarks). DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). Continued mechanism ablation (spectral vs spatial operator isolation). The bar remains paired Wilcoxon p < 0.01 after BH correction.
 
@@ -359,7 +361,7 @@ Coverage is 100% line **and** 100% branch on the `topogeoml/` package (with torc
   author       = {Maniches, Santiago},
   title        = {TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification},
   year         = {2026},
-  version      = {0.0.5},
+  version      = {0.0.6},
   doi          = {10.5281/zenodo.20365816},
   url          = {https://doi.org/10.5281/zenodo.20365816},
   orcid        = {0009-0005-6480-1987}

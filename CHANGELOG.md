@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.0.6] — 2026-07-06
+
+Documentation-accuracy and packaging-hygiene release. No code-behaviour changes,
+no new empirical results, and no change to any reported claim.
+
 ### Fixed
 
 - **Test-count claims reconciled to 504.** `CITATION.cff`, `CONTRIBUTING.md`, `docs/index.md`, `docs/CLAIMS_TO_EVIDENCE.md`, and `STATUS.md` still reported "500 tests" while `README.md` and `.zenodo.json` had moved to 504; the full suite reports 504 passing tests under `.[all]`. `docs/CLAIMS_TO_EVIDENCE.md` Claim 1 also asserted "500 test functions as counted by `grep -c \"def test_\"`", but that command returns 509 (the suite defines 509 test functions that resolve to 504 passing items after parametrization and optional-dependency skips); the verification note now states the pytest-based measurement.
