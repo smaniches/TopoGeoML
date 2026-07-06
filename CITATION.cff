@@ -26,5 +26,5 @@ abstract: >-
   neural network classification. Systematic mechanism elimination
   (sample size, feature density, graph topology) narrows the positive NCI1
   claim (+8.6 pp, p_BH = 4.83e-3) to an architecture-data complementarity
-  interaction. Includes 500 tests, 100% line and branch coverage, and statistically
+  interaction. Includes 504 tests, 100% line and branch coverage, and statistically
   defensible reporting (BCa bootstrap, paired Wilcoxon, BH-FDR).
