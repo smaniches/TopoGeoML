@@ -7,9 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- **Silenced a torch sparse-tensor `UserWarning`** in `topogeoml.nn.hodge.sparse_scipy_to_torch`. Converting a scipy sparse matrix to a torch COO tensor emitted "Sparse invariant checks are implicitly disabled" on every call. The COO comes from a valid scipy sparse matrix, so the construction is wrapped in torch's documented `torch.sparse.check_sparse_tensor_invariants(False)` context manager, making the already-default behaviour explicit and removing the warning. Behaviour is unchanged; the scoped context manager leaks no global state.
+Nothing yet.
 
 ## [0.0.6] — 2026-07-06
 
@@ -18,6 +16,7 @@ no new empirical results, and no change to any reported claim.
 
 ### Fixed
 
+- **Silenced a torch sparse-tensor `UserWarning`** in `topogeoml.nn.hodge.sparse_scipy_to_torch`. Converting a scipy sparse matrix to a torch COO tensor emitted "Sparse invariant checks are implicitly disabled" on every call. The COO comes from a valid scipy sparse matrix, so the construction is wrapped in torch's documented `torch.sparse.check_sparse_tensor_invariants(False)` context manager, making the already-default behaviour explicit and removing the warning. Behaviour is unchanged; the scoped context manager leaks no global state.
 - **Test-count claims reconciled to 504.** `CITATION.cff`, `CONTRIBUTING.md`, `docs/index.md`, `docs/CLAIMS_TO_EVIDENCE.md`, and `STATUS.md` still reported "500 tests" while `README.md` and `.zenodo.json` had moved to 504; the full suite reports 504 passing tests under `.[all]`. `docs/CLAIMS_TO_EVIDENCE.md` Claim 1 also asserted "500 test functions as counted by `grep -c \"def test_\"`", but that command returns 509 (the suite defines 509 test functions that resolve to 504 passing items after parametrization and optional-dependency skips); the verification note now states the pytest-based measurement.
 - **Project description in `.zenodo.json` brought up to date.** The Zenodo deposit description still described "Seven hypotheses (H001-H007) with 27+ falsifiable sub-predictions"; the investigation now spans 14 hypotheses (H001–H011b) with 53 falsifiable sub-predictions, matching `CITATION.cff`, `README.md`, and `STATUS.md`.
 - **`rips_diagram_torch` docstring corrected** (`topogeoml.nn.diff_ph`): the `max_edge_length` parameter was documented as raising `NotImplementedError` when it truncates the H_0 filtration. The v0.0.5 reconstruction handles a truncating threshold correctly — keeping the MST edges that die at or below it as finite bars and emitting one essential bar per surviving component, matching ripser exactly (covered by `tests/test_library_coverage.py`) — so the docstring now describes the implemented behaviour.
