@@ -62,12 +62,6 @@ tda = [
     "gudhi>=3.9",
     "giotto-tda>=0.6",
 ]
-# Inference / descriptor service layer.
-api = [
-    "fastapi>=0.110",
-    "uvicorn>=0.29",
-    "pydantic>=2.5",
-]
 # Dev tooling.
 dev = [
     "pytest>=7.4",
@@ -84,7 +78,7 @@ dev = [
     "numpy<2.5",
 ]
 all = [
-    "topogeoml[torch,higher-order,tda,api,dev]",
+    "topogeoml[torch,higher-order,tda,dev]",
 ]
 # Benchmark harness — compares `nn/diff_ph.py` against `torch-topological`
 # on real datasets (MNIST topology in Phase 2). torchvision provides the

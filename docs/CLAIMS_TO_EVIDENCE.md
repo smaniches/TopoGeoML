@@ -16,13 +16,13 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 
 ---
 
-## Claim 1: "500 tests; 100% line and 100% branch coverage on the `topogeoml` package with torch installed"
+## Claim 1: "504 tests; 100% line and 100% branch coverage on the `topogeoml` package with torch installed"
 
 | Field | Value |
 |---|---|
 | Evidence | `pytest --cov=topogeoml --cov-branch` (with `pip install -e ".[all]"`) reports 100% line **and** 100% branch coverage on the importable `topogeoml` package. |
 | Artifact | CI reports coverage on every push. The dedicated full-deps `coverage-gate` job (`.github/workflows/ci.yml`, Python 3.11 / ubuntu) installs `.[all]` (torch CPU wheels) and runs `pytest -m "not gpu" --cov=topogeoml --cov-branch --cov-fail-under=100`, failing the build below 100%. |
-| Tolerance | Exact: 500 test functions as counted by `grep -c "def test_" tests/*.py`. |
+| Tolerance | Exact: `pytest -m "not gpu"` under `pip install -e ".[all]"` (the full-deps `coverage-gate` environment) reports 504 passing tests. The suite defines 509 `def test_` functions; parametrization plus optional-dependency skips resolve to 504 passing test items in that environment. |
 | Limitation | The default `test` CI job installs `.[dev]` (no torch), so `topogeoml/nn/` code paths are import-skipped and package coverage is below 100% in that job (reported, not gated there). The separate `coverage-gate` job installs `.[all]` and **does** gate the package at 100% line + 100% branch under `--cov-branch`. `__init__.py` files are omitted per `pyproject.toml [tool.coverage.run]`. The `benchmarks/` research harness is **not** at 100% and is deliberately outside the gated scope (the gate is `--cov=topogeoml`; see Claim 6). |
 
 ---

@@ -56,7 +56,7 @@ The following floor is enforced:
 ## Testing
 
 ```bash
-pytest                                           # full suite (500 tests)
+pytest                                           # full suite (504 tests)
 pytest -m "not slow"                             # skip slow tests
 pytest --cov=topogeoml --cov=benchmarks          # with coverage
 ruff check topogeoml tests benchmarks scripts notebooks  # lint

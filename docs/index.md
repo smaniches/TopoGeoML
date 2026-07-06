@@ -45,7 +45,7 @@ On NCI1 (4110 chemical-compound graphs), a one-layer message-passing classifier 
 | Persistence vectorizers + pipeline | `topogeoml.core`, `topogeoml.pipelines` | persistence images, Betti curves; sklearn-compatible |
 | Statistical machinery | `benchmarks.stats` | BCa + block + percentile bootstrap; Wilcoxon, Mann–Whitney, BH-FDR |
 
-Quality floor: 500 tests; 100% line and 100% branch coverage on the `topogeoml` package with full dependencies, gated in CI (the `benchmarks/` research harness is below 100%); mypy strict; ruff clean.
+Quality floor: 504 tests; 100% line and 100% branch coverage on the `topogeoml` package with full dependencies, gated in CI (the `benchmarks/` research harness is below 100%); mypy strict; ruff clean.
 
 ## How the investigation was run
 
