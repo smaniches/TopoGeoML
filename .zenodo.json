@@ -20,7 +20,7 @@
   "license": {"id": "MIT"},
   "upload_type": "software",
   "access_right": "open",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "related_identifiers": [
     {
       "identifier": "10.5281/zenodo.20365816",
@@ -28,7 +28,7 @@
       "scheme": "doi"
     },
     {
-      "identifier": "10.5281/zenodo.20719956",
+      "identifier": "10.5281/zenodo.20787342",
       "relation": "isNewVersionOf",
       "scheme": "doi"
     },
