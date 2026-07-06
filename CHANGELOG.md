@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- **Silenced a torch sparse-tensor `UserWarning`** in `topogeoml.nn.hodge.sparse_scipy_to_torch`. Converting a scipy sparse matrix to a torch COO tensor emitted "Sparse invariant checks are implicitly disabled" on every call. The COO comes from a valid scipy sparse matrix, so the construction is wrapped in torch's documented `torch.sparse.check_sparse_tensor_invariants(False)` context manager, making the already-default behaviour explicit and removing the warning. Behaviour is unchanged; the scoped context manager leaks no global state.
 
 ## [0.0.6] — 2026-07-06
 
