@@ -130,8 +130,8 @@ unreviewed later `main` commit.
 ```bash
 git fetch origin main --tags
 
-# Replace this with the release PR's exact squash-merge commit SHA.
-RELEASE_SHA=<full-40-character-commit-sha>
+# Replace the value below with the release PR's exact squash-merge commit SHA.
+RELEASE_SHA="PASTE_FULL_40_CHARACTER_COMMIT_SHA_HERE"
 
 git cat-file -e "${RELEASE_SHA}^{commit}"
 git merge-base --is-ancestor "$RELEASE_SHA" origin/main
@@ -141,6 +141,7 @@ VERSION=$(git show "$RELEASE_SHA:topogeoml/_version.py" \
 TAG="v$VERSION"
 
 test -n "$VERSION"
+printf '%s\n' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
 git show "$RELEASE_SHA:CHANGELOG.md" | grep -qF "## [$VERSION]"
 
 if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
@@ -149,6 +150,7 @@ if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; the
 fi
 
 git tag -a "$TAG" "$RELEASE_SHA" -m "$TAG"
+test "$(git rev-parse "${TAG}^{commit}")" = "$RELEASE_SHA"
 git show --no-patch --decorate "$TAG"
 git push origin "refs/tags/$TAG"
 ```
