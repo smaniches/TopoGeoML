@@ -1,10 +1,11 @@
 name: Release
 
+# Tag-triggered only. Recover failed downstream jobs by re-running failed jobs
+# in the original workflow run so its successful build artifacts are reused.
 on:
   push:
     tags:
       - "v[0-9]*"
-  workflow_dispatch:
 
 permissions:
   contents: read
