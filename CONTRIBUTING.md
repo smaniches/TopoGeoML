@@ -110,19 +110,57 @@ docs/hypotheses/HYPOTHESIS-NNN-description.md (commit hash: ...)
 
 ## Releasing
 
-Cutting a release is still a hand-authored PR: bump `topogeoml/_version.py`
-(and the version references in `CITATION.cff`, `.zenodo.json`, `README.md`,
-`docs/index.md`, `LIMITATIONS.md`), and add the `## [X.Y.Z]` section to
-`CHANGELOG.md` describing what changed, following the existing entries'
-style and detail.
+A release has two explicit maintainer approvals: merging the hand-authored
+release PR, then creating the release tag from that exact reviewed commit.
+No workflow creates tags automatically.
 
-Once that PR merges to `main`, `.github/workflows/auto-tag-release.yml`
-creates and pushes the `vX.Y.Z` tag automatically — no manual `git tag &&
-git push` step. It only tags when the version in `topogeoml/_version.py` is
-a plain `X.Y.Z` release version, the tag doesn't already exist, and
-`CHANGELOG.md` documents that version; otherwise it does nothing. It then
-explicitly dispatches the existing `release.yml` (build, PyPI publish via
-Trusted Publishing, Sigstore signing, GitHub Release) against that tag —
-a tag pushed by the workflow's own token does not fire `release.yml`'s
-`push: tags:` trigger on its own (GitHub suppresses workflow-triggered push
-events to prevent infinite recursion), so the explicit dispatch is required.
+Prepare one focused release PR that:
+
+1. bumps `topogeoml/_version.py` and the version references in
+   `CITATION.cff`, `.zenodo.json`, `README.md`, `docs/index.md`, and
+   `LIMITATIONS.md`;
+2. adds the `## [X.Y.Z]` section to `CHANGELOG.md`;
+3. passes the complete required CI suite; and
+4. is reviewed and merged deliberately.
+
+After merge, copy the exact squash-merge commit SHA from the release PR and
+create an annotated tag on that commit. Do not tag a moving branch name or an
+unreviewed later `main` commit.
+
+```bash
+git fetch origin main --tags
+
+# Replace the value below with the release PR's exact squash-merge commit SHA.
+RELEASE_SHA="PASTE_FULL_40_CHARACTER_COMMIT_SHA_HERE"
+
+git cat-file -e "${RELEASE_SHA}^{commit}"
+git merge-base --is-ancestor "$RELEASE_SHA" origin/main
+
+VERSION=$(git show "$RELEASE_SHA:topogeoml/_version.py" \
+  | sed -n 's/^__version__ = "\(.*\)"/\1/p')
+TAG="v$VERSION"
+
+test -n "$VERSION"
+printf '%s\n' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
+git show "$RELEASE_SHA:CHANGELOG.md" | grep -qF "## [$VERSION]"
+
+if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+  echo "Refusing to overwrite existing tag $TAG" >&2
+  exit 1
+fi
+
+git tag -a "$TAG" "$RELEASE_SHA" -m "$TAG"
+test "$(git rev-parse "${TAG}^{commit}")" = "$RELEASE_SHA"
+git show --no-patch --decorate "$TAG"
+git push origin "refs/tags/$TAG"
+```
+
+The tag push triggers `.github/workflows/release.yml`, which checks out that
+exact tag, builds the distributions, generates provenance and an SBOM,
+publishes through PyPI Trusted Publishing, signs the artifacts with Sigstore,
+and creates the GitHub Release.
+
+`workflow_dispatch` is retained for recovery only. If a tag-triggered run must
+be retried, dispatch `release.yml` against the existing exact tag. Never run the
+release workflow against `main` or another branch, and never move or overwrite a
+published release tag.
