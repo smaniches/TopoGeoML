@@ -128,6 +128,8 @@ create an annotated tag on that commit. Do not tag a moving branch name or an
 unreviewed later `main` commit.
 
 ```bash
+set -euo pipefail
+
 git fetch origin main --tags
 
 # Replace the value below with the release PR's exact squash-merge commit SHA.
@@ -160,7 +162,16 @@ exact tag, builds the distributions, generates provenance and an SBOM,
 publishes through PyPI Trusted Publishing, signs the artifacts with Sigstore,
 and creates the GitHub Release.
 
-`workflow_dispatch` is retained for recovery only. If a tag-triggered run must
-be retried, dispatch `release.yml` against the existing exact tag. Never run the
-release workflow against `main` or another branch, and never move or overwrite a
-published release tag.
+The publication workflow is deliberately tag-triggered only. Do not start a
+new workflow run to recover a partial release: a new run would rebuild the
+wheel and sdist and could produce files that differ from artifacts already
+accepted by PyPI.
+
+Inspect the original tag-triggered run and the external state before recovery.
+If `build` succeeded and a downstream job failed, use **Re-run failed jobs** on
+the original run, or run `gh run rerun RUN_ID --failed`. This preserves the
+original tag and commit and lets the retried downstream job download the
+`release-artifacts` associated with that workflow run without rerunning a
+successful build. If PyPI may have accepted only part of the distribution set,
+stop and reconcile the exact filenames and hashes before retrying any job.
+Never move or overwrite a published release tag.
