@@ -141,10 +141,13 @@ git merge-base --is-ancestor "$RELEASE_SHA" origin/main
 VERSION=$(git show "$RELEASE_SHA:topogeoml/_version.py" \
   | sed -n 's/^__version__ = "\(.*\)"/\1/p')
 TAG="v$VERSION"
+CHANGELOG_FILE=$(mktemp)
+trap 'rm -f "$CHANGELOG_FILE"' EXIT
 
+git show "$RELEASE_SHA:CHANGELOG.md" > "$CHANGELOG_FILE"
 test -n "$VERSION"
 printf '%s\n' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
-git show "$RELEASE_SHA:CHANGELOG.md" | grep -qF "## [$VERSION]"
+grep -F "## [$VERSION]" "$CHANGELOG_FILE" >/dev/null
 
 if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
   echo "Refusing to overwrite existing tag $TAG" >&2
@@ -169,9 +172,15 @@ accepted by PyPI.
 
 Inspect the original tag-triggered run and the external state before recovery.
 If `build` succeeded and a downstream job failed, use **Re-run failed jobs** on
-the original run, or run `gh run rerun RUN_ID --failed`. This preserves the
-original tag and commit and lets the retried downstream job download the
-`release-artifacts` associated with that workflow run without rerunning a
-successful build. If PyPI may have accepted only part of the distribution set,
-stop and reconcile the exact filenames and hashes before retrying any job.
-Never move or overwrite a published release tag.
+the original run, or run `gh run rerun RUN_ID --failed`. The successful build
+is not rerun, and the failed job downloads the original `release-artifacts`.
+
+The PyPI job is safe to rerun after a partial upload. Before publishing, it
+compares every filename already present on PyPI with the original local
+artifact and requires the SHA-256 digest to match. It rejects hash mismatches
+and unexpected remote filenames, then stages and uploads only distributions
+that are still absent. If none are missing, the upload step is skipped. A
+post-publication check polls PyPI and requires the complete remote filename set
+and every digest to match the original artifacts. Do not bypass these checks,
+use a blanket `skip-existing`, rebuild the distributions, or move a published
+tag.
