@@ -116,7 +116,7 @@ Two real-data experiments have been run since v0.0.1 was first cut. Both are rep
 
 **Still NOT validated:**
 
-- **Discriminability beyond MUTAG / PROTEINS.** No empirical claim exists yet on DRIVE, CIFAR, ImageNet, NCI1, DD, COLLAB, ZINC, or any embedding-quality benchmark. The DRIVE pipeline (`notebooks/drive_unet_topology_loss.py`) is shipped but requires manual dataset download + GPU to produce numbers.
+- **Discriminability beyond MUTAG / PROTEINS / NCI1.** No empirical claim exists yet on DRIVE, CIFAR, ImageNet, DD, COLLAB, ZINC, or any embedding-quality benchmark. The DRIVE pipeline (`notebooks/drive_unet_topology_loss.py`) is shipped but requires manual dataset download + GPU to produce numbers.
 - **Performance characteristics at production scale.** `pytest-benchmark` micro-benchmarks exist for the diff-PH backends (`benchmarks/axes/speed.py`), but no end-to-end "topology layer in a real training loop on a real model" timing is published. Runtime claims in script docstrings are CPU estimates from manual inspection.
 - **Numerical stability at scale.** The Cohen-Steiner stability check is verified at n_points ≤ 50; larger point clouds and longer training horizons are uncharacterised.
 - **Cross-platform behaviour.** CI runs Ubuntu + macOS on Python 3.11/3.12. Windows is not tested.
