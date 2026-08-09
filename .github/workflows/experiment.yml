@@ -115,6 +115,23 @@ jobs:
           if not models:
               raise SystemExit("at least one model is required")
 
+          managed_options = {
+              "--datasets",
+              "--models",
+              "--seeds",
+              "--n-epochs",
+              "--output",
+              "--markdown",
+          }
+          conflicting_options = sorted(
+              {token.split("=", 1)[0] for token in extra_args} & managed_options
+          )
+          if conflicting_options:
+              raise SystemExit(
+                  "extra_args may not override workflow-managed options: "
+                  + ", ".join(conflicting_options)
+              )
+
           output_dir = Path("notebooks/results")
           output_dir.mkdir(parents=True, exist_ok=True)
           stem = f"{hypothesis}_{seed_count}seeds"
