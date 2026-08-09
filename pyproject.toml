@@ -175,6 +175,13 @@ addopts = [
     "--strict-markers",
     "--tb=short",
 ]
+# Unexpected warnings are defects in the test signal. The only exception is a
+# known PyTorch 2.13 deprecation emitted from torch's own JIT implementation;
+# it is outside TopoGeoML and is matched narrowly by message, category, and module.
+filterwarnings = [
+    "error",
+    "ignore:`torch[.]jit[.]script` is deprecated[.].*:DeprecationWarning:torch[.]jit[.]_script",
+]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "gpu: requires CUDA",
