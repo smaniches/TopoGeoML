@@ -140,6 +140,7 @@ jobs:
               sys.executable,
               "-m",
               "benchmarks.hodge",
+              *extra_args,
               "--datasets",
               *datasets,
               "--models",
@@ -152,7 +153,6 @@ jobs:
               str(output_dir / f"{stem}.json"),
               "--markdown",
               str(output_dir / f"{stem}.md"),
-              *extra_args,
           ]
           subprocess.run(command, check=True)
           PY
