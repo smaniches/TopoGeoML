@@ -15,12 +15,18 @@ permissions:
 
 jobs:
   bench:
-    name: HodgeMP vs MLP baseline on MUTAG (CPU)
+    name: Hodge residual vs MLP smoke (${{ matrix.dataset }}, CPU)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        dataset: [mutag, proteins, nci1]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python 3.12
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -37,37 +43,36 @@ jobs:
           pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
           pip install -e ".[bench]"
 
-      - name: Cache TUDataset downloads
+      - name: Cache TUDataset download
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/topogeoml/benchmarks/hodge
-          key: tudataset-mutag-${{ runner.os }}
+          key: tudataset-${{ matrix.dataset }}-${{ runner.os }}
 
-      - name: Run Hodge bench (smoke tier)
-        # CI runs the smoke tier (3 seeds × 10 epochs) so the run fits
-        # comfortably under the 30-minute timeout. Full-rigor numbers
-        # require ``--seeds 0 1 2 3 4 5 6 7 8 9 --n-epochs 30`` (locally
-        # or on a longer-budget runner). The smoke tier is sufficient
-        # to validate that the pipeline runs end-to-end and to produce
-        # an underpowered-but-directional accuracy comparison.
+      - name: Run Hodge smoke benchmark
+        # This workflow is an end-to-end regression smoke test only. It uses
+        # the two model arms named by the job and a small fixed seed/epoch
+        # budget. Scientific claims must use the hypothesis-specific,
+        # preregistered protocols and committed result artifacts.
         run: |
           python -m benchmarks.hodge \
-            --datasets mutag proteins nci1 \
+            --datasets "${{ matrix.dataset }}" \
+            --models hodge-mp-residual mlp-baseline \
             --seeds 0 1 2 \
             --n-epochs 10 \
-            --output benchmarks/hodge/leaderboard/current.json \
-            --markdown bench_hodge_report.md
+            --output "benchmarks/hodge/leaderboard/smoke-${{ matrix.dataset }}.json" \
+            --markdown "bench_hodge_${{ matrix.dataset }}_report.md"
 
       - name: Upload leaderboard JSON
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: hodge-bench-leaderboard
-          path: benchmarks/hodge/leaderboard/current.json
-          retention-days: 90
+          name: hodge-smoke-${{ matrix.dataset }}-leaderboard
+          path: benchmarks/hodge/leaderboard/smoke-${{ matrix.dataset }}.json
+          retention-days: 30
 
       - name: Upload markdown report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: hodge-bench-report-markdown
-          path: bench_hodge_report.md
+          name: hodge-smoke-${{ matrix.dataset }}-report
+          path: bench_hodge_${{ matrix.dataset }}_report.md
           retention-days: 30
