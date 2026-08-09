@@ -53,10 +53,10 @@ jobs:
   # so the torch / torch-geometric modules (nn/diff_ph, nn/cubical_diff_ph,
   # nn/hodge, training/callbacks) are import-skipped and never gated there.
   # This job installs `.[all]` — torch CPU wheels install cleanly on the GitHub
-  # runners, and no test is `gpu`-marked — then runs the FULL suite with branch
-  # coverage and fails below the genuinely-achieved package total. A single
-  # interpreter is sufficient: line/branch coverage of this pure-Python logic is
-  # OS- and version-independent.
+  # runners, and no test is `gpu`-marked — then audits the installed environment
+  # and runs the FULL suite with branch coverage. A single interpreter is
+  # sufficient: line/branch coverage of this pure-Python logic is OS- and
+  # version-independent.
   coverage-gate:
     name: Full-deps coverage gate (Python 3.11 / ubuntu-latest)
     runs-on: ubuntu-latest
@@ -76,6 +76,10 @@ jobs:
           # CPU-only torch keeps the install lean (no CUDA payload on the runner).
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e ".[all]"
+          pip install pip-audit
+
+      - name: Audit installed Python dependencies
+        run: pip-audit --local
 
       - name: Run FULL test suite with branch-coverage gate
         # `-m "not gpu"` is explicit-by-design: there are currently zero
