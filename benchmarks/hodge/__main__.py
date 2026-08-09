@@ -25,7 +25,10 @@ def _reconfigure_stdout_utf8() -> None:  # pragma: no cover
 
 
 def main(argv: list[str] | None = None) -> int:  # pragma: no cover
-    parser = argparse.ArgumentParser(prog="python -m benchmarks.hodge")
+    parser = argparse.ArgumentParser(
+        prog="python -m benchmarks.hodge",
+        allow_abbrev=False,
+    )
     parser.add_argument("--models", nargs="+", default=None)
     parser.add_argument("--datasets", nargs="+", default=None)
     parser.add_argument("--seeds", type=int, nargs="+", default=None)
