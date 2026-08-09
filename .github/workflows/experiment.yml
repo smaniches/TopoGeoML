@@ -150,4 +150,6 @@ jobs:
           retention-days: 90
 
       - name: Post summary
-        run: cat "notebooks/results/${{ inputs.hypothesis }}_${{ inputs.seeds }}seeds.md" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          RESULT_STEM: ${{ inputs.hypothesis }}_${{ inputs.seeds }}seeds
+        run: cat "notebooks/results/${RESULT_STEM}.md" >> "$GITHUB_STEP_SUMMARY"
