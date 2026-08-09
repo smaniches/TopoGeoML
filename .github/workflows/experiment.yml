@@ -56,6 +56,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python 3.12
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -75,31 +77,77 @@ jobs:
           path: ~/.cache/topogeoml/benchmarks/hodge
           key: tudataset-${{ inputs.datasets }}-${{ runner.os }}
 
-      - name: Generate seed list
-        id: seeds
-        run: |
-          python -c "print(' '.join(str(i) for i in range(int(${{ inputs.seeds }}))))" > /tmp/seeds.txt
-          echo "list=$(cat /tmp/seeds.txt)" >> "$GITHUB_OUTPUT"
-
       - name: Run experiment
+        env:
+          EXPERIMENT_HYPOTHESIS: ${{ inputs.hypothesis }}
+          EXPERIMENT_MODELS: ${{ inputs.models }}
+          EXPERIMENT_DATASETS: ${{ inputs.datasets }}
+          EXPERIMENT_SEEDS: ${{ inputs.seeds }}
+          EXPERIMENT_EPOCHS: ${{ inputs.epochs }}
+          EXPERIMENT_EXTRA_ARGS: ${{ inputs.extra_args }}
         run: |
-          python -m benchmarks.hodge \
-            --datasets ${{ inputs.datasets }} \
-            --models ${{ inputs.models }} \
-            --seeds ${{ steps.seeds.outputs.list }} \
-            --n-epochs $(python -c "print(int(${{ inputs.epochs }}))") \
-            --output notebooks/results/${{ inputs.hypothesis }}_30seeds.json \
-            --markdown notebooks/results/${{ inputs.hypothesis }}_30seeds.md \
-            ${{ inputs.extra_args }}
+          python - <<'PY'
+          import os
+          import re
+          import shlex
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          hypothesis = os.environ["EXPERIMENT_HYPOTHESIS"]
+          if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", hypothesis):
+              raise SystemExit(
+                  "hypothesis must contain only letters, digits, '.', '_' or '-'"
+              )
+
+          seed_count = int(os.environ["EXPERIMENT_SEEDS"])
+          epochs = int(os.environ["EXPERIMENT_EPOCHS"])
+          if seed_count < 1:
+              raise SystemExit("seeds must be at least 1")
+          if epochs < 1:
+              raise SystemExit("epochs must be at least 1")
+
+          datasets = shlex.split(os.environ["EXPERIMENT_DATASETS"])
+          models = shlex.split(os.environ["EXPERIMENT_MODELS"])
+          extra_args = shlex.split(os.environ.get("EXPERIMENT_EXTRA_ARGS", ""))
+          if not datasets:
+              raise SystemExit("at least one dataset is required")
+          if not models:
+              raise SystemExit("at least one model is required")
+
+          output_dir = Path("notebooks/results")
+          output_dir.mkdir(parents=True, exist_ok=True)
+          stem = f"{hypothesis}_{seed_count}seeds"
+
+          command = [
+              sys.executable,
+              "-m",
+              "benchmarks.hodge",
+              "--datasets",
+              *datasets,
+              "--models",
+              *models,
+              "--seeds",
+              *(str(seed) for seed in range(seed_count)),
+              "--n-epochs",
+              str(epochs),
+              "--output",
+              str(output_dir / f"{stem}.json"),
+              "--markdown",
+              str(output_dir / f"{stem}.md"),
+              *extra_args,
+          ]
+          subprocess.run(command, check=True)
+          PY
 
       - name: Upload results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ inputs.hypothesis }}-results
+          name: ${{ inputs.hypothesis }}-${{ inputs.seeds }}seeds-results
           path: |
-            notebooks/results/${{ inputs.hypothesis }}_30seeds.json
-            notebooks/results/${{ inputs.hypothesis }}_30seeds.md
+            notebooks/results/${{ inputs.hypothesis }}_${{ inputs.seeds }}seeds.json
+            notebooks/results/${{ inputs.hypothesis }}_${{ inputs.seeds }}seeds.md
           retention-days: 90
 
       - name: Post summary
-        run: cat notebooks/results/${{ inputs.hypothesis }}_30seeds.md >> "$GITHUB_STEP_SUMMARY"
+        run: cat "notebooks/results/${{ inputs.hypothesis }}_${{ inputs.seeds }}seeds.md" >> "$GITHUB_STEP_SUMMARY"
