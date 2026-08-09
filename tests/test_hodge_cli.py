@@ -4,8 +4,6 @@ import pytest
 
 pytest.importorskip("torch")
 
-from benchmarks.hodge.__main__ import main
-
 
 @pytest.mark.parametrize(
     "abbreviated_option",
@@ -17,6 +15,8 @@ from benchmarks.hodge.__main__ import main
 )
 def test_rejects_abbreviated_long_options(abbreviated_option: str) -> None:
     """Workflow-managed arguments must not be overridable by abbreviations."""
+    from benchmarks.hodge.__main__ import main
+
     with pytest.raises(SystemExit) as exc_info:
         main(
             [
