@@ -78,6 +78,7 @@ jobs:
           key: tudataset-${{ inputs.datasets }}-${{ runner.os }}
 
       - name: Run experiment
+        id: experiment
         env:
           EXPERIMENT_HYPOTHESIS: ${{ inputs.hypothesis }}
           EXPERIMENT_MODELS: ${{ inputs.models }}
@@ -92,20 +93,32 @@ jobs:
           import shlex
           import subprocess
           import sys
+          from decimal import Decimal, InvalidOperation
           from pathlib import Path
 
-          hypothesis = os.environ["EXPERIMENT_HYPOTHESIS"]
+          def parse_positive_integer(name: str) -> int:
+              raw = os.environ[name].strip()
+              try:
+                  value = Decimal(raw)
+              except InvalidOperation as exc:
+                  raise SystemExit(f"{name} must be an integer >= 1") from exc
+              if not value.is_finite() or value != value.to_integral_value():
+                  raise SystemExit(f"{name} must be an integer >= 1")
+              parsed = int(value)
+              if parsed < 1:
+                  raise SystemExit(f"{name} must be an integer >= 1")
+              return parsed
+
+          hypothesis = os.environ["EXPERIMENT_HYPOTHESIS"].strip()
           if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", hypothesis):
               raise SystemExit(
                   "hypothesis must contain only letters, digits, '.', '_' or '-'"
               )
 
-          seed_count = int(os.environ["EXPERIMENT_SEEDS"])
-          epochs = int(os.environ["EXPERIMENT_EPOCHS"])
-          if seed_count < 1:
-              raise SystemExit("seeds must be at least 1")
-          if epochs < 1:
-              raise SystemExit("epochs must be at least 1")
+          # GitHub number inputs may be rendered into the environment as decimal
+          # strings such as "30.0". Accept only mathematically integral values.
+          seed_count = parse_positive_integer("EXPERIMENT_SEEDS")
+          epochs = parse_positive_integer("EXPERIMENT_EPOCHS")
 
           datasets = shlex.split(os.environ["EXPERIMENT_DATASETS"])
           models = shlex.split(os.environ["EXPERIMENT_MODELS"])
@@ -136,6 +149,11 @@ jobs:
           output_dir.mkdir(parents=True, exist_ok=True)
           stem = f"{hypothesis}_{seed_count}seeds"
 
+          # Downstream artifact collection must use the same canonical stem as the
+          # benchmark command, never the raw workflow_dispatch number rendering.
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              print(f"result_stem={stem}", file=output)
+
           command = [
               sys.executable,
               "-m",
@@ -160,13 +178,13 @@ jobs:
       - name: Upload results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ inputs.hypothesis }}-${{ inputs.seeds }}seeds-results
+          name: ${{ steps.experiment.outputs.result_stem }}-results
           path: |
-            notebooks/results/${{ inputs.hypothesis }}_${{ inputs.seeds }}seeds.json
-            notebooks/results/${{ inputs.hypothesis }}_${{ inputs.seeds }}seeds.md
+            notebooks/results/${{ steps.experiment.outputs.result_stem }}.json
+            notebooks/results/${{ steps.experiment.outputs.result_stem }}.md
           retention-days: 90
 
       - name: Post summary
         env:
-          RESULT_STEM: ${{ inputs.hypothesis }}_${{ inputs.seeds }}seeds
+          RESULT_STEM: ${{ steps.experiment.outputs.result_stem }}
         run: cat "notebooks/results/${RESULT_STEM}.md" >> "$GITHUB_STEP_SUMMARY"
