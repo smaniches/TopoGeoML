@@ -88,11 +88,10 @@ class _HodgeGraphClassifier(nn.Module):
 
     The Hodge propagation step replicates ``HodgeMessagePassing``
     inline — ``activation(L @ x @ W + b)`` — but with **shared**
-    learnable ``W`` and ``b`` across graphs. Previously the layer was
-    constructed inside ``forward_one`` per graph, which (a) reset its
-    Xavier-initialised weights on every call and (b) left those weights
-    out of ``model.parameters()`` so the optimizer never saw them.
-    Caught by Gemini's PR #6 review; this rewrite fixes it.
+    learnable ``W`` and ``b`` across graphs. A previous per-graph
+    construction reset Xavier-initialised weights on every call and
+    kept those weights out of ``model.parameters()``. This module keeps
+    the propagation parameters shared and trainable across the run.
     """
 
     def __init__(
@@ -647,23 +646,34 @@ class GINResidualBaseline:
 
 
 class _SheafResidualGraphClassifier(nn.Module):
-    """Learned sheaf Laplacian with external residual (scalar stalks).
+    """Learned scalar cellular-sheaf Laplacian with external residual.
 
-    For each edge e={i,j}, a linear layer predicts restriction scalars
-    f_{i<-e}, f_{j<-e} from concatenated projected features [h_i || h_j].
-    The sheaf Laplacian L_F is PSD by construction (L_F = delta^T delta):
-      L_F[i,j] = -f_{i<-e} * f_{j<-e}  (off-diagonal)
-      L_F[i,i] = sum_{e containing i} f_{i<-e}^2  (diagonal)
+    Each undirected edge ``e = {i, j}`` is represented exactly once. A
+    shared endpoint learner evaluates the ordered pairs ``[h_i || h_j]``
+    and ``[h_j || h_i]`` to obtain one restriction scalar for each
+    endpoint. With an arbitrary orientation ``i -> j``, the coboundary row
+    is ``[... f_{i<-e} ... -f_{j<-e} ...]`` and the unnormalized sheaf
+    Laplacian is formed explicitly as ``L_F = delta.T @ delta``.
 
-    Propagation: h' = act(L_F_tilde @ proj(x) @ W + b) + proj(x)
-    where L_F_tilde is the symmetrically normalised sheaf Laplacian.
-    Generalises the Hodge arm (special case: all f = 1).
+    This construction is symmetric positive semidefinite by definition.
+    If every restriction equals one, ``delta`` is an ordinary oriented
+    graph-incidence matrix and ``L_F`` is exactly the combinatorial graph
+    Laplacian, including zero rows for isolated vertices.
+
+    Propagation uses the degree-supported symmetric normalization of the
+    learned Laplacian followed by the same external identity residual as
+    the matched Hodge and normalized-adjacency arms.
     """
 
     def __init__(self, input_dim: int, num_classes: int, hidden_dim: int = 32) -> None:
         super().__init__()
         self._proj_in = nn.Linear(input_dim, hidden_dim).to(torch.float64)
-        self._sheaf_learner = nn.Linear(2 * hidden_dim, 2, bias=True).to(torch.float64)
+        # One shared scalar restriction function. Evaluating it in both
+        # endpoint orders gives 2 * hidden_dim + 1 trainable parameters
+        # instead of learning two unrelated outputs for each directed entry.
+        self._sheaf_learner = nn.Linear(
+            2 * hidden_dim, 1, bias=True,
+        ).to(torch.float64)
         self._mp_weight = nn.Parameter(
             torch.empty(hidden_dim, hidden_dim, dtype=torch.float64),
         )
@@ -672,46 +682,86 @@ class _SheafResidualGraphClassifier(nn.Module):
         self._activation = nn.ReLU()
         self.head = nn.Linear(hidden_dim, num_classes).to(torch.float64)
 
+    @staticmethod
+    def _undirected_edges(
+        laplacian: torch.sparse.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Return one canonical ``i < j`` entry for each undirected edge."""
+        L = laplacian.coalesce()
+        indices = L.indices()
+        values = L.values()
+        mask = (indices[0] < indices[1]) & (values != 0)
+        return indices[0][mask], indices[1][mask]
+
+    def _build_sheaf_coboundary(
+        self,
+        proj: torch.Tensor,
+        laplacian: torch.sparse.Tensor,
+    ) -> torch.Tensor:
+        """Construct one scalar-sheaf coboundary row per undirected edge."""
+        src, dst = self._undirected_edges(laplacian)
+        n_edges = src.numel()
+        n_nodes = proj.shape[0]
+        if n_edges == 0:
+            return torch.zeros(
+                (0, n_nodes), dtype=proj.dtype, device=proj.device,
+            )
+
+        src_context = torch.cat([proj[src], proj[dst]], dim=-1)
+        dst_context = torch.cat([proj[dst], proj[src]], dim=-1)
+        f_src = self._sheaf_learner(src_context).squeeze(-1)
+        f_dst = self._sheaf_learner(dst_context).squeeze(-1)
+
+        rows = torch.arange(n_edges, device=proj.device)
+        delta = torch.zeros(
+            (n_edges, n_nodes), dtype=proj.dtype, device=proj.device,
+        )
+        delta = delta.index_put((rows, src), f_src)
+        return delta.index_put((rows, dst), -f_dst)
+
+    def _build_sheaf_laplacian(
+        self,
+        proj: torch.Tensor,
+        laplacian: torch.sparse.Tensor,
+    ) -> torch.Tensor:
+        """Return the exact unnormalized ``delta.T @ delta`` operator."""
+        delta = self._build_sheaf_coboundary(proj, laplacian)
+        return delta.transpose(0, 1) @ delta
+
+    @staticmethod
+    def _normalize_sheaf_laplacian(laplacian: torch.Tensor) -> torch.Tensor:
+        """Symmetrically normalize on positive diagonal support only."""
+        diag = torch.diagonal(laplacian)
+        positive = diag > 0
+        safe_diag = torch.where(positive, diag, torch.ones_like(diag))
+        d_inv_sqrt = torch.where(
+            positive,
+            torch.rsqrt(safe_diag),
+            torch.zeros_like(diag),
+        )
+        return laplacian * d_inv_sqrt.unsqueeze(1) * d_inv_sqrt.unsqueeze(0)
+
     def forward_one(
         self, x: torch.Tensor, laplacian: torch.sparse.Tensor,
     ) -> torch.Tensor:
         proj = self._proj_in(x)
-        n = proj.shape[0]
-
-        L = laplacian.coalesce()
-        indices = L.indices()
-        off_diag = indices[0] != indices[1]
-        src, dst = indices[0][off_diag], indices[1][off_diag]
-
-        if src.numel() == 0:
-            h = self._activation(proj @ self._mp_weight + self._mp_bias) + proj
-            return self.head(h.sum(dim=0))
-
-        edge_features = torch.cat([proj[src], proj[dst]], dim=-1)
-        restrictions = self._sheaf_learner(edge_features)
-        f_src = restrictions[:, 0]
-        f_dst = restrictions[:, 1]
-
-        L_F = torch.zeros(n, n, dtype=proj.dtype, device=proj.device)
-        L_F[src, dst] = -f_src * f_dst
-        L_F_diag = torch.zeros(n, dtype=proj.dtype, device=proj.device)
-        L_F_diag.index_add_(0, src, f_src ** 2)
-        L_F_diag.index_add_(0, dst, f_dst ** 2)
-        L_F = L_F + torch.diag(L_F_diag)
-
-        d_inv_sqrt = 1.0 / torch.sqrt(L_F_diag.clamp(min=1e-6))
-        L_F_norm = L_F * d_inv_sqrt.unsqueeze(1) * d_inv_sqrt.unsqueeze(0)
-
+        L_F = self._build_sheaf_laplacian(proj, laplacian)
+        L_F_norm = self._normalize_sheaf_laplacian(L_F)
         propagated = L_F_norm @ proj
         h = self._activation(propagated @ self._mp_weight + self._mp_bias) + proj
         return self.head(h.sum(dim=0))
 
 
 class SheafResidualBaseline:
-    """Learned sheaf Laplacian + external residual (Bodnar et al. 2022)."""
+    """Corrected learned scalar sheaf Laplacian + external residual.
+
+    Version 2.0.0 is mathematically distinct from the historical version
+    used by the invalidated H009 run. H009 remains unresolved until a fresh
+    preregistered replication is executed with this repaired implementation.
+    """
 
     name: ClassVar[str] = "sheaf-residual"
-    version: ClassVar[str] = "1.0.0"
+    version: ClassVar[str] = "2.0.0"
 
     @staticmethod
     def available() -> bool:
