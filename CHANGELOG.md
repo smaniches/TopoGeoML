@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Security
+
+- Hardened manual experiment dispatch by removing workflow-input shell interpolation, disabling long-option abbreviation in the Hodge CLI, keeping workflow-managed protocol/output arguments authoritative, and adding regression tests for abbreviated-option bypasses found during review.
+- Read-only CI, benchmark, experiment, and release checkout steps no longer persist GitHub credentials when subsequent authenticated Git operations are unnecessary.
+- The full-dependency CI gate now runs `pip-audit --local`. The audit surfaced an unused `giotto-tda` dependency that pinned vulnerable scikit-learn 1.3.2; `giotto-tda` was removed, the scikit-learn minimum was raised to 1.5, and setuptools is upgraded before auditing.
+
+### Changed
+
+- Dependabot now uses its default labels instead of repository labels that did not exist.
 
 ## [0.0.6] — 2026-07-06
 

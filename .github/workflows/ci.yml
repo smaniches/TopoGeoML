@@ -21,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -53,16 +55,18 @@ jobs:
   # so the torch / torch-geometric modules (nn/diff_ph, nn/cubical_diff_ph,
   # nn/hodge, training/callbacks) are import-skipped and never gated there.
   # This job installs `.[all]` — torch CPU wheels install cleanly on the GitHub
-  # runners, and no test is `gpu`-marked — then runs the FULL suite with branch
-  # coverage and fails below the genuinely-achieved package total. A single
-  # interpreter is sufficient: line/branch coverage of this pure-Python logic is
-  # OS- and version-independent.
+  # runners, and no test is `gpu`-marked — then audits the installed environment
+  # and runs the FULL suite with branch coverage. A single interpreter is
+  # sufficient: line/branch coverage of this pure-Python logic is OS- and
+  # version-independent.
   coverage-gate:
     name: Full-deps coverage gate (Python 3.11 / ubuntu-latest)
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python 3.11
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -72,10 +76,14 @@ jobs:
 
       - name: Install package + all extras (torch CPU wheels)
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools
           # CPU-only torch keeps the install lean (no CUDA payload on the runner).
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -e ".[all]"
+          pip install pip-audit
+
+      - name: Audit installed Python dependencies
+        run: pip-audit --local
 
       - name: Run FULL test suite with branch-coverage gate
         # `-m "not gpu"` is explicit-by-design: there are currently zero

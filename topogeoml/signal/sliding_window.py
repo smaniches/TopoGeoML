@@ -19,6 +19,7 @@ persistence entropy :math:`E`, and longest lifetime
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 
 import numpy as np
@@ -180,7 +181,7 @@ def sliding_window_topology_features(
                      Determinism: identical inputs produce bitwise identical
                      outputs.
     Complexity:      :math:`O(w \\cdot W^{2K+2})` worst case, where
-                     :math:`w = \\lfloor (N - W) / \\Delta \\rfloor + 1`
+                     :math:`w = \\lfloor (N - W) / \\Delta\\rfloor + 1`
                      (Bauer, 2021, §4, on ripser's complexity).
 
     Parameters
@@ -251,7 +252,20 @@ def sliding_window_topology_features(
         # Avoid degenerate ripser calls when the window has duplicate points.
         if np.unique(window, axis=0).shape[0] < 2:
             continue
-        result = ripser(window, **ripser_kwargs)
+        # The public contract above fixes rows as points. ripser's heuristic
+        # warning for k > N therefore cannot indicate a transposed input here.
+        # Silence only that exact false positive; all other warnings propagate.
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=(
+                    r"The input point cloud has more columns than rows; "
+                    r"did you mean to transpose\?"
+                ),
+                category=UserWarning,
+                module=r"ripser\.ripser",
+            )
+            result = ripser(window, **ripser_kwargs)
         diagrams: list[NDArray[np.float64]] = result["dgms"]
 
         # Scale normalization (REMARK 4.4): divide lifetimes by window diameter.
