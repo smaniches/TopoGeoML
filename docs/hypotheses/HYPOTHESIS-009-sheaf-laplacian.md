@@ -6,13 +6,13 @@ nav_order: 11
 
 # Hypothesis 009: Does a learned sheaf Laplacian outperform fixed operators on NCI1?
 
-**Status.** Resolved 2026-05-25. H39 confirmed (sheaf outperforms MLP at p_BH = 0.017); H40 refuted (sheaf does not outperform Hodge, p_BH = 0.797); H41 refuted (sheaf strictly underperforms gin-residual at p_BH = 0.014). The learned sheaf Laplacian adds no value over fixed operators at this configuration. See §7.
+**Status.** Resolved 2026-05-25. H39 confirmed under its preregistered threshold (sheaf-residual outperforms MLP, p_BH = 0.0168). H40 refuted (no significant improvement over Hodge, p_BH = 0.797). H41 is inconclusive under its preregistered decision rule: the sheaf point estimate is below gin-residual and the pairwise p_BH is 0.0137, but H41 required p_BH < 0.01 to declare strict underperformance. The learned sheaf operator therefore shows no supported improvement over the fixed operators at this configuration. See §7.
 
-**Falsification target.** Whether a data-dependent sheaf Laplacian — where edge-level restriction maps are learned from node features — outperforms both the fixed Hodge Laplacian and the fixed normalised adjacency on NCI1 under the matched-capacity protocol with external residual.
+**Falsification target.** Whether a data-dependent sheaf Laplacian, where edge-level restriction maps are learned from node features, outperforms both the fixed Hodge Laplacian and the fixed normalised adjacency on NCI1 under the matched-capacity protocol with external residual.
 
-**Prior results motivating this hypothesis.** H008-c established that the external residual is the operative architectural factor for NCI1 classification at this capacity. The choice between L_tilde (high-pass) and I - L_tilde (low-pass) as the fixed propagation operator is secondary (gin-residual 0.629 vs Hodge 0.609). Both operators use a *fixed* propagation matrix determined entirely by graph structure. A learned sheaf Laplacian replaces this fixed operator with a data-dependent one, where the propagation weights are predicted from node features. This is the natural escalation: if the operator doesn't matter when fixed, does a *learned* operator add value?
+**Prior results motivating this hypothesis.** H008-c established that the external residual is the operative architectural factor for NCI1 classification at this capacity. The choice between L_tilde (high-pass) and I - L_tilde (low-pass) as the fixed propagation operator is secondary (gin-residual 0.629 vs Hodge 0.609). Both operators use a fixed propagation matrix determined entirely by graph structure. A learned sheaf Laplacian replaces this fixed operator with a data-dependent one, where propagation weights are predicted from node features. The experiment asks whether that additional operator flexibility produces a measurable benefit.
 
-**Theoretical context.** A cellular sheaf on a graph assigns a vector space (stalk) to each node and a linear map (restriction map) to each edge. The sheaf Laplacian L_F = delta^T delta, where delta is the sheaf coboundary operator, generalises the graph Laplacian: when all restriction maps are the identity, L_F reduces to L_0. Neural Sheaf Diffusion (Bodnar et al. 2022, NeurIPS) learns the restriction maps from node features, making the propagation operator a function of the data. This is strictly more expressive than any fixed-Laplacian method (Hansen & Ghrist 2019).
+**Theoretical context.** A cellular sheaf on a graph assigns a vector space (stalk) to each node and a linear map (restriction map) to each edge. The sheaf Laplacian L_F = delta^T delta, where delta is the sheaf coboundary operator, generalises the graph Laplacian: when all restriction maps are the identity, L_F reduces to L_0. Neural Sheaf Diffusion (Bodnar et al. 2022, NeurIPS) learns restriction maps from node features, allowing a data-dependent propagation operator rather than a fixed graph operator.
 
 ---
 
@@ -28,7 +28,7 @@ For scalar stalks (stalk dimension d_s = 1), the sheaf Laplacian simplifies to a
 
 Propagation with external residual: h' = act(L_F_tilde @ proj(x) @ W + b) + proj(x)
 
-This generalises the Hodge arm (which is the special case f = 1 for all edges).
+This generalises the Hodge arm, which is recovered when the scalar restriction maps are fixed to the corresponding identity case.
 
 | Arm | Operator | Learned? | Residual |
 |---|---|---|---|
@@ -53,7 +53,7 @@ The sheaf arm has ~2.8% more parameters due to the sheaf learner (65 params). Th
 | ID | Sub-hypothesis | Prediction | Rationale | Falsified if |
 |---|---|---|---|---|
 | **H39** | sheaf-residual strictly beats mlp-baseline on NCI1 | p_BH < 0.05 | A learned operator with external residual should at minimum capture the structural signal that gin-residual and Hodge both capture | p_BH >= 0.05 |
-| **H40** | sheaf-residual strictly beats hodge-mp-residual on NCI1 | Uncertain — the learned operator may or may not improve over fixed L_tilde at 10 epochs | 10 epochs may be insufficient for the sheaf learner to converge; the additional parameters may also overfit at this sample size | p_BH >= 0.05 or sheaf < hodge |
+| **H40** | sheaf-residual strictly beats hodge-mp-residual on NCI1 | Uncertain; the learned operator may or may not improve over fixed L_tilde at 10 epochs | 10 epochs may be insufficient for the sheaf learner to converge; the additional parameters may also overfit at this sample size | p_BH >= 0.05 or sheaf < hodge |
 | **H41** | sheaf-residual at least matches gin-residual on NCI1 | p_BH >= 0.05 or sheaf > gin-residual | The learned operator should be at least as expressive as the fixed normalised adjacency | sheaf strictly underperforms gin-residual at p_BH < 0.01 |
 
 ## 4. Outcome decision tree
@@ -61,8 +61,8 @@ The sheaf arm has ~2.8% more parameters due to the sheaf learner (65 params). Th
 | Pattern | Interpretation |
 |---|---|
 | H39 + H40 confirmed (sheaf beats Hodge and MLP) | A learned propagation operator provides classification-relevant structure that fixed operators miss. The data-dependent restriction maps capture edge-level interactions that uniform propagation cannot. |
-| H39 confirmed, H40 refuted (sheaf matches Hodge but beats MLP) | The learned operator does not improve over fixed operators at this capacity and epoch budget. The sheaf learner's 65 additional parameters are insufficient to learn meaningful edge-level structure, or 10 epochs is too short for convergence. |
-| H39 refuted (sheaf does not beat MLP) | The sheaf learner fails to converge at this configuration. Possible causes: overfitting (additional parameters on 4110 graphs), optimisation difficulty (joint learning of restriction maps and classification weights), or insufficient epoch budget. |
+| H39 confirmed, H40 refuted (sheaf does not improve over Hodge but beats MLP) | The learned operator does not improve over the fixed Hodge operator at this capacity and epoch budget. |
+| H39 refuted (sheaf does not beat MLP) | The sheaf learner fails to produce the preregistered positive difference from MLP at this configuration. |
 
 ## 5. Experimental design
 
@@ -92,50 +92,48 @@ Per-arm reports in `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}`.
 
 ### Per-arm accuracy
 
-| Arm | Median accuracy (BCa 95% CI) | vs MLP p_BH | Verdict |
+| Arm | Median accuracy (BCa 95% CI) | vs MLP p_BH | Result at alpha=0.05 |
 |---|---|---|---|
-| gin-residual | 0.629 [0.607, 0.641] | 2.42 x 10^-3 | WINS (+10.6 pp) |
-| hodge-mp-residual | 0.609 [0.581, 0.625] | 1.01 x 10^-2 | WINS (+8.6 pp) |
-| sheaf-residual | 0.604 [0.564, 0.619] | 1.68 x 10^-2 | WINS (+8.1 pp) |
-| mlp-baseline | 0.523 [0.513, 0.566] | -- | control |
+| gin-residual | 0.629 [0.607, 0.641] | 2.42 x 10^-3 | Positive difference from MLP |
+| hodge-mp-residual | 0.609 [0.581, 0.625] | 1.01 x 10^-2 | Positive difference from MLP |
+| sheaf-residual | 0.604 [0.564, 0.619] | 1.68 x 10^-2 | Positive difference from MLP |
+| mlp-baseline | 0.523 [0.513, 0.566] | -- | Control |
 
 ### Key comparisons
 
 | Comparison | median Delta | p_BH | r | Interpretation |
 |---|---|---|---|---|
-| sheaf vs Hodge | -0.005 | 0.797 | +0.133 | Indistinguishable |
-| sheaf vs gin-residual | -0.025 | 1.37 x 10^-2 | -0.467 | Sheaf underperforms |
-| gin-residual vs Hodge | +0.020 | 1.52 x 10^-2 | +0.400 | gin-residual slightly ahead |
+| sheaf vs Hodge | -0.005 | 0.797 | +0.133 | No significant difference detected |
+| sheaf vs gin-residual | -0.025 | 1.37 x 10^-2 | -0.467 | Lower sheaf point estimate; significant at 0.05 but not at H41's preregistered 0.01 falsification threshold |
+| gin-residual vs Hodge | +0.020 | 1.52 x 10^-2 | +0.400 | Positive difference at alpha=0.05 in this H009 family |
 
 ### Sub-hypotheses resolved
 
-- **H39** (sheaf beats MLP): **CONFIRMED.** sheaf-residual (0.604) outperforms MLP (0.523) at p_BH = 1.68 x 10^-2, r = +0.333. The learned operator, like both fixed operators with external residual, captures structural signal above the no-topology baseline.
-- **H40** (sheaf beats Hodge): **REFUTED.** sheaf-residual (0.604) is statistically indistinguishable from Hodge (0.609) at p_BH = 0.797. The learned restriction maps do not improve over the fixed identity maps (which reduce the sheaf Laplacian to the standard graph Laplacian) at this configuration.
-- **H41** (sheaf matches gin-residual): **REFUTED.** sheaf-residual (0.604) strictly underperforms gin-residual (0.629) at p_BH = 1.37 x 10^-2, r = -0.467.
+- **H39** (sheaf beats MLP): **CONFIRMED.** sheaf-residual (0.604) exceeds MLP (0.523) at p_BH = 1.68 x 10^-2, satisfying H39's preregistered p_BH < 0.05 threshold.
+- **H40** (sheaf beats Hodge): **REFUTED.** The sheaf point estimate is lower (0.604 vs 0.609) and the pairwise test detects no significant difference (p_BH = 0.797), satisfying H40's preregistered falsification rule.
+- **H41** (sheaf at least matches gin-residual): **INCONCLUSIVE UNDER THE PREREGISTERED RULE.** sheaf-residual is lower by 2.5 pp and the pairwise p_BH is 1.37 x 10^-2. That is below 0.05, but H41 explicitly required p_BH < 0.01 to declare strict underperformance. The observed result therefore does not satisfy H41's stated confirmation condition or its stated falsification threshold.
 
 ### Interpretation
 
-The learned sheaf Laplacian does not improve over fixed operators at this configuration. All three topology-aware arms with external residual produce comparable accuracy (0.604-0.629), with gin-residual (fixed normalised adjacency) performing best and the sheaf Laplacian performing worst among the three. The 130 additional sheaf-learner parameters and per-graph dense Laplacian construction provide no measurable benefit.
+The learned sheaf Laplacian does not provide a supported improvement over the fixed Hodge operator at this configuration. Its median accuracy is 0.604, compared with 0.609 for Hodge and 0.629 for gin-residual. The comparison with Hodge detects no significant difference, while the comparison with gin-residual produces p_BH = 0.0137, which is suggestive under a conventional 0.05 threshold but does not cross H41's preregistered 0.01 falsification threshold.
 
-Two factors likely contribute:
-1. **Insufficient training budget.** The sheaf learner must jointly learn restriction maps and classification weights in 10 epochs. At convergence, the sheaf approach's additional expressiveness may manifest, but the current epoch budget may be insufficient for the sheaf parameters to specialise.
-2. **Scalar stalks are minimally expressive.** The scalar-stalk sheaf Laplacian learns one restriction scalar per (node, edge) pair. Bodnar et al. (2022) use vector-valued stalks (d_s > 1) with full matrix restriction maps, which are substantially more expressive. The scalar reduction may be too constrained to capture edge-level heterogeneity.
+The experiment therefore supports a narrower conclusion than the original post-result summary: adding the scalar learned sheaf operator did not improve the tested NCI1 classifier over the fixed operators. It does not establish that learned sheaf operators are generally inferior.
 
-### What the full H003-H009 arc establishes
+Possible explanations such as insufficient training budget or limited scalar-stalk expressivity remain post hoc hypotheses and require separate tests.
+
+### What the H003-H009 arc establishes
 
 | Hypothesis | Question | Finding |
 |---|---|---|
-| H003 | Does Hodge beat MLP on NCI1? | Yes (+8.6 pp) |
-| H004 | Is sample size the mechanism? | No |
-| H005 | Is feature dimensionality the mechanism? | No |
-| H006 | Does topology carry class signal? | Yes (all 3 datasets) |
-| H007 | Which structural proxy explains the gain? | None individually |
-| H008 | Does Hodge beat GIN/GAT? | Yes, but GIN/GAT lack external residual |
-| H008-b | Does normalisation close the gap? | No |
-| H008-c | Does the external residual close the gap? | **Yes — gin-residual matches/exceeds Hodge** |
-| H009 | Does a learned operator improve further? | **No — fixed operators suffice** |
-
-**Consolidated conclusion:** On NCI1 at this configuration, topology-aware message passing with an external residual connection outperforms no-topology MLP by 8-10 pp. The critical factor is the external residual architecture, not the choice of propagation operator (fixed Laplacian, fixed adjacency, or learned sheaf). The propagation operator is secondary: all three variants perform comparably once the residual is present.
+| H003 | Does Hodge beat MLP on NCI1? | Positive difference at the tested configuration (+8.6 pp) |
+| H004 | Is sample size the mechanism? | Sample size alone does not explain the cross-dataset sign change |
+| H005 | Is feature dimensionality the mechanism? | Feature dimensionality alone does not explain it |
+| H006 | Does graph structure carry class signal under constant features? | Yes on the three tested datasets |
+| H007 | Which tested structural proxy explains the full-feature pattern? | None of the five tested proxies tracks it |
+| H008 | Does Hodge separate from GIN/GAT in the matched-capacity NCI1 regime? | Yes; mechanism not isolated by H008 alone |
+| H008-b | Does degree normalisation close the gap? | No |
+| H008-c | Does the external residual close the gap? | The residual is the operative factor in the tested ablation; no unique Hodge advantage remains |
+| H009 | Does the scalar learned sheaf operator improve further? | No supported improvement over the fixed Hodge operator; H41 remains inconclusive at its preregistered threshold |
 
 ---
 
