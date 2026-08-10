@@ -5,99 +5,147 @@ nav_order: 4
 
 # Investigation-Wide Statistical Summary
 
-This document reports the statistical properties of the complete TopoGeoML investigation (H001-H011) at the investigation level, addressing multiple-testing burden, power, and the false discovery rate across all experiments.
+This document summarizes multiplicity, inferential scope, and the adaptive structure of the current TopoGeoML graph-classification investigation. It distinguishes the preregistered decision rules inside each experiment from retrospective analyses across the entire realized research program.
 
 ## 1. Scope
 
-- **Distinct pairwise comparisons (primary unit of analysis):** 59
-- **Total comparisons computed:** 76 — the 59 distinct plus 17 exact re-reports (the same baseline comparison is carried into multiple hypothesis families; e.g. the NCI1 hodge-residual-vs-MLP test recurs across 7 result files)
+- **Distinct pairwise comparisons in the realized record:** 59
+- **Total pairwise comparisons computed:** 76
+- **Repeated comparisons:** 17 of the 76 are repeated baseline comparisons that also appear in other hypothesis families
 - **Result files:** 22 JSON artifacts in `notebooks/results/`
-- **Hypotheses:** 14 preregistered documents, 12 resolved
-- **Sub-predictions:** 50+ falsifiable sub-hypotheses
+- **Preregistered hypothesis documents:** 14
+- **Resolved primary experiment documents:** 12
+- **Partially resolved:** H011 on NCI1
+- **Unresolved:** H011b on COLLAB
+- **Falsifiable sub-predictions:** 53
 
-## 2. Multiple-Testing Correction
+The 59-comparison set is used when reporting a de-duplicated investigation-wide sensitivity analysis. It is not treated as a globally preregistered family because the research questions themselves were generated sequentially from earlier results.
 
-### Per-hypothesis correction (as reported)
+## 2. Within-experiment inference
 
-Each hypothesis applies Benjamini-Hochberg FDR at alpha=0.05 within its own comparison family (typically 3-10 comparisons per hypothesis). This controls the false discovery rate within each experiment but does not control the investigation-wide FDR.
+Each preregistered experiment defines a comparison family and a decision rule before its corresponding result is observed. Pairwise Wilcoxon p-values are adjusted with Benjamini-Hochberg within the declared family.
 
-### Investigation-wide BH-FDR
+The decision threshold is not always 0.05. Several sub-hypotheses explicitly use 0.01. Therefore:
 
-The investigation-wide FDR correction is computed over the **59 distinct comparisons** — the primary unit of analysis. The 76-total figure includes 17 exact re-reports (the same baseline comparison carried into multiple hypothesis families); a global FDR over those 76 double-counts re-reported baselines and inflates both the denominator and the significant count. Both pools are reported below for transparency.
+- a BH-adjusted p-value below 0.05 is not automatically a preregistered confirmation if that sub-hypothesis required 0.01;
+- a result between 0.01 and 0.05 can be conventionally significant while remaining inconclusive under a stricter preregistered rule;
+- the hypothesis documents, not a generic alpha, determine the confirmation or falsification label.
 
-| Investigation-wide correction (alpha=0.05) | Over 59 distinct (primary) | Over 76 with re-reports |
-|---|---|---|
-| Significant at investigation-wide BH | 31/59 (53%) | 47/76 (62%) |
-| Surviving Bonferroni (alpha=0.05/m) | 16/59 (27%) | 22/76 (29%) |
-| Non-significant | 28/59 (47%) | 29/76 (38%) |
+H009 H41 is the clearest example: sheaf-residual versus gin-residual has p_BH = 0.0137, but H41 preregistered p_BH < 0.01 as the strict underperformance threshold. H41 is therefore inconclusive under its own decision rule.
 
-Per-hypothesis BH — applied within each hypothesis's own comparison family, as each hypothesis document reports — yields 47 family-level significant results; that within-family correction is unaffected by investigation-wide de-duplication.
+## 3. Retrospective investigation-wide multiplicity sensitivity
 
-**The headline conclusions hold under either denominator:** all four key claims below survive investigation-wide BH identically over the 59 distinct and the 76 pools (only the ranks/thresholds shift). De-duplication moves the significant fraction down (62% -> 53%), the conservative direction. Not all primary claims survive Bonferroni: the H003 NCI1 Hodge-residual > MLP comparison (p_raw = 3.38 x 10^-3) survives investigation-wide BH but not Bonferroni, whereas the residual-placement finding (gin-residual > MLP, p_raw = 4.03 x 10^-4) survives both. See the key claims table below.
+For transparency, the raw p-values from the realized program were also re-evaluated as one de-duplicated 59-comparison set. This produces the following retrospective sensitivity analysis:
 
-### Key claims under investigation-wide correction
+| Retrospective correction | Over 59 distinct comparisons | Over 76 computed entries including repeats |
+|---|---:|---:|
+| BH-adjusted p < 0.05 | 31/59 (53%) | 47/76 (62%) |
+| Bonferroni-adjusted p < 0.05 | 16/59 (27%) | 22/76 (29%) |
+| Not significant under BH at 0.05 | 28/59 (47%) | 29/76 (38%) |
 
-| Claim | p_raw | Rank (of 59) | BH threshold | Survives global BH | Survives Bonferroni |
-|---|---|---|---|---|---|
-| Hodge-residual > MLP on NCI1 (H003) | 3.38 x 10^-3 | 22/59 | 1.86 x 10^-2 | Yes | No |
-| gin-residual > MLP on NCI1 (H008-c) | 4.03 x 10^-4 | 14/59 | 1.19 x 10^-2 | Yes | Yes |
-| Hodge-residual > GIN on NCI1 (H008) | 2.12 x 10^-6 | 5/59 | 4.24 x 10^-3 | Yes | Yes |
-| gin-residual > gin-normalised on NCI1 (H008-c) | 1.73 x 10^-6 | 2/59 | 1.69 x 10^-3 | Yes | Yes |
+The 59-comparison version is the more meaningful of the two because it does not count the same raw comparison repeatedly. The 76-entry version is retained only to show what was actually computed in individual result files.
 
-Ranks are over the 59 distinct comparisons (primary). The same four verdicts hold over the 76-with-re-reports pool — only the ranks/thresholds shift (there H003 is rank 29/76, threshold 1.91 x 10^-2). The NCI1 Hodge-vs-MLP claim (p_raw = 3.38 x 10^-3) survives investigation-wide BH but NOT Bonferroni; under the most conservative correction it would require a lower alpha or more seeds to be confirmed. The residual-placement finding (gin-residual vs MLP, p = 4.03 x 10^-4) survives both.
+### Interpretation of the global BH table
 
-## 3. Statistical Power
+The investigation-wide BH calculation is a **retrospective robustness check**, not a claim that the adaptive program has a formally guaranteed 5% global false-discovery rate. The reason is structural:
 
-For paired Wilcoxon signed-rank at alpha=0.05, power=0.80:
+1. H001-H011b were not all specified before any data were observed.
+2. Later hypotheses were chosen because of earlier outcomes.
+3. The resulting global comparison family is therefore adaptively generated rather than fixed in advance.
+4. Standard BH guarantees depend on assumptions about the tested family and dependence structure that have not been established for this adaptive selection process.
 
-| Seeds (n) | Minimum detectable effect (|r|) |
+The global BH result is still useful. It asks whether important comparisons remain small relative to the total realized testing burden. It should be read as a sensitivity analysis, not as a substitute for the preregistered within-experiment decision rules.
+
+Bonferroni over the realized 59-comparison set is also reported as a conservative sensitivity check. Because the global family was defined retrospectively, its adjusted thresholds likewise should not be presented as if they were prospectively specified confirmatory thresholds.
+
+### Selected comparisons under the 59-comparison sensitivity analysis
+
+| Comparison | p_raw | Rank of 59 | BH threshold at rank | Global BH < 0.05 | Bonferroni over 59 |
+|---|---:|---:|---:|---|---|
+| Hodge-residual vs MLP on NCI1 (H003) | 3.38 x 10^-3 | 22 | 1.86 x 10^-2 | Yes | No |
+| gin-residual vs MLP on NCI1 (H008c) | 4.03 x 10^-4 | 14 | 1.19 x 10^-2 | Yes | Yes |
+| Hodge-residual vs GIN on NCI1 (H008) | 2.12 x 10^-6 | 5 | 4.24 x 10^-3 | Yes | Yes |
+| gin-residual vs gin-normalised on NCI1 (H008c) | 1.73 x 10^-6 | 2 | 1.69 x 10^-3 | Yes | Yes |
+
+For H003, “survives global BH but not Bonferroni” means exactly what the table says for this retrospective 59-comparison sensitivity analysis. It does not mean that a lower alpha would help. A stricter alpha would make rejection harder. Stronger Bonferroni evidence would require a smaller observed p-value relative to the fixed 0.05/59 threshold.
+
+## 4. Non-significance, equivalence, and sensitivity
+
+A non-significant comparison is a failure to reject the null under the stated test and threshold. It is not evidence that two methods are equivalent.
+
+The project therefore uses language such as “no significant difference detected” rather than “equal,” “equivalent,” or “statistically indistinguishable” unless an explicit equivalence design is performed.
+
+The repository previously listed exact minimum-detectable-effect values for the paired Wilcoxon test without documenting a generative model or reproducible power calculation. Those values have been removed. Power for a signed-rank test depends on the distribution of paired differences, zero/tie structure, effect definition, and the planned decision threshold. A defensible prospective power statement should be produced by an explicit analytical model or simulation tied to the intended experiment.
+
+For a future equivalence claim, preregister an equivalence margin and an appropriate equivalence procedure rather than interpreting p > alpha as equality.
+
+## 5. Adaptive hypothesis generation
+
+The research program is sequential and adaptive:
+
+- H001-H007 were designed in response to preceding results.
+- H008-H010 were designed after the earlier mechanism studies.
+- H011 was motivated by the conclusion that `L_0` does not provide a unique Hodge advantage.
+- H011b was created after the NCI1 triangle census showed that H011 was a poor test of a triangle-rich `L_1` mechanism.
+
+Each new hypothesis was committed before the corresponding new experiment ran. That protects the experiment from changing its prediction after seeing its own result.
+
+It does **not** make the entire program equivalent to a single pre-specified group-sequential clinical-style design, and classical Pocock or O'Brien-Fleming stopping rules do not automatically apply to this adaptive hypothesis-generation process.
+
+The correct interpretation is:
+
+- individual hypothesis tests can be evaluated against their preregistered local rules;
+- the sequence of scientific questions is adaptive and should be reported as such;
+- the 59-comparison BH calculation is a retrospective multiplicity sensitivity analysis across the realized program;
+- independent replication on new data is the strongest next step for claims intended to generalize beyond this research sequence.
+
+## 6. Configuration scope
+
+The main graph experiments are bounded to the following regime:
+
+| Parameter | Current scope |
 |---|---|
-| 18 | 0.373 |
-| 30 | 0.289 |
-
-At n=30 seeds, the investigation has 80% power to detect effects with rank-biserial |r| >= 0.289. Effects smaller than this may produce non-significant results due to insufficient power rather than absence of effect.
-
-**Implications for null results:** When we report "no significant difference" (e.g., Hodge matches MLP on PROTEINS, p_BH = 0.548), this is a failure to reject the null at the tested power level, not evidence of equality. An equivalence test (TOST procedure) would be needed to make a positive equality claim. We do not make such claims; all null results are reported as "not significantly different at the tested configuration."
-
-## 4. Post-Hoc Hypothesis Generation
-
-H001-H007 were designed sequentially: each hypothesis's design was informed by the prior hypothesis's outcome. H008-H010 were designed after seeing H001-H007 results, and H011 (with its COLLAB follow-up H011b) was designed after H001-H010 — H011 to test higher-order L₁ structure once H008-c had shown the L₀ operator choice was secondary, and H011b after H011's degenerate NCI1 result. While each hypothesis was preregistered (committed to git before execution), the hypothesis *selection* was data-driven.
-
-This is legitimate sequential testing (Pocock 1977; O'Brien & Fleming 1979), not p-hacking, provided:
-1. Each hypothesis was committed before its experiment ran (verified by git timestamps)
-2. All results — positive and negative — are reported (verified: 28 of the 59 distinct comparisons, 47%, are non-significant under investigation-wide BH; 38% of the 76-with-re-reports pool)
-3. The per-hypothesis BH correction accounts for the within-family multiplicity
-
-The investigation-wide BH analysis in §2 provides the additional global correction.
-
-## 5. Configuration Scope
-
-All reported results are bounded to:
-
-| Parameter | Value |
-|---|---|
-| Architecture depth | 1 layer (2 for deep-residual arm) |
-| Hidden dimension | 32 |
-| Training epochs | 10-20 |
-| Optimiser | Adam, lr=1e-2, no scheduling |
+| Architecture depth | Primarily 1 layer; 2 layers for the deep-residual H001 arm |
+| Hidden dimension | Primarily 32 |
+| Training epochs | 10 to 20 |
+| Optimiser | Adam, lr=1e-2, no scheduler in the reported graph experiments |
 | Batch normalisation | None |
-| Seeds | 30 (18 for COLLAB) |
-| Datasets | MUTAG (188), PROTEINS (1113), NCI1 (4110), COLLAB (5000, pending) |
-| Split | Stratified 80/20 per seed |
+| Seeds | Usually 30 for confirmatory graph experiments |
+| Datasets | MUTAG (188), PROTEINS (1113), NCI1 (4110); COLLAB H011b remains incomplete |
+| Split | Stratified 80/20 per seed in the reported graph-classification experiments |
 
-Results at different configurations (deeper architectures, batch normalisation, learning rate schedules, larger hidden dimensions) may differ. No claim of generality beyond the tested configuration is made.
+H011b preregisters a 30-seed COLLAB design. A separate 18-seed compute attempt exceeded the GitHub Actions six-hour limit. That timed-out attempt is not a completed substitute for the preregistered 30-seed design and produces no statistical claim.
 
-## 6. Summary of All Comparisons
+Results at different depths, normalization schemes, training budgets, hidden dimensions, optimizers, or datasets can differ. No claim of generality beyond the tested configuration is made.
 
-Investigation-wide counts over the **59 distinct comparisons** (primary), with the 76-with-re-reports pool alongside:
+## 7. Current comparison counts
 
-| Category | Over 59 distinct (primary) | Over 76 with re-reports |
-|---|---|---|
-| Significant at investigation-wide BH | 31 (53%) | 47 (62%) |
-| Significant at Bonferroni | 16 (27%) | 22 (29%) |
-| Non-significant (null results reported) | 28 (47%) | 29 (38%) |
-| **Total** | **59 (100%)** | **76 (100%)** |
+For the retrospective realized-family analysis:
 
-Per-hypothesis BH (within each hypothesis family) yields 47 family-level significant results, unaffected by investigation-wide de-duplication. Within each pool the Bonferroni-significant set is a strict subset of the investigation-wide BH-significant set, and the partition is additive: **significant + non-significant = total** (31 + 28 = 59; 47 + 29 = 76).
+| Category | 59 distinct comparisons | 76 computed entries including repeats |
+|---|---:|---:|
+| BH-adjusted p < 0.05 | 31 | 47 |
+| Bonferroni-adjusted p < 0.05 | 16 | 22 |
+| Not significant under BH at 0.05 | 28 | 29 |
+| Total | 59 | 76 |
 
-No selective reporting. All 76 computed comparisons (59 distinct + 17 exact re-reports) are documented in their respective hypothesis documents and JSON artifacts; the investigation-wide FDR is computed over the 59 distinct. Negative results are given identical formatting and statistical treatment as positive results.
+These counts describe statistical significance under the stated retrospective corrections. They are not counts of “true discoveries,” and they are not counts of preregistered hypotheses confirmed, because individual hypotheses can use stricter decision thresholds or contain multiple comparisons.
+
+All computed comparisons remain in the public record, including regressions, non-significant results, and results that are inconclusive under their preregistered rules.
+
+## 8. Recommended confirmatory next step
+
+For any result intended to support a broad external claim, the preferred next step is an independent confirmatory experiment with:
+
+1. a fixed hypothesis and comparison family specified before data analysis;
+2. a pre-specified primary endpoint and effect direction;
+3. a justified sample-size or simulation-based sensitivity analysis;
+4. a fixed multiplicity procedure;
+5. a new dataset, held-out benchmark, or independent reproduction not used to generate the hypothesis.
+
+That design would separate hypothesis generation from confirmation and provide a cleaner basis for generalization.
+
+## References
+
+- Benjamini, Y. & Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. *Journal of the Royal Statistical Society: Series B*, 57(1), 289-300.
+- Benjamini, Y. & Yekutieli, D. (2001). The control of the false discovery rate in multiple testing under dependency. *Annals of Statistics*, 29(4), 1165-1188.
