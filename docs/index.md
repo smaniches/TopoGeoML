@@ -50,7 +50,7 @@ Smoke runs and exploratory diagnostics are also kept separate from confirmatory 
 
 ## Start here
 
-- [Current project status]({% link ../STATUS.md %})
+- [Current project status](../STATUS.md)
 - [Claims to evidence]({% link CLAIMS_TO_EVIDENCE.md %})
 - [Statistical summary]({% link STATISTICAL_SUMMARY.md %})
 - [Hypotheses H001-H011b]({% link hypotheses/index.md %})
