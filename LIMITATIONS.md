@@ -1,164 +1,107 @@
 # Limitations of TopoGeoML v0.0.6
 
-This document lists what TopoGeoML v0.0.6 **does not do**, what it does **only partially**, and the **failure modes** the user should expect. Honest accounting is part of the contract: every claim in the codebase must name its validation, and every absence must be named here.
+TopoGeoML is a pre-stable scientific software library and an accompanying empirical research record. This document states the limits of the current implementation and of the claims supported by the repository. It is not a roadmap.
 
-If you hit a behavior that is not listed here and is not what the docstring promises, that is a bug — open an issue.
+If observed behavior contradicts the public API documentation, treat that as a defect and open an issue.
 
----
+## 1. Scientific claims are configuration-bound
 
-## 0. Empirical scope (v0.0.2)
+The graph-classification investigation uses a deliberately constrained matched-capacity regime: primarily one message-passing layer, `hidden_dim=32`, 10 to 20 epochs, Adam at `1e-2`, no batch normalisation, and fixed TUDataset splits across seeded repetitions. Those experiments are mechanism studies, not competitive benchmark submissions.
 
-All empirical results are bounded to the tested configuration:
+The strongest current conclusion is negative and specific: on the tested graph-classification configurations, the Hodge Laplacian does not provide a unique advantage once an external residual connection is present. H008c shows that a normalised-adjacency operator with the same external residual matches or exceeds the Hodge operator in that regime.
 
-- **Architecture:** 1-layer message passing (2-layer for deep-residual arm), hidden_dim=32
-- **Training:** Adam(lr=1e-2), 10-20 epochs, no batch normalisation, no learning rate scheduling
-- **Datasets:** MUTAG (188 graphs), PROTEINS (1113), NCI1 (4110), COLLAB (5000, pending)
-- **Seeds:** 18-30 per experiment
-- **Statistical power:** Minimum detectable effect |r| = 0.289 at n=30 (see [docs/STATISTICAL_SUMMARY.md](docs/STATISTICAL_SUMMARY.md))
-- **Multiple testing:** Investigation-wide BH-FDR applied across the 59 distinct comparisons (76 total computed); NCI1 Hodge-vs-MLP survives global BH but not Bonferroni
-- **Absolute performance regime (important):** All arms operate far below benchmark SOTA. On NCI1 the best arm reaches ~0.61–0.63 and the MLP baseline ~0.52, versus the ~0.80+ that properly-trained GNNs achieve in the literature. Under the matched-capacity protocol the standard GNN baselines (GIN, GAT) collapse to the class prior (0.500). Every "outperforms X" statement in this repository is therefore *at equal, deliberately-constrained capacity* — it isolates architectural mechanism and is **not** a benchmark-performance or expressiveness claim. The primary scientific finding is negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c).
+The NCI1 Hodge-residual versus MLP comparison is a positive-difference result at the tested configuration (`median delta = +0.086`, paired Wilcoxon `p_BH = 4.83e-3`) and survives the investigation-wide Benjamini-Hochberg correction, but not Bonferroni. It does not establish that Hodge propagation is generally superior to graph neural networks or to adjacency propagation.
 
-Results at different configurations (deeper architectures, batch normalisation, learning rate schedules, larger hidden dimensions, different datasets) may differ. No claim of generality beyond the tested configuration is made.
+Non-significant pairwise tests are reported as failures to detect a difference at the tested power. They are not equivalence results unless an equivalence procedure is explicitly performed. See [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md) and [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md).
 
-### Type checking
+H011b, the triangle-rich COLLAB test of edge-level `L_1` propagation, has only a directional smoke result. The full statistical experiment exceeded the GitHub Actions time limit and remains unresolved. No cross-domain `L_1` claim is licensed from the smoke run.
 
-mypy strict mode is enforced in CI on `topogeoml/`. Third-party stubs for `ripser`, `persim`, and `gudhi` are not available; `ignore_missing_imports = true` is set in `pyproject.toml` to handle this. Type annotations on the library code itself are complete and checked on every push.
+The topology-divergence callback result is exploratory. In the published experiment the topology trigger fires at its earliest possible step on every seed, and no non-overfitting negative control was run. The result shows that the trigger was not later than the loss trigger under that experiment; it does not establish anticipatory prediction of divergence.
 
----
+## 2. Persistent-homology scope
 
-## 1. Scope limits (deliberate v0.0.1 cuts)
+### Vietoris-Rips
 
-### 1.1 Only Vietoris–Rips persistent homology
+`RipsFiltration` uses `ripser` on CPU. Rips-complex growth is combinatorial in the worst case. Large or dense point clouds can become expensive rapidly, especially when `max_homology_dim` increases or `max_edge_length` is unconstrained. For large clouds, set a finite threshold based on the data scale or subsample deliberately.
 
-`RipsFiltration` is the only filtration shipped. **Cubical persistence on real-valued images, alpha complexes, witness complexes, lower-star filtrations on functions, and the PH metric cascade are not implemented in v0.0.1.** The cubical *diagnostic* (`cubical_mask_diagnostic`) handles binary masks but does not produce a persistence diagram.
+The public filtration API currently exposes Vietoris-Rips persistence. Alpha, Cech, witness, and general lower-star filtrations are not exposed through `RipsFiltration`.
 
-### 1.2 Only two vectorizers
+### Cubical persistence
 
-Persistence images (Adams et al. 2017) and Betti curves. **Persistence landscapes (Bubenik 2015), persistence entropy, kernel-based diagram features, and silhouettes are deferred.**
+Differentiable cubical persistence is implemented in `topogeoml.nn.cubical_diff_ph` using GUDHI to identify persistence pairings and PyTorch indexing to route gradients to critical pixels. The combinatorial pairing step is CPU-bound and discrete. Gradients are valid for the selected critical pairing, but pairing changes create the expected piecewise-smooth behavior of topology-based losses. This is not a fully GPU-native cubical persistence implementation.
 
-### 1.3 Single point cloud per fit/transform call
+`CubicalTopologyLoss` is implemented and tested as a differentiable loss primitive. The repository does not yet contain a completed, statistically powered end-to-end segmentation study demonstrating that it improves a production segmentation model on DRIVE or another imaging benchmark.
 
-`TopologyFeaturePipeline` operates on batches of point clouds, but each cloud is processed serially. **No GPU acceleration. No batched persistence computation.** For batches of >100 clouds with >500 points each, expect minutes of compute.
+The separate `cubical_mask_diagnostic` is a lightweight diagnostic and should not be confused with the differentiable cubical persistence backend.
 
-### 1.4 No persistence-diagram distances
+### Diagram representations and distances
 
-`bottleneck_distance` and `wasserstein_distance` are not in v0.0.1. The `core/distances.py` module is reserved for v0.1. Until then, diagrams can only be vectorized and compared in feature space.
+The public feature API ships persistence images and Betti curves. Persistence landscapes, silhouettes, and a general public kernel family are not currently part of the package API.
 
-### 1.5 Hodge Laplacian: real coefficients only
+Bottleneck distance is used internally by the benchmark stability machinery through GUDHI, but TopoGeoML does not currently expose a general-purpose persistence-diagram distance API. Wasserstein distance is not part of the public package API.
 
-Hodge Laplacian construction uses real coefficients. **Z/2, Z/p, and field-coefficient generalizations are not provided.** This is the correct choice for spectral methods (Z/2 makes ∂ᵀ∂ useless as a Laplacian), but it means Hodge homology may disagree with persistent homology computed over Z/2 in degenerate cases.
+## 3. Differentiable persistence limits
 
-### 1.6 Cubical mask diagnostic: 2D only for β₁
+`topogeoml.nn.diff_ph` reconstructs differentiable Vietoris-Rips bar values by indexing critical distances back into an autograd-connected PyTorch distance matrix.
 
-`cubical_mask_diagnostic` reports β₀ in 2D and 3D but **β₁ only in 2D**. The 3D case requires a full cubical persistence backend (GUDHI's `cubical_complex` or `cripser`); 3D inputs return `betti_1=-1` as a sentinel. Coming in v0.1.
+For `H_0`, finite deaths are tied to minimum-spanning-tree edges and the thresholded essential-component behavior is reconstructed explicitly.
 
-### 1.7 Embedding audit: prototype only
+For `H_1`, the implementation uses ripser cocycle information for birth routing and a critical-distance routing rule for finite deaths. This provides a useful piecewise subgradient path, but persistent-pair identities can change under perturbation and equal or nearly equal filtration values can make the selected route non-unique. Treat this layer as a differentiable research primitive, not as a claim of globally smooth or uniquely defined persistence gradients.
 
-`audit_embedding` is explicitly a prototype. **The persistence-significance threshold defaults to `2 × median nearest-neighbor distance`, which is a heuristic, not a calibrated noise floor.** The PH metric cascade (Euclidean → Spectral → Fermat with d_int/d_amb selection) that would replace this heuristic lands in v0.1. Audit results are diagnostic, not metric-correct.
+The repository checks gradient flow, selected small-input `torch.autograd.gradcheck` cases, and perturbation stability in the benchmark harness. Those checks are evidence for the exercised regimes, not a proof that every degenerate filtration or every large-scale training trajectory has numerically well-conditioned gradients.
 
-### 1.8 Hodge message passing: minimal, not state-of-the-art
+`TopologyRegularizer` subsamples when the point count exceeds `max_points`. That changes the topology being regularized. Use the subsampling setting as an explicit modeling choice, not as a transparent acceleration.
 
-`HodgeMessagePassing` implements one round of `x' = σ(L̃ₖ @ x @ W + b)`. **No multi-rank simplicial neural network (SCN), no equivariance machinery, no batching across complexes, no temporal extension, no attention.** This is a building block, not a competitive architecture. Real simplicial NNs (Ebli et al. 2020; Bunch et al. 2020) require composing this with up/down separation, residual connections, and dimension-mixing layers.
+## 4. Feature-pipeline limits
 
-### 1.9 Experiment configs support exactly one dataset and one pipeline kind
+`TopologyFeaturePipeline` is a scikit-learn transformer for batches of point clouds, but each sample is currently processed serially. The public `n_jobs` constructor argument is reserved and does not provide parallel persistence computation in v0.0.6.
 
-`load_experiment_config` and `run_experiment.py` recognize only `dataset.name = "synthetic_shapes"` and `pipeline.kind = "topology_feature"`. Real-world datasets, alternative pipelines, and multi-stage benchmarks land in v0.1.
+The persistence-image representation depends on the fitted filtration scale, image resolution, and Gaussian bandwidth. Distribution shift in geometric scale can therefore move test points outside the scale represented well by the training grid. Fit the transformer inside each cross-validation fold and normalize geometry deliberately when scale is not itself a feature.
 
----
+Betti curves and persistence images are summaries, not lossless representations of persistence diagrams. Their discriminative value is task-dependent and can degrade under noise or inappropriate scale choices.
 
-## 2. Failure modes you will hit
+## 5. Simplicial and Hodge limits
 
-### 2.1 Rips explodes for large point clouds without `max_edge_length`
+`SimplicialComplex` enumerates faces of supplied facets. Clique-complex construction can grow exponentially with clique size, so dense graphs require conservative `max_dim` choices.
 
-ripser's complex size scales combinatorially. For point clouds with `n > 2000` and unset `max_edge_length`, expect seconds to minutes of compute and gigabytes of RAM. **Always set a finite `max_edge_length` calibrated to your data scale.** v0.1 will provide automatic calibration via intrinsic-dimension estimation.
+`betti_numbers` converts Hodge Laplacians to dense arrays and calls `numpy.linalg.eigvalsh`. It is intended for small complexes. It is not a scalable sparse homology solver.
 
-### 2.2 PersistenceImageVectorizer outputs are sensitive to `fallback_max` and `sigma`
+`HodgeMessagePassing` is a minimal fixed-complex layer. It stores one Laplacian as a module buffer and does not implement variable-topology graph batching, multi-rank message passing, attention, learned incidence maps, or a complete simplicial neural-network architecture.
 
-`fallback_max` substitutes for infinite deaths and bounds the pixel grid. **The pipeline auto-estimates this from the training-batch scale, but for novel test inputs at different scales, you may need to fit-then-transform within each CV fold (which the pipeline does by default if used inside `sklearn.model_selection`).** `sigma` controls the Gaussian smoothing bandwidth — too small produces sparse spiky images, too large washes out structure. Defaults (`sigma=0.1`, `resolution=20`) are reasonable for unit-scale point clouds; rescale your data or tune both for other regimes.
+At `k=0`, TopoGeoML's normalized Hodge operator is a normalized graph Laplacian, not the standard Kipf-Welling GCN propagation operator. The distinction between high-pass Laplacian propagation and adjacency-based propagation is central to H008c and should not be collapsed in interpretation.
 
-### 2.3 Betti curve discriminability degrades with noise
+## 6. Embedding-audit limits
 
-Above noise levels of ~10% of the data diameter, Betti curves count spurious short-lived loops at the noise scale. The `tests/test_vectorizers.py::test_betti_curve_h1_line_much_smaller_than_circle` test documents this: σ=0.05 noise on a 50-point line produces ~6 grid-cells of spurious β₁ signal. Use comparison ratios, not absolute thresholds, when this matters.
+`audit_embedding` is a diagnostic prototype. Its `beta_0_estimate` and `beta_1_estimate` fields count persistent features whose lifetime exceeds a heuristic threshold. They are not exact Betti numbers at a specified filtration scale.
 
-### 2.4 Clique-complex enumeration is exponential
+The default threshold, twice the median nearest-neighbor distance, is a heuristic noise floor. A single global threshold can be inappropriate for embeddings with strongly heterogeneous density. Audit outputs should be interpreted comparatively or diagnostically unless the threshold has been calibrated for the domain.
 
-`graph_to_clique_complex` calls `networkx.find_cliques` (Bron–Kerbosch). For dense graphs (edge density > 0.5) with > 50 nodes, expect noticeable compute. Cap `max_dim` conservatively (default 2). A complete graph K_n at `max_dim=3` produces C(n,4) tetrahedra, C(n,3) triangles, C(n,2) edges, n vertices — quartic in n.
+The audit subsamples to bound Rips cost, so results can vary with the chosen `max_points` and seed when the original embedding is larger than that limit.
 
-### 2.5 Hodge Laplacian Betti numbers are dense
+## 7. Signal-analysis limits
 
-`betti_numbers(complex_)` uses `np.linalg.eigvalsh` on the dense form of each Lₖ. **For complexes with > 1000 simplices in any dimension, this is slow and memory-heavy.** Use the persistent-homology pipeline (`RipsFiltration` + vectorization) instead.
+The signal utilities provide Takens delay embedding, an autocorrelation-based delay heuristic, and sliding-window persistent-homology features. The delay estimator is a baseline heuristic, not a substitute for domain-specific embedding-dimension and delay selection.
 
-### 2.6 Hodge MP layer assumes a fixed complex
+Sliding-window persistence runs `ripser` independently across windows. Long signals, large windows, or higher homology dimensions can therefore be computationally expensive. The provided pooled topology statistics are invariant under the documented geometric transformations, but they are not guaranteed to improve downstream prediction on every signal domain.
 
-`HodgeMessagePassing` stores its normalized Laplacian as a buffer. **The complex is fixed for the lifetime of the layer.** If your inputs are batched graphs of varying topology, you need to instantiate one layer per graph or use a per-batch construction pattern. The standard PyG batching trick (block-diagonal Laplacian across a batch) is not implemented in v0.0.1.
+## 8. Engineering and platform limits
 
-### 2.7 Embedding audit's β estimates are conservative
+The required CI matrix covers Python 3.11 and 3.12 on Linux and macOS, with a separate full-dependency package-coverage gate. Windows is declared as a supported package target but is not part of the current required CI matrix.
 
-`audit_embedding` declares a bar significant if its lifetime exceeds the default threshold. **For embeddings with multimodal density (some clusters tight, others loose), a single global threshold under-counts loops in the loose regions.** This is one of the motivations for the metric cascade in v0.1.
+Mypy strict mode is enforced on `topogeoml/`, while missing third-party type stubs are ignored. A clean type-check therefore establishes consistency of the library's own annotations, not completeness of external package typing.
 
-### 2.8 JSON output writes are not strictly atomic
+The benchmark harness is research infrastructure and is not part of the 100% package-coverage invariant. The maintained coverage claim is 100% line and 100% branch coverage for the importable `topogeoml` package under the required full-dependency gate.
 
-`write_results` uses a `tmp` + `os.replace` pattern. **`os.replace` is atomic on POSIX same-filesystem and on Windows for non-existing targets, but a Windows-side replace of an open file may fail.** Don't rely on atomicity for production pipelines until v0.1, which adds explicit cross-platform atomic writes.
+`write_results` uses a temporary file followed by `os.replace`. This provides strong same-filesystem behavior on normal POSIX use, but the package does not claim transactional durability under every filesystem, process-crash, or concurrent-writer scenario.
 
----
+## 9. What TopoGeoML does not claim
 
-## 3. What is **not validated** — and what now is
+TopoGeoML does not claim to replace GUDHI, ripser, PyTorch Geometric, or broad topological-deep-learning frameworks. It composes narrower primitives into a typed, inspectable research workflow with provenance, scikit-learn integration, differentiable topology losses, simplicial operators, signal features, and explicit claim-to-evidence discipline.
 
-Two real-data experiments have been run since v0.0.1 was first cut. Both are reproducible from `notebooks/`; per-seed JSON + a Markdown report live in `notebooks/results/`.
+It does not claim that topology improves every machine-learning task, that Hodge propagation is universally superior, that its differentiable persistence backend is the fastest available implementation, or that the current graph-classification results generalize beyond the tested configurations.
 
-**Validated (positive).** The `ShapeOfLearningCallback` topology-divergence score fires *no later* than a textbook val-loss-ratio watchdog on a controlled overfitting regime (200-sample `sklearn.load_digits`, 30 seeds, paired Wilcoxon p_raw = 5.77 × 10⁻⁴, rank-biserial r = +1.0). See `notebooks/results/topology_predicts_divergence_30seeds.md`. The directional verdict is robust; the magnitude is floor-censored.
+## 10. Version stability
 
-**Validated (positive, strict difference, NCI1).** A one-layer Hodge MP classifier with a symmetrically-normalised Laplacian *and an identity residual connection* (the `hodge-mp-residual` arm) strictly outperforms an MLP baseline of matched capacity on NCI1 (4110 chemical-compound graphs, 30 seeds, 10 epochs): median Δ = +0.086, paired Wilcoxon p_BH = 4.83 × 10⁻³, rank-biserial r = +0.533, BCa 95% CI on Hodge accuracy: [0.581, 0.625] vs MLP's [0.513, 0.566]. **This is the framework's first strict positive-difference real-data claim and meets the v0.0.2 release gate.** See `notebooks/results/nci1_hodge_ablation_30seeds.md` and `docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md`. The cross-dataset behaviour is non-monotonic: the same architecture LOSES on MUTAG (-4 pp, p_BH = 0.019) and MATCHES on PROTEINS (p_BH = 0.339). The strict-positive claim is dataset-conditional.
-
-**Validated (positive equality, three datasets).** A one-layer Hodge MP classifier with a *symmetrically-normalised* Laplacian (no residual) is statistically indistinguishable from an MLP baseline of matched capacity on MUTAG (p_BH = 0.714), PROTEINS (p_BH = 0.548), and NCI1 (p_BH = 0.253). The symm-normalised one-layer architecture is a robust no-loss baseline across the small-medium-large dataset spectrum.
-
-**Negative findings shipped honestly.** The combinatorial Laplacian underperforms MLP on MUTAG (9 pp gap, p_BH = 5.66 × 10⁻⁴) and on NCI1 (1.7 pp, p_BH = 2.6 × 10⁻⁴). The residual connection *hurts* on MUTAG (p_BH = 0.019). Depth (2 stacked layers) does not significantly improve over a single residual layer at any scale tested.
-
-**Still NOT validated:**
-
-- **Discriminability beyond MUTAG / PROTEINS / NCI1.** No empirical claim exists yet on DRIVE, CIFAR, ImageNet, DD, COLLAB, ZINC, or any embedding-quality benchmark. The DRIVE pipeline (`notebooks/drive_unet_topology_loss.py`) is shipped but requires manual dataset download + GPU to produce numbers.
-- **Performance characteristics at production scale.** `pytest-benchmark` micro-benchmarks exist for the diff-PH backends (`benchmarks/axes/speed.py`), but no end-to-end "topology layer in a real training loop on a real model" timing is published. Runtime claims in script docstrings are CPU estimates from manual inspection.
-- **Numerical stability at scale.** The Cohen-Steiner stability check is verified at n_points ≤ 50; larger point clouds and longer training horizons are uncharacterised.
-- **Cross-platform behaviour.** CI runs Ubuntu + macOS on Python 3.11/3.12. Windows is not tested.
-
----
-
-## 4. What is **explicitly out of scope** for v0.0.1
-
-Status updated to reflect work since the initial v0.0.1 cut.
-
-| Item | Status |
-|---|---|
-| Differentiable Vietoris-Rips persistent homology with autograd | **delivered** — `topogeoml.nn.diff_ph` (Hofer 2017 / Carrière 2021 critical-edge indexing) |
-| Differentiable cubical persistent homology + topology loss for image segmentation (Clough 2020 style) | **delivered** — `topogeoml.nn.cubical_diff_ph` + `notebooks/drive_unet_topology_loss.py` |
-| Topology-aware divergence callback for PyTorch | **delivered** — `topogeoml.training.ShapeOfLearningCallback`, empirically validated (see §3) |
-| Real-data dataset adapter for TUDataset / MUTAG | **delivered** — `benchmarks/hodge/datasets.py` |
-| Bottleneck distance between persistence diagrams (Kerber-Morozov-Nigmetov 2017 via gudhi) | **delivered** — used in `benchmarks/axes/stability.py` |
-| Bias-corrected accelerated bootstrap (Efron 1987) + non-overlapping block bootstrap (Künsch 1989) | **delivered** — `benchmarks.stats.bootstrap_ci(method=...)` |
-| Benchmark framework with paired Wilcoxon + Benjamini-Hochberg FDR + bootstrap CIs | **delivered** — `benchmarks/` and `benchmarks/hodge/` |
-| Drift-tensor correction layer | **dropped** — was never specced beyond a name |
-| PH metric cascade (Euclidean → Spectral → Fermat with d_int/d_amb selection) | **deferred indefinitely** — not pursued |
-| TopoNetX integration | **deferred indefinitely** — depends on TopoNetX upstream stability |
-| GPU-batched Rips persistence | **deferred indefinitely** — depends on `ripserplusplus` upstream |
-| MLflow / Weights & Biases tracking | **deferred indefinitely** — no demand; bench framework provides JSON provenance |
-| Multi-rank simplicial neural network (full SCN) | **deferred indefinitely** — superseded by need for a positive empirical claim first |
-| FastAPI inference service | **dropped** — premature for a research toolkit |
-| Wasserstein distance between persistence diagrams | **deferred** — bottleneck is the working distance for stability proofs |
-
----
-
-## 5. How to read the version
-
-`0.0.6` (a `0.x` release) is the deliberate signal: pre-stable. **APIs may change without notice.** Pin exact versions in any downstream project, and re-test before upgrading.
-
-The semantics of the upcoming versions are deliberately narrower than the v0.0.1 cut promised:
-
-- `v0.x` — pre-stable, breaking changes expected
-- `v0.0.2` — gated on a *positive* real-data empirical claim (paired Wilcoxon p < 0.01 after BH, BCa CI reported)
-- `v1.0` — **conditional**: only minted once at least one such positive empirical claim exists, the API has settled, and a methods paper draft exists
-
-No promises are made about peer-reviewed publication timing, GPU batching, framework status, or scope beyond v0.0.2.
-
----
+`0.0.6` is pre-stable. Public APIs can change before `1.0`. Pin exact versions in downstream research, record configuration and dependency versions, and rerun validation when upgrading.
 
 Santiago Maniches (ORCID: [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)).
