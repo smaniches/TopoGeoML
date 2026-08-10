@@ -1,233 +1,287 @@
-# TopoGeoML — Empirical Leaderboard
+# TopoGeoML Empirical Evidence Index
 
-Single navigable artefact aggregating every empirical claim the framework makes. Each row points to (a) the per-seed report in `notebooks/results/`, (b) the preregistered hypothesis (when applicable) in `docs/hypotheses/`, and (c) the reproduction command. **A claim is not in this table unless a paired Wilcoxon p-value (BH-corrected where appropriate) and a BCa 95% CI have been computed from a seeded run; smoke runs, theoretical arguments, and aspirational results do not appear.**
+The filename is retained for stable links, but this document is an evidence index, not a competitive model leaderboard. It summarizes the current empirical record, points to the corresponding preregistration and result artifact, and states what each experiment does and does not establish.
 
-The discipline of the table:
+## Status vocabulary
 
-- **Positive** = strict improvement; p_BH < 0.01 AND BCa CI on the difference strictly above zero.
-- **Equality** = p_BH ≥ 0.05 OR CI overlaps zero; method is *not significantly worse* but not significantly better either.
-- **Negative** = strict regression; the comparison method underperforms the baseline at p_BH < 0.05 with CI strictly below zero.
-- **Exploratory** = a directional signal exists but the design cannot yet support a positive/negative conclusion (e.g. a censored magnitude with no negative control). Reported for transparency; not counted as a confirmed claim.
-- **Pending** = the preregistered experiment is incomplete; no claim is licensed until the specified run and statistical analysis finish.
+- **Positive difference:** the declared directional comparison crosses its preregistered significance threshold.
+- **Significant regression:** the tested method is significantly lower than the comparator under the declared rule.
+- **No significant difference detected:** the comparison does not cross the declared threshold. This is not statistical equivalence.
+- **Refuted:** a preregistered falsification condition is satisfied.
+- **Inconclusive:** neither the preregistered confirmation condition nor the falsification condition is satisfied, or the data do not test the intended mechanism cleanly.
+- **Exploratory:** the design is intentionally nonconfirmatory.
+- **Pending:** the preregistered experiment is incomplete and licenses no statistical claim.
 
-> **Important — read before citing: capacity regime.** Every accuracy number below is obtained under a deliberately constrained *matched-capacity* protocol (1 layer, hidden_dim=32, 10–20 epochs, no batch normalisation, ~1.4–2.3k parameters per arm). This isolates architectural *mechanism* at fixed capacity. It is **not** a benchmark-performance comparison: absolute accuracies (0.50–0.79) sit well below literature SOTA (e.g. properly-trained GNNs reach ~0.80+ on NCI1), and under this protocol the standard GNN baselines (GIN, GAT) collapse to the class prior (0.500) on NCI1. Phrases like "outperforms GIN/GAT" mean "at equal, severely-limited capacity" — **not** "is a better graph classifier." The investigation's *primary* finding is negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (Claim 11 / H008c).
+Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg correction within their declared comparison family unless the source document states otherwise. Investigation-wide multiplicity is reported separately in [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md). Deterministic analyses are labeled as such rather than being forced into a seeded-test template.
+
+> **Capacity regime.** The graph-classification experiments are deliberately constrained mechanism studies, primarily one layer, `hidden_dim=32`, 10 to 20 epochs, no batch normalisation, and matched parameter budgets. They are not competitive benchmark submissions. Absolute NCI1 accuracies in this record are substantially below well-tuned literature baselines. Any phrase such as “outperforms” refers only to the stated matched experimental configuration.
 
 ---
 
-## Claim 1 — Topology-divergence score detects overfitting no later than a val-loss watchdog
+## Claim 1: Topology-divergence trigger is not later than the loss trigger in the published overfitting experiment
 
 | Field | Value |
 |---|---|
-| Status | **Exploratory (directional only — floor-limited, no negative control)** |
+| Status | **Exploratory** |
 | Domain | Training-loop monitoring |
-| Setup | 200-sample `sklearn.load_digits`, 64-hidden MLP, Adam(lr=1e-2), 600 steps, 30 independent seeds |
-| Comparison | `ShapeOfLearningCallback.divergence_score` (`topogeoml.training`) vs textbook val-loss-ratio watchdog (val_loss > 1.10 × running_min) |
-| Headline numbers | Direction count: 14 topology earlier / 16 tie / 0 loss earlier; rank-biserial r = +1.000; paired Wilcoxon p_raw = **5.77 × 10⁻⁴**; BCa 95% CI on median advantage = [+0.0, +10.0] steps |
-| Why exploratory, not positive | The topology watchdog fired at step 30 — its *earliest possible* step given the 3-snapshot baseline window — in every one of the 30 seeds, and all 30 runs overfit (train loss → 0). The data therefore establish only that topology is never *slower* than the loss watchdog; they do **not** establish that it *anticipates* divergence. No no-overfitting (negative) control has been run, so a genuine falsification test does not yet exist. Reported here for transparency, not counted as a confirmed claim. |
-| Per-seed report | `notebooks/results/topology_predicts_divergence_30seeds.md` |
-| Preregistered? | No (PR #11 was opportunistic) |
+| Setup | 200 `sklearn.load_digits` samples, 64-hidden MLP, Adam(lr=1e-2), 600 steps, 30 seeds |
+| Result | 14 topology earlier / 16 ties / 0 loss earlier; rank-biserial r = +1.000; paired Wilcoxon p_raw = 5.77 x 10^-4; BCa 95% CI on median step advantage = [0.0, 10.0] |
+| Limitation | The topology trigger fires at its earliest possible step in every seed and no non-overfitting negative control was run. The experiment does not establish anticipatory prediction of divergence. |
+| Artifact | `notebooks/results/topology_predicts_divergence_30seeds.md` |
+| Preregistered | No |
 | Reproduce | `python notebooks/topology_predicts_divergence.py --n-seeds 30` |
-| First shipped in | PR #11 |
 
 ---
 
-## Claim 2 — Symmetrically-normalised Hodge MP matches MLP baseline on MUTAG
+## Claim 2: MUTAG normalization removes the detected combinatorial-L deficit, but does not establish superiority over MLP
 
 | Field | Value |
 |---|---|
-| Status | **Equality (matched-capacity, BH-corrected family of 10)** |
-| Domain | Graph classification |
-| Setup | MUTAG (188 molecular graphs, 2 classes, Debnath 1991 via PyG TUDataset), 30 seeds × 20 epochs × hidden_dim=32, stratified 80/20 split per seed |
-| Comparison | 5 matched-capacity arms (1378–1442 trainable params): combinatorial L, symm L̃ = D⁻¹/² L D⁻¹/², symm L̃ + residual, symm L̃ + 2 stacked + residual, MLP baseline |
-| Headline numbers | `hodge-mp-normalised` 0.789 [0.763, 0.816] vs `mlp-baseline` 0.789 [0.763, 0.816]; median Δ = +0.000; paired Wilcoxon p_BH = **0.714**; rank-biserial r = +0.130 |
-| Sub-finding 1 | Combinatorial L underperforms MLP by **9 pp** (p_BH = 5.66 × 10⁻⁴, r = -0.760). Symmetric normalisation closes the entire gap. |
-| Sub-finding 2 (H2 refuted) | Adding a residual on top of normalisation *hurts* — `hodge-mp-residual` underperforms MLP at p_BH = 0.019. |
-| Sub-finding 3 (H3 refuted) | Two stacked layers + residual: not significantly different from H1 (p_BH = 0.21). |
-| Per-seed report | `notebooks/results/mutag_hodge_ablation_30seeds.md` |
-| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-001-hodge-mutag.md` (H1/H2/H3) |
+| Status | **Mixed: regression plus no significant difference findings** |
+| Domain | Graph classification, H001 |
+| Setup | MUTAG, 188 graphs, 30 seeds, 20 epochs, hidden_dim=32 |
+| Normalized Hodge vs MLP | 0.789 [0.763, 0.816] vs 0.789 [0.763, 0.816]; median Delta = 0.000; p_BH = 0.714. **No significant difference detected.** |
+| Combinatorial Hodge vs MLP | About -9 pp; p_BH = 5.66 x 10^-4. **Significant regression.** |
+| Hodge residual vs MLP | About -4 pp; p_BH = 0.019. **Significant regression at alpha=0.05.** |
+| Deep residual arm | No significant improvement over the selected normalized arm at this experiment's comparison threshold |
+| Artifact | `notebooks/results/mutag_hodge_ablation_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-001-hodge-mutag.md` |
 | Reproduce | `python -m benchmarks.hodge --datasets mutag --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 20` |
-| First shipped in | PR #15 |
 
 ---
 
-## Claim 3 — Two-dataset equality holds on PROTEINS; strict positive-difference refuted
+## Claim 3: PROTEINS does not show a significant normalized-Hodge improvement over MLP
 
 | Field | Value |
 |---|---|
-| Status | **Equality (replicates Claim 2 on a 5.9× larger dataset); strong "topology beats MLP" hypothesis refuted** |
-| Domain | Graph classification |
-| Setup | PROTEINS (1113 protein graphs, 2 classes, Borgwardt 2005 via PyG TUDataset), 30 seeds × 10 epochs × hidden_dim=32 |
-| Comparison | Same 5 arms as Claim 2 |
-| Headline numbers | `hodge-mp-normalised` 0.688 [0.670, 0.704] vs `mlp-baseline` 0.675 [0.596, 0.706]; median Δ = +0.014; paired Wilcoxon p_BH = **0.548** |
-| Sub-finding (H4 refuted) | The combinatorial-L harm from MUTAG (9 pp, p_BH = 5.66 × 10⁻⁴) does not replicate on PROTEINS (2.9 pp, p_BH = 0.65, r = -0.07). The normalisation effect is dataset-dependent. |
-| Cross-dataset claim | The symmetrically-normalised one-layer Hodge MP matches MLP on **both** MUTAG (p_BH = 0.714) and PROTEINS (p_BH = 0.548). Strong "topology helps graph classification" claim ruled out at this architectural class on two TUDatasets. |
-| Per-seed report | `notebooks/results/proteins_hodge_ablation_30seeds.md` |
-| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-002-hodge-proteins.md` (H4/H5/H6/H7) |
+| Status | **No significant difference detected; strict superiority hypothesis refuted** |
+| Domain | Graph classification, H002 |
+| Setup | PROTEINS, 1113 graphs, 30 seeds, 10 epochs, hidden_dim=32 |
+| Result | normalized Hodge 0.688 [0.670, 0.704] vs MLP 0.675 [0.596, 0.706]; median Delta = +0.014; p_BH = 0.548 |
+| Interpretation | The experiment does not support a positive-difference claim for normalized Hodge over MLP. It is not an equivalence test. |
+| Artifact | `notebooks/results/proteins_hodge_ablation_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-002-hodge-proteins.md` |
 | Reproduce | `python -m benchmarks.hodge --datasets proteins --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
-| First shipped in | PR #16 |
 
 ---
 
-## Claim 4 — NCI1 scale-escalation: one narrow strict positive-difference claim (matched-capacity regime)
+## Claim 4: Hodge-residual has a narrow positive difference from MLP on NCI1
 
 | Field | Value |
 |---|---|
-| Status | **Positive (strict positive-difference), regime-bound.** See the capacity-regime caveat at the top: this is a matched-capacity *mechanism* result (best arm 0.609 vs MLP 0.523, both ~20 pp below SOTA), not a benchmark-performance claim. H008c (Claim 11) shows the Hodge Laplacian is not the operative factor. |
-| Domain | Graph classification |
-| Setup | NCI1 (4110 chemical-compound graphs, 2 classes, Wale et al. 2008 via PyG TUDataset), 30 seeds × 10 epochs × hidden_dim=32 |
-| Comparison | Same 5 arms as Claims 2 and 3 |
-| Headline numbers | `hodge-mp-residual` 0.609 [0.581, 0.625] vs `mlp-baseline` 0.523 [0.513, 0.566]; median Δ = +0.086; paired Wilcoxon p_BH = **4.83 × 10⁻³**; rank-biserial r = +0.533 |
-| Sub-finding 1 | Combinatorial L still underperforms MLP (Δ = −0.017, p_BH = 2.6 × 10⁻⁴) |
-| Sub-finding 2 | The residual variant — which *lost* on MUTAG and *matched* on PROTEINS — **wins** on NCI1. The residual's contribution scales positively with dataset size at this architectural class. |
-| Cross-dataset pattern | Architecture effects invert across datasets: same architecture underperforms MLP on MUTAG, matches on PROTEINS, outperforms on NCI1 |
-| Per-seed report | `notebooks/results/nci1_hodge_ablation_30seeds.md` |
-| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md` (H8/H9/H10/H11/H12) |
+| Status | **Positive difference, regime-bound** |
+| Domain | Graph classification, H003 |
+| Setup | NCI1, 4110 graphs, 30 seeds, 10 epochs, hidden_dim=32 |
+| Result | Hodge-residual 0.609 [0.581, 0.625] vs MLP 0.523 [0.513, 0.566]; median Delta = +0.086; p_BH = 4.83 x 10^-3; r = +0.533 |
+| Investigation-wide correction | Survives Benjamini-Hochberg over the 59 distinct comparisons; does not survive Bonferroni |
+| Scope | Later H008c/H010 operator controls show that this positive difference is not unique to the Hodge `L_0` operator. |
+| Artifact | `notebooks/results/nci1_hodge_ablation_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md` |
 | Reproduce | `python -m benchmarks.hodge --datasets nci1 --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
-| First shipped in | PR #19 |
 
 ---
 
-## Claim 5 — Sample size is NOT the mechanism (H004)
+## Claim 5: Sample size alone does not explain the MUTAG/NCI1 sign change
 
 | Field | Value |
 |---|---|
-| Status | **Negative (mechanism ruled out)** |
-| Domain | Mechanism investigation |
-| Setup | NCI1 subsampled to {188, 1113, 2000, 4110} graphs per seed, 30 seeds × 10 epochs, `hodge-mp-residual` vs `mlp-baseline` |
-| Headline numbers | NCI1@188: Δ = +0.019, p_BH = 0.897 (not significant); NCI1@4110: Δ = +0.086, p_BH = 3.38 × 10⁻³ (control reproduces). Hodge advantage monotone in n (Spearman ρ = +1.0) but never crosses zero — MUTAG's residual-defeat is NOT replicated by sample-size matching. |
-| Per-seed report | `notebooks/results/h004_nci1_n{188,1113,2000,4110}_30seeds.md` |
-| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-004-sample-size-mechanism.md` (H13/H14/H15/H16/H17) |
+| Status | **Mechanism hypothesis not supported** |
+| Domain | H004 sample-size ablation |
+| Setup | NCI1 subsampled to 188, 1113, 2000, and 4110 graphs per seed; 30 seeds |
+| NCI1 at 188 | Hodge-residual vs MLP median Delta = +0.019; p_BH = 0.897 |
+| NCI1 at 4110 | median Delta = +0.086; p_BH = 3.38 x 10^-3 |
+| Interpretation | Matching MUTAG's sample count does not reproduce MUTAG's negative Hodge-residual difference. Sample size alone is therefore insufficient to explain the cross-dataset sign change. The increasing NCI1 effect with sample count is descriptive and does not identify a causal mechanism by itself. |
+| Artifact | `notebooks/results/h004_nci1_n{188,1113,2000,4110}_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-004-sample-size-mechanism.md` |
 | Reproduce | See `REPRODUCING.md` §H004 |
-| First shipped in | PR #21 |
 
 ---
 
-## Claim 6 — Feature dimensionality is NOT the mechanism (H005)
+## Claim 6: Feature dimensionality alone does not explain the cross-dataset result
 
 | Field | Value |
 |---|---|
-| Status | **Negative (mechanism ruled out); secondary positive (feature-degradation robustness)** |
-| Domain | Mechanism investigation |
-| Setup | NCI1 features projected 37→7 dim (direction A); MUTAG features expanded 7→37 dim (direction B). 30 seeds × 10 epochs, `hodge-mp-residual` vs `mlp-baseline` |
-| Headline numbers | NCI1-7d: Hodge 0.581 vs MLP 0.500 (class prior), Δ = +0.081, p_BH = 4.93 × 10⁻⁴ — MLP collapses, Hodge retains signal. MUTAG-37d: Δ = −0.013, p_BH = 0.246 — no difference. |
-| Per-seed report | `notebooks/results/h005_{nci1_7d,mutag_37d}_30seeds.md` |
-| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-005-feature-density-mechanism.md` (H18/H19/H20/H21) |
+| Status | **Mechanism hypothesis not supported; one positive degradation result** |
+| Domain | H005 feature ablation |
+| NCI1 37 to 7 dimensions | Hodge-residual 0.581 vs MLP 0.500; median Delta = +0.081; p_BH = 4.93 x 10^-4 |
+| MUTAG 7 to 37 dimensions | median Delta = -0.013; p_BH = 0.246; no significant difference detected |
+| Interpretation | Dimensionality manipulation does not transfer the dataset behavior in either direction. The NCI1 projected-feature result shows robustness of the tested graph-aware arm relative to MLP under that perturbation, not a general theorem about feature degradation. |
+| Artifact | `notebooks/results/h005_{nci1_7d,mutag_37d}_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-005-feature-density-mechanism.md` |
 | Reproduce | See `REPRODUCING.md` §H005 |
-| First shipped in | PR #21 |
 
 ---
 
-## Claim 7 — Graph-structural signal is universal but rank-inverted vs full-feature gain (H006)
+## Claim 7: Graph-structural classification signal is detected on all three tested datasets under constant features
 
 | Field | Value |
 |---|---|
-| Status | **Positive (graph-structural signal on all 3 datasets); negative (simple topology-predicts-gain hypothesis refuted)** |
-| Domain | Mechanism investigation |
-| Setup | All node features replaced with constant vector (all-ones). 30 seeds × 10 epochs × 3 datasets, `hodge-mp-residual` vs class prior |
-| Headline numbers | MUTAG: +0.098 over class prior (p_BH = 4.53 × 10⁻⁶); PROTEINS: +0.088 (p_BH = 1.41 × 10⁻⁴); NCI1: +0.071 (p_BH = 1.93 × 10⁻⁵). All significant. But constant-feature gap is rank-inverted vs full-feature gain (Spearman ρ = −1.0). |
-| Per-seed report | `notebooks/results/h006_{mutag,proteins,nci1}_constant_30seeds.md` |
-| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-006-graph-topology-mechanism.md` (H22/H23/H24/H25) |
+| Status | **Positive differences from class-prior controls on three tested datasets** |
+| Domain | H006 constant-feature ablation |
+| MUTAG | +0.098 over class prior; p_BH = 4.53 x 10^-6 |
+| PROTEINS | +0.088; p_BH = 1.41 x 10^-4 |
+| NCI1 | +0.071; p_BH = 1.93 x 10^-5 |
+| Interpretation | The tested graph-aware architecture extracts class-relevant graph structure when node features are constant on these datasets. The result does not imply that the Hodge operator is uniquely responsible or that the result generalizes beyond the three datasets. |
+| Artifact | `notebooks/results/h006_{mutag,proteins,nci1}_constant_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-006-graph-topology-mechanism.md` |
 | Reproduce | See `REPRODUCING.md` §H006 |
-| First shipped in | PR #22 |
 
 ---
 
-## Claim 8 — No single structural proxy explains the full-feature gain (H007)
+## Claim 8: None of the five tested structural proxies tracks the full-feature cross-dataset pattern
 
 | Field | Value |
 |---|---|
-| Status | **Negative (no proxy is predictive of full-feature gain)** |
-| Domain | Mechanism investigation (analysis-only, no model training) |
-| Setup | Five graph-structural proxies (size, degree, WL subtree, cycle, spectral) × 3 datasets. Per-class separability measured by max |rank-biserial r|. |
-| Headline numbers | All five proxies rank MUTAG > PROTEINS > NCI1 (ρ = +1.0 vs constant-feature gap; ρ = −1.0 vs full-feature gain). No single proxy explains where Hodge helps under full features. |
-| Per-seed report | `notebooks/results/h007_structural_decomposition.md` |
-| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-007-graph-structural-signal-decomposition.md` (H26/H27) |
+| Status | **Deterministic descriptive mechanism result** |
+| Domain | H007 structural proxy analysis |
+| Proxies | graph size, degree distribution, WL subtree histogram, cycle statistics, normalized-Laplacian spectrum |
+| Result | All five proxies rank MUTAG > PROTEINS > NCI1, matching the H006 constant-feature ordering and reversing the full-feature Hodge-versus-MLP ordering |
+| Scope | There are only three datasets. The rank pattern is descriptive; it does not support a population-level correlation claim or prove that no untested structural variable could explain the effect. |
+| Artifact | `notebooks/results/h007_structural_decomposition.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-007-graph-structural-signal-decomposition.md` |
 | Reproduce | `python -m benchmarks.hodge.h007_analysis` |
-| First shipped in | PR #23 |
 
 ---
 
-## Claim 9 — Under matched capacity, GIN and GAT collapse to class prior on NCI1; Hodge-MP-residual does not (H008)
+## Claim 9: Hodge-residual separates from the tested GIN/GAT baselines under the matched-capacity NCI1 protocol
 
 | Field | Value |
 |---|---|
-| Status | **Regime-bound, NOT an expressiveness or SOTA claim.** Under the matched-capacity protocol, GIN (0.500) and GAT (0.500) collapse to the class prior on NCI1 while Hodge-MP-residual reaches 0.609. This is a *training-stability-at-fixed-capacity* finding — properly-trained GIN reaches ~0.80+ on NCI1, so "outperforms GIN/GAT" here means only "at equal, severely-limited capacity." H008-c (Claim 11) subsequently showed a normalised-adjacency arm with an external residual matches or exceeds Hodge, so the operative factor is the residual, not the operator. |
-| Domain | Architecture comparison |
-| Setup | NCI1 (4110 graphs), 30 seeds × 10 epochs × hidden_dim=32, 4 arms: `hodge-mp-residual`, `gin-baseline`, `gat-baseline`, `mlp-baseline`. All arms matched to ~2339 params. |
-| Headline numbers | Hodge 0.609 [0.581, 0.625] vs GIN 0.500 [0.500, 0.505]: p_BH = 6.36 × 10⁻⁶, r = +0.933. Hodge vs GAT 0.500 [0.500, 0.500]: p_BH = 6.36 × 10⁻⁶, r = +1.000. GIN and GAT both strictly underperform MLP 0.523 [0.513, 0.566]. |
-| Interpretation | The Hodge arm's symmetric Laplacian normalisation provides training stability that unnormalised GIN/GAT aggregation lacks under the tested capacity constraints. This is an architectural interaction finding, not a theoretical expressiveness claim. |
-| Per-seed report | `notebooks/results/h008_nci1_gin_gat_30seeds.md` |
-| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-008-gin-gat-comparison.md` (H28/H29/H30/H31/H32) |
+| Status | **Positive pairwise differences, mechanism not isolated by H008 alone** |
+| Domain | H008 architecture comparison |
+| Result | Hodge-residual 0.609 vs GIN 0.500 and GAT 0.500; Hodge vs each p_BH = 6.36 x 10^-6 |
+| Scope | The standard baselines are intentionally tiny and short-trained here. This is not an expressiveness or state-of-the-art comparison. H008-b and H008c are required to interpret the architectural cause. |
+| Artifact | `notebooks/results/h008_nci1_gin_gat_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-008-gin-gat-comparison.md` |
 | Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-baseline gat-baseline mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
-| First shipped in | This commit |
 
 ---
 
-## Claim 10 — Degree normalisation does not close the GIN-Hodge gap (H008-b)
+## Claim 10: Degree normalization with the tested internal-self GIN formulation does not recover NCI1 performance
 
 | Field | Value |
 |---|---|
-| Status | **Negative (candidate explanation refuted)** |
-| Domain | Architecture comparison / mechanism ablation |
-| Setup | NCI1 (4110 graphs), 30 seeds × 10 epochs × hidden_dim=32, 4 arms: `hodge-mp-residual`, `gin-normalised` (D^{-1/2}AD^{-1/2}), `gin-baseline` (raw A), `mlp-baseline`. |
-| Headline numbers | gin-normalised: 0.500 [0.500, 0.500] — still at class prior. Hodge vs gin-normalised: p_BH = 6.36 × 10⁻⁶, r = +1.000 (perfect rank separation). The candidate explanation from H008 (normalisation accounts for the gap) is refuted. |
-| Interpretation | The Hodge advantage on NCI1 is not attributable to degree normalisation alone. The operative architectural difference involves the spectral operator (Laplacian vs adjacency), the weight-propagation interaction order, or the residual placement. |
-| Per-seed report | `notebooks/results/h008b_nci1_gin_normalised_30seeds.md` |
-| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-008b-gin-normalised.md` (H33/H34/H35) |
+| Status | **Candidate mechanism refuted** |
+| Domain | H008b |
+| Result | `gin-normalised` median = 0.500; Hodge-residual vs gin-normalised p_BH = 6.36 x 10^-6 |
+| Interpretation | Normalizing adjacency while retaining the tested internal-self GIN update is insufficient. This experiment does not by itself identify which later architectural change is causal. |
+| Artifact | `notebooks/results/h008b_nci1_gin_normalised_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-008b-gin-normalised.md` |
 | Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-normalised gin-baseline mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
 
 ---
 
-## Claim 11 — The external residual, not the Hodge Laplacian, is the operative factor (H008-c) — *primary finding*
+## Claim 11: The matched external-residual adjacency formulation recovers NCI1 performance and removes a unique Hodge advantage
 
 | Field | Value |
 |---|---|
-| Status | **Primary finding of the investigation (refutes "topology helps").** Once an external residual is added, a normalised-*adjacency* operator (low-pass, `I − L̃`) matches or slightly exceeds the Hodge Laplacian (high-pass, `L̃`). The Hodge Laplacian confers no unique advantage. |
-| Domain | Architecture comparison / mechanism isolation |
-| Setup | NCI1 (4110 graphs), 30 seeds × 10 epochs × hidden_dim=32, 4 arms: `gin-residual` (`I−L̃` + external residual), `hodge-mp-residual` (`L̃` + external residual), `gin-normalised` (internal self-loop), `mlp-baseline`. All differ only in operator/residual placement. |
-| Headline numbers | `gin-residual` 0.629 [0.607, 0.641] vs MLP 0.523: p_BH = 6.05 × 10⁻⁴, r = +0.600 (WINS +10.6 pp). `gin-residual` vs `hodge-mp-residual`: Δ = +0.0195, p_BH = 1.01 × 10⁻², r = +0.400 — adjacency *slightly beats* Hodge. `gin-normalised` (no external residual) 0.500 — class-prior collapse. |
-| Interpretation | The operative architectural element is the external residual (`act(prop @ W + b) + h`), which preserves projected features through propagation. The choice of spectral operator (high-pass Hodge vs low-pass adjacency) is secondary. This refutes the strong "topology helps graph classification" hypothesis at the tested configuration. |
-| Per-seed report | `notebooks/results/h008c_nci1_gin_residual_30seeds.md` |
-| Preregistered? | Yes — `docs/hypotheses/HYPOTHESIS-008c-gin-residual.md` (H36/H37/H38) |
+| Status | **Primary architecture finding, scoped** |
+| Domain | H008c |
+| gin-residual vs gin-normalised | 0.629 vs 0.500; p_BH = 5.20 x 10^-6 |
+| gin-residual vs Hodge | median Delta = +0.0195; p_BH = 1.01 x 10^-2; r = +0.400 |
+| gin-residual vs MLP | median Delta = +0.1058; p_BH = 6.05 x 10^-4; r = +0.600 |
+| Interpretation | The tested external-residual adjacency formulation is sufficient to recover performance and the matched Hodge arm has no unique advantage. `gin-normalised` and `gin-residual` differ in placement and parameterization of the self path, so this is not a universal proof that residual connections alone are the sole causal mechanism. |
+| H37 decision-rule note | The preregistration encoded “match” as p_BH >= 0.05. The observed result is significant in the favorable gin-residual direction, not an equivalence result. It nevertheless directly rules out the preregistered Hodge-superiority falsification condition. |
+| Artifact | `notebooks/results/h008c_nci1_gin_residual_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-008c-gin-residual.md` |
 | Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-residual gin-residual gin-normalised mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
 
 ---
 
-## Deferred — DRIVE retinal-vessel segmentation with `CubicalTopologyLoss`
+## Claim 12: The tested scalar learned sheaf operator does not improve over fixed Hodge on NCI1
 
 | Field | Value |
 |---|---|
-| Status | **Deferred** (infrastructure exists; experiment not yet run) |
-| Domain | Image segmentation training-loss regularisation |
-| Setup | DRIVE (40 retinal fundus images, binary vessel segmentation, Staal 2004), 5–10 seeds × 50 epochs, small 3-level U-Net, Dice+BCE baseline vs Dice+BCE + λ·`CubicalTopologyLoss` |
-| Comparison | Per-seed paired IoU on the test split (matched seed, same model architecture, only the loss term differs) |
-| Preregistered? | Not yet — script exists in `notebooks/drive_unet_topology_loss.py`, hypothesis doc to be written before the run |
-| Reproduce | `python notebooks/drive_unet_topology_loss.py --seeds 0 1 2 3 4 --n-epochs 50 --topo-weight 0.1 --topo-resolution 64` (requires DRIVE downloaded to `~/.cache/topogeoml/drive/`) |
+| Status | **H39 confirmed; H40 refuted; H41 inconclusive at its preregistered threshold** |
+| Domain | H009 |
+| sheaf vs MLP | sheaf 0.604 vs MLP 0.523; p_BH = 1.68 x 10^-2, crossing H39's preregistered 0.05 threshold |
+| sheaf vs Hodge | median Delta = -0.005; p_BH = 0.797. No significant improvement detected; H40 refuted. |
+| sheaf vs gin-residual | median Delta = -0.025; p_BH = 1.37 x 10^-2; r = -0.467 |
+| H41 decision | **Inconclusive.** H41 required p_BH < 0.01 to declare strict sheaf underperformance. The observed 0.0137 is below 0.05 but does not cross the preregistered falsification threshold. |
+| Interpretation | The scalar learned sheaf operator provides no supported improvement over the fixed Hodge operator at this configuration. The experiment does not establish that learned sheaf methods are generally inferior. |
+| Artifact | `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-009-sheaf-laplacian.md` |
+| Reproduce | See the H009 hypothesis document |
 
 ---
 
-## Quality-floor metrics (not claims, just discipline)
+## Claim 13: Cross-dataset operator controls show no unique Hodge advantage, but do not establish the preregistered dataset-property mechanism
 
-| Metric | Value |
+| Field | Value |
+|---|---|
+| Status | **H42 confirmed; H43 no significant difference; H44 inconclusive; H45/H46 refuted** |
+| Domain | H010 |
+| MUTAG | gin-residual 0.789 vs Hodge 0.750; p_BH = 7.44 x 10^-3. Significant gin-residual advantage. |
+| PROTEINS | Hodge 0.686 vs gin-residual 0.675; p_BH = 0.292. No significant operator difference detected. |
+| NCI1 | Hodge 0.609 vs gin-residual 0.629; p_BH = 1.01 x 10^-2. Significant gin-residual advantage at the H010 alpha=0.05 family threshold. |
+| H44 decision | **Inconclusive.** Gap magnitude varies, but H44 predicted association with a dataset-level property and no such association was established. Its stated falsification condition is also not met because magnitudes differ. |
+| MLP controls | On MUTAG, Hodge-residual is significantly below MLP (p_BH = 8.61 x 10^-3) and gin-residual has no significant difference from MLP (p_BH = 0.438). On PROTEINS, neither arm has a significant positive difference from MLP. |
+| Interpretation | No tested dataset provides evidence of Hodge superiority over the matched normalized-adjacency arm. This does not justify the stronger claim that one spectral filter type is universally superior or that H44's dataset-level mechanism was found. |
+| Artifact | `notebooks/results/h010_{mutag,proteins}_operator_30seeds.{json,md}`, with NCI1 reused from H008c |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-010-cross-dataset-operator.md` |
+| Reproduce | See the H010 hypothesis document |
+
+---
+
+## Claim 14: The NCI1 `L_1` experiment does not establish a higher-order advantage
+
+| Field | Value |
+|---|---|
+| Status | **H47/H48/H49 refuted; higher-order mechanism inconclusive on NCI1** |
+| Domain | H011 |
+| Per-arm medians | L_1 0.590; L_0 Hodge 0.609; gin-residual 0.629; MLP 0.523 |
+| L_1 vs MLP | median Delta = +0.0669; p_BH = 0.0957. No significant positive difference detected; H47 refuted. |
+| L_1 vs L_0 Hodge | median Delta = -0.0195; p_BH = 0.0787. No significant L_1 advantage; H48 refuted under its stated rule. |
+| L_1 vs gin-residual | median Delta = -0.0389; p_BH = 0.00676; r = -0.533. Crosses H49's preregistered 0.01 falsification threshold. |
+| Structural limitation | 3961/4110 NCI1 graphs (96%) contain no triangles, so the triangle-based `B_2 B_2^T` up-Laplacian term is absent for almost all graphs. The experiment is therefore a poor test of the intended triangle-rich higher-order mechanism. |
+| Artifact | `notebooks/results/h011_nci1_l1_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-011-l1-edge-propagation.md` |
+| Reproduce | See H011 |
+
+---
+
+## Pending: H011b `L_1` on triangle-rich COLLAB
+
+| Field | Value |
+|---|---|
+| Status | **Pending, no statistical claim licensed** |
+| Dataset | COLLAB, 5000 graphs, triangle-rich |
+| Smoke result | One seed, one epoch: L_1 0.668 vs MLP 0.520. Directional only. |
+| Full run | The attempted multi-seed GitHub Actions run exceeded the six-hour limit. The preregistered full experiment remains incomplete. |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-011b-l1-collab.md` |
+
+---
+
+## Deferred: DRIVE segmentation with `CubicalTopologyLoss`
+
+| Field | Value |
+|---|---|
+| Status | **Deferred; infrastructure exists, downstream benefit not yet tested at statistical rigor** |
+| Domain | Image segmentation |
+| Current evidence | `CubicalTopologyLoss` is implemented and gradient-tested. No preregistered powered DRIVE result is currently part of the evidence record. |
+| Script | `notebooks/drive_unet_topology_loss.py` |
+
+---
+
+## Quality-floor metrics
+
+| Metric | Current contract |
 |---|---|
 | Test suite | Required CI matrix; exact verified full-dependency snapshot is recorded in `docs/CLAIMS_TO_EVIDENCE.md` Claim 1 |
-| Package coverage | **100% line and 100% branch** on `topogeoml/` under full dependencies, enforced by the required coverage gate; no 100% coverage claim is made for `benchmarks/` |
-| Ruff clean across `topogeoml tests benchmarks scripts notebooks` | Yes |
-| Mypy strict on `topogeoml/` | **0 errors** |
-| Required PR validation | Python 3.11/3.12 on Linux and macOS; full-dependency coverage and dependency audit; CodeQL Python and Actions; diff-PH benchmark; required Hodge smoke on MUTAG, PROTEINS, and NCI1 |
-| Registered model arms | 11 (4 Hodge + MLP + GIN + GIN-normalised + GIN-residual + GAT + sheaf-residual + L1-Hodge-residual) |
-| Lockfile / Dockerfile | None — deliberate; library is a research toolkit, not a deployment artefact |
+| Package coverage | 100% line and 100% branch on `topogeoml/` under the required full-dependency gate; no 100% coverage claim is made for `benchmarks/` |
+| Lint | ruff enforced across the declared source/research paths |
+| Type checking | mypy strict on `topogeoml/` |
+| Required PR validation | Python 3.11/3.12 on Linux and macOS; full-dependency coverage and dependency audit; CodeQL Python and Actions; diff-PH benchmark; required Hodge smoke matrix |
+| Registered benchmark arms | 11 |
 | DOI | [10.5281/zenodo.20365816](https://doi.org/10.5281/zenodo.20365816) |
 
----
+## Adding new evidence
 
-## How to add a new claim
+1. Write the preregistered hypothesis and explicit decision rule before running a confirmatory experiment.
+2. Run the declared design without changing thresholds after observing results.
+3. Save machine-readable and human-readable result artifacts.
+4. Report the result using the status vocabulary above. Do not convert non-significance into equivalence and do not relax a preregistered threshold after the fact.
+5. Update the statistical summary if the comparison family or investigation-wide multiplicity changes.
+6. Merge only after the result artifact, hypothesis interpretation, public summary, and required CI agree.
 
-1. Write a preregistered hypothesis doc in `docs/hypotheses/HYPOTHESIS-NNN-…md` with falsifiable sub-predictions BEFORE running the experiment.
-2. Run the ablation with ≥ 20 seeds (the `min_samples_for_pvalue` floor in `benchmarks.stats`) so paired Wilcoxon has power.
-3. Save the JSON + Markdown report to `notebooks/results/`.
-4. Add a row to this leaderboard with status (positive / equality / negative / pending), headline numbers, and the reproduce command.
-5. Update `LIMITATIONS.md` if the claim refutes a previously-listed unvalidated hypothesis.
-6. Open a PR; do not merge without (a) CI green and (b) the row in this file matching the per-seed report.
-
-Negative results count and are shipped. Selective reporting is the failure mode this leaderboard exists to prevent.
+Negative, null, inconclusive, and positive outcomes all remain part of the record.
