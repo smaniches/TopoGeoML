@@ -4,56 +4,66 @@ parent: Hypotheses (H001–H011b)
 nav_order: 14
 ---
 
-# Hypothesis 011-b: L_1 edge-level message passing on COLLAB (triangle-rich graphs)
+# Hypothesis 011-b: L_1 edge-level message passing on COLLAB
 
-**Status.** Preregistered 2026-05-25. Smoke test (1 seed, 1 epoch) completed on container: L_1 0.668 vs MLP 0.520 (directional only, not a claim). Full 18-seed run timed out on GitHub Actions (6h limit exceeded). Awaiting local execution on higher-compute hardware.
+**Status.** Preregistered 2026-05-25 and unresolved at statistical rigor. A one-seed, one-epoch smoke run completed with L_1 accuracy 0.668 and MLP accuracy 0.520. That result is directional only and licenses no statistical claim. A separate 18-seed compute attempt exceeded the GitHub Actions six-hour limit. The preregistered confirmatory design remains 30 seeds and has not been completed.
 
-**Falsification target.** Whether L_1 edge-level message passing provides a classification advantage on a dataset with rich triangle structure, where the up-Laplacian component ∂_2 ∂_2^T is non-trivial.
+**Falsification target.** Whether the tested L_1 edge-level propagation architecture provides a classification advantage on a graph dataset with non-trivial triangle structure, where the up-Laplacian term B_2 B_2^T is present rather than nearly always zero.
 
-**Prior result.** H011 on NCI1 was uninformative: 96% of NCI1 graphs have 0 triangles, so L_1 degenerates to the down-Laplacian. A proper test requires a dataset where L_1's shared-triangle adjacency has signal to propagate.
+**Prior result.** H011 on NCI1 is a poor test of that mechanism because 96% of NCI1 graphs have no triangles. The NCI1 L_1 arm does not significantly outperform MLP and is lower than gin-residual under the preregistered H49 rule. A triangle-rich follow-up is therefore required before making a higher-order claim.
 
-**Why COLLAB.** 5000 scientific-collaboration ego-network graphs, 3 classes (High Energy Physics, Condensed Matter, Astrophysics). Mean 9,290 triangles per graph. 100% of graphs have triangles. No node features (degree used as 1-dim input). Classification depends entirely on graph structure — exactly the setting where higher-order topology should matter if it matters anywhere.
+**Why COLLAB.** COLLAB is a TUDataset graph-classification benchmark of scientific collaboration ego networks. It has no intrinsic node attributes in the project loader, so degree is used as a one-dimensional structural input. It was selected as a denser social-network benchmark in which triangle-based 2-simplices are expected to be materially more common than in NCI1.
+
+The final confirmatory artifact must report the triangle census actually observed under the exact dataset loader and preprocessing used for the experiment. This avoids relying on an undocumented structural statistic when interpreting the up-Laplacian mechanism.
 
 ---
 
 ## 1. Design
 
-Same architecture as H011, applied to COLLAB:
+Use the same broad matched-capacity comparison as H011, applied to COLLAB:
 
-| Arm | Operator | Level | Residual |
+| Arm | Operator | Representation level | Self path |
 |---|---|---|---|
-| `l1-hodge-residual` | L_1 (edge Laplacian with up-component) | Edges | External |
-| `hodge-mp-residual` | L_0 (node Laplacian) | Nodes | External |
-| `gin-residual` | I - L_tilde (normalised adjacency) | Nodes | External |
-| `mlp-baseline` | None | Nodes | N/A |
+| `l1-hodge-residual` | L_1 edge Laplacian | Edges | External identity residual |
+| `hodge-mp-residual` | L_0 node Laplacian | Nodes | External identity residual |
+| `gin-residual` | normalized adjacency | Nodes | External identity residual |
+| `mlp-baseline` | no message-passing operator | Nodes | N/A |
 
-All arms use degree as the 1-dim node feature (input_dim=1).
+All arms use degree as the one-dimensional node input supplied by the COLLAB dataset adapter.
 
 ## 2. Preregistered sub-hypotheses
 
-| ID | Sub-hypothesis | Prediction | Rationale | Falsified if |
-|---|---|---|---|---|
-| **H51** | l1-hodge-residual outperforms mlp-baseline on COLLAB | p_BH < 0.05 | COLLAB has no node features — structure IS the signal. L_1 accesses triangle-level structure that MLP (operating on degree alone) cannot. | p_BH >= 0.05 |
-| **H52** | l1-hodge-residual outperforms hodge-mp-residual (L_0) on COLLAB | p_BH < 0.05 | COLLAB is triangle-rich; L_1's up-Laplacian component provides structural signal beyond node-level adjacency. This is the core test of higher-order Hodge theory. | p_BH >= 0.05 |
-| **H53** | l1-hodge-residual outperforms gin-residual on COLLAB | p_BH < 0.05 | Same reasoning as H52 — L_1 encodes triangle co-boundary structure inaccessible to any L_0-based method. | p_BH >= 0.05 |
+The table below preserves the preregistered thresholds.
+
+| ID | Sub-hypothesis | Prediction | Falsified if |
+|---|---|---|---|
+| **H51** | l1-hodge-residual outperforms mlp-baseline on COLLAB | p_BH < 0.05 | p_BH >= 0.05 |
+| **H52** | l1-hodge-residual outperforms hodge-mp-residual on COLLAB | p_BH < 0.05 | p_BH >= 0.05 |
+| **H53** | l1-hodge-residual outperforms gin-residual on COLLAB | p_BH < 0.05 | p_BH >= 0.05 |
+
+The scientific motivation is that L_1 explicitly contains edge-space incidence structure and, when triangles are present, the up-Laplacian term B_2 B_2^T. Node-level models can still learn features correlated with triangle structure, so a positive H52/H53 result would be evidence for this tested L_1 architecture relative to the matched controls, not proof that triangle information is inaccessible to every L_0-based model.
 
 ## 3. Outcome decision tree
 
 | Pattern | Interpretation |
 |---|---|
-| H51 + H52 + H53 confirmed | **Higher-order Hodge structure provides unique classification signal on triangle-rich graphs.** L_1 captures structural information that L_0-based methods (Hodge, GIN) cannot access. This is the vindication of the Hodge approach — the value is in L_k for k >= 1, not in L_0. |
-| H51 confirmed, H52/H53 refuted (L_1 beats MLP but not L_0) | L_1 captures structural signal, but L_0-based methods already capture it. The triangle-level information is redundant with node-level neighbourhood information on COLLAB. |
-| H51 refuted (L_1 does not beat MLP on COLLAB) | Edge-level message passing with degree features fails on COLLAB. Possible causes: 1-dim degree input is insufficient, edge-to-graph pooling loses discrimination, or the L_1 computation on dense graphs is numerically unstable. |
+| H51 + H52 + H53 confirmed | The tested L_1 architecture has a positive difference from MLP and both matched node-level controls on COLLAB under the preregistered design. This would justify a new, dataset-scoped higher-order result. |
+| H51 confirmed; H52/H53 refuted | L_1 separates from the no-message-passing MLP control but does not separate from the matched node-level graph operators. No unique higher-order advantage is established. |
+| H51 refuted | The tested L_1 architecture does not produce the preregistered positive difference from MLP on COLLAB. This would not falsify all possible higher-order Hodge models. |
 
-## 4. Experimental design
+## 4. Confirmatory design
 
-- **Dataset:** COLLAB (5000 graphs, 3 classes), 1-dim degree features.
+- **Dataset:** COLLAB, 5000 graph instances as provided by TUDataset.
+- **Node input:** one-dimensional degree feature from the project dataset adapter.
 - **Models:** `l1-hodge-residual`, `hodge-mp-residual`, `gin-residual`, `mlp-baseline`.
 - **Seeds:** 30.
 - **Epochs:** 10.
 - **Optimiser:** Adam(lr=1e-2).
 - **Hidden dim:** 32.
-- **Note:** COLLAB graphs are denser than NCI1 (mean 873 edges vs 32). Per-graph L_1 computation takes 0.02-0.13s. Estimated total wall time: ~8-12 hours on CPU.
+- **Statistical procedure:** paired Wilcoxon comparisons with BH-FDR at alpha=0.05.
+- **Required structural audit in final artifact:** number/fraction of graphs with triangles and a summary of triangle counts under the exact loaded graphs.
+
+The 18-seed timed-out compute attempt is not a completed substitute for this design and is not included as confirmatory evidence.
 
 ## 5. Reproduction
 
@@ -66,3 +76,5 @@ python -m benchmarks.hodge \
   --output notebooks/results/h011b_collab_l1_30seeds.json \
   --markdown notebooks/results/h011b_collab_l1_30seeds.md
 ```
+
+Until that run is completed, H011b remains pending and the one-seed smoke result must not be cited as evidence of a higher-order classification advantage.
