@@ -11,7 +11,7 @@ description: "TopoGeoML software, evidence, and scientific scope."
 
 The installed package provides persistent-homology features for ordinary ML pipelines, differentiable Vietoris-Rips and cubical topology primitives for PyTorch, simplicial and Hodge operators, topology features for signals, embedding diagnostics, and reproducible experiment metadata.
 
-The graph-classification investigation is one application of those tools. Its negative result is important because it narrows where Hodge propagation should be used, but it does not define the value of the library.
+The graph-classification investigation is one application of those tools. Its negative and inconclusive results narrow where the tested graph operators should be used, but they do not define the value of the library.
 
 ## Software surface
 
@@ -29,9 +29,13 @@ Required CI enforces 100% line and 100% branch coverage on the importable `topog
 
 ## Graph-classification finding
 
-Across the tested matched-capacity graph-classification configurations, the Hodge `L_0` operator does not provide a unique advantage once an external residual connection is present. H008c shows that normalised-adjacency propagation with the same external residual performs comparably to or better than the Hodge operator in that regime. The operative architectural factor identified by that experiment is the residual connection, not the Hodge Laplacian itself.
+Across the tested matched-capacity graph-classification configurations, no unique `L_0` Hodge advantage is supported. H008c shows that normalized adjacency in the same external-residual architecture reaches 0.629 on NCI1 versus 0.609 for Hodge. H010 finds a significant adjacency advantage on MUTAG, no significant operator difference on PROTEINS, and the same favorable adjacency direction on NCI1.
 
-A narrow positive result remains. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points (`p_BH = 4.83 x 10^-3`). The comparison survives investigation-wide Benjamini-Hochberg correction but not Bonferroni, and H008c shows that the improvement is not unique to Hodge propagation.
+H008c also shows that the tested external-residual adjacency formulation recovers performance after the normalized internal-self formulation does not. The causal statement is deliberately scoped: the two formulations place and parameterize the self path differently, so the result identifies a successful tested architecture rather than proving that residual connections alone are the sole mechanism in arbitrary models.
+
+A narrow positive result remains. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points (`p_BH = 4.83 x 10^-3`). The comparison survives investigation-wide Benjamini-Hochberg correction but not Bonferroni, and the later operator ablations show that the improvement is not unique to Hodge propagation.
+
+The genuinely higher-order question remains open. H011's NCI1 `L_1` arm does not significantly outperform MLP and is evaluated on a dataset where 96% of graphs contain no triangles. H011b on triangle-rich COLLAB has only a directional smoke result so far.
 
 These experiments are mechanism studies at deliberately constrained capacity. They are not benchmark-performance claims and they do not establish that TopoGeoML should replace well-tuned graph neural networks.
 
