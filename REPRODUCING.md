@@ -1,9 +1,9 @@
 # Reproducing the Empirical Results
 
-This guide separates two different goals that should not be conflated:
+This guide separates two goals that should not be conflated:
 
-1. **Current-code rerun:** execute the same experimental design and the same comparison family using the current repository code.
-2. **Historical numerical replication:** recreate the code revision and software environment recorded in the archived result artifact, then rerun that design.
+1. **Current-code rerun:** execute the same experimental design and comparison family using the current repository code.
+2. **Historical numerical replication:** recover the historical code revision and as much of the recorded software environment as the archived evidence actually contains, then rerun that design.
 
 The distinction matters because the Hodge benchmark registry has grown over time. When `python -m benchmarks.hodge` is invoked without `--models`, the runner uses every model currently registered. That can change the pairwise comparison family and therefore the Benjamini-Hochberg adjusted p-values. Every confirmatory command below names the model family explicitly.
 
@@ -30,21 +30,38 @@ For the authoritative full-dependency package test environment, use `pip install
 
 Run the exact dataset, model family, seeds, and experimental modifiers specified below on the current checkout. This checks whether the present implementation still executes the intended design.
 
-Do not assume the current-code numbers must be numerically identical to an old artifact if implementation or dependencies have changed since that experiment.
+Do not assume current-code numbers must be numerically identical to an old artifact if implementation or dependencies have changed since that experiment.
 
 ### Historical numerical replication
 
-Each Hodge result artifact contains a `git_commit_sha` and selected dependency versions. For a historical replication:
+Provenance coverage differs by artifact. Newer result files record a `git_commit_sha` and selected dependency versions. Several earlier H001-H008b artifacts do not contain both fields, so this repository does not pretend that every historical environment can be reconstructed from the JSON alone.
 
-1. Read the provenance block in the archived JSON or Markdown artifact.
-2. Create a clean checkout at the recorded git commit.
-3. Recreate the recorded Python and dependency versions as closely as possible.
-4. Run the exact model family and design from this guide or the contemporaneous hypothesis file.
+If the artifact contains embedded provenance:
+
+1. Read its recorded git commit, Python version, and dependency versions.
+2. Create a clean checkout at that commit.
+3. Recreate the recorded environment as closely as possible.
+4. Run the exact historical model family and design.
 5. Write the new result to a separate location and compare the complete per-seed output, not only the median.
 
-The historical experiment environments were not captured by a complete lockfile containing every transitive dependency. The repository therefore does not claim that a future machine can reproduce every floating-point result bit-for-bit from metadata alone.
+If an older artifact lacks a recorded commit, use repository history to locate the commit that introduced the artifact:
 
-No universal numerical tolerance is declared here. A tolerance used for a confirmatory reproduction should be justified before comparing results and should reflect the endpoint and environment being reproduced. In particular, a p-value should not be treated as “reproduced” merely because it remains on the same side of a threshold after an undocumented amount of numerical drift.
+```bash
+git log --diff-filter=A --format='%H %cs %s' -- notebooks/results/ARTIFACT.json
+```
+
+Then inspect the artifact and its contemporaneous hypothesis at that revision:
+
+```bash
+git show COMMIT:notebooks/results/ARTIFACT.json
+git show COMMIT:docs/hypotheses/HYPOTHESIS-FILE.md
+```
+
+This history-based recovery establishes a historical code anchor. It does not reconstruct dependency versions that were never recorded. When environment provenance is incomplete, describe the exercise as a **historical-code rerun**, not an exact historical numerical replication.
+
+The historical experiment environments were not captured by complete transitive lockfiles. The repository therefore does not claim that a future machine can reproduce every floating-point result bit-for-bit from metadata alone.
+
+No universal numerical tolerance is declared here. A tolerance used for confirmatory reproduction should be justified before comparing results and should reflect the endpoint and environment being reproduced. A p-value should not be called reproduced merely because it remains on the same side of a threshold after undocumented numerical drift.
 
 ## 3. Exploratory topology-divergence experiment
 
@@ -180,6 +197,8 @@ The archived NCI1 projection has a positive Hodge-residual versus MLP difference
 
 ## 9. H006: constant-feature ablation
 
+The generic benchmark runner produces Hodge-versus-MLP pairwise comparisons. H006's published evidence instead tests Hodge against each dataset's class-prior control and applies BH correction across the three datasets. Reproducing H006 therefore requires both the three benchmark runs and the dedicated resolver.
+
 ```bash
 SEEDS="0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29"
 
@@ -193,7 +212,14 @@ for DS in mutag proteins nci1; do
     --output "reproductions/h006_${DS}_constant_30seeds.json" \
     --markdown "reproductions/h006_${DS}_constant_30seeds.md"
 done
+
+python -m benchmarks.hodge.h006_analysis \
+  --constant-results-dir reproductions \
+  --full-results-dir notebooks/results \
+  > reproductions/h006_analysis.md
 ```
+
+The resolver performs the one-sample Wilcoxon tests against class prior and BH correction across MUTAG, PROTEINS, and NCI1. Its `--full-results-dir notebooks/results` input supplies the archived H001-H003 full-feature controls used only for the H25 descriptive cross-dataset correlation. The H006 class-prior p-values come from the newly generated constant-feature files in `reproductions/`.
 
 Archived evidence: `notebooks/results/h006_{mutag,proteins,nci1}_constant_30seeds.{json,md}`.
 
@@ -263,21 +289,21 @@ Key archived values: `gin-residual` 0.629, Hodge-residual 0.609, `gin-normalised
 
 The clean operator comparison is `gin-residual` versus Hodge-residual because those two use the same external-residual computation. The `gin-normalised` versus `gin-residual` comparison also changes the self-path placement and parameterization, so it should not be interpreted as a universal residual-only causal proof.
 
-## 14. H009: learned scalar sheaf operator
+## 14. H009: invalidated historical sheaf experiment
 
-```bash
-python -m benchmarks.hodge \
-  --datasets nci1 \
-  --models sheaf-residual hodge-mp-residual gin-residual mlp-baseline \
-  --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 \
-  --n-epochs 10 \
-  --output reproductions/h009_nci1_sheaf_30seeds.json \
-  --markdown reproductions/h009_nci1_sheaf_30seeds.md
-```
+The historical H009 run is **not a current scientific reproduction target**. A later implementation audit showed that the `sheaf-residual` arm used in that run did not construct the scalar cellular-sheaf Laplacian stated by the hypothesis, and its parameter count also fell outside the stated matched-capacity tolerance.
 
-Archived evidence: `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}`.
+Archived evidence remains at `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` for provenance only. Do not rerun the currently registered historical `sheaf-residual` implementation and treat the result as evidence for H39-H41.
 
-H39 crosses its preregistered 0.05 threshold versus MLP. H40 is refuted because the sheaf arm does not improve over Hodge. H41 is **inconclusive** under its preregistered rule: sheaf versus gin-residual has p_BH = 0.0137, while H41 required p_BH < 0.01 to declare strict underperformance.
+The valid sequence is:
+
+1. repair the sheaf operator so one undirected edge defines one restriction pair and the unnormalized operator is symmetric PSD by construction;
+2. verify identity reduction to the ordinary graph Laplacian, gradient flow, isolated-vertex behavior, endpoint consistency, and exact trainable-parameter count;
+3. merge the repaired implementation;
+4. preregister a corrective H009 replication before observing its result;
+5. run a fresh 30-seed NCI1 experiment and write a new artifact.
+
+Until that sequence is complete, H39-H41 remain unresolved and the historical H009 pairwise statistics have no current inferential status.
 
 ## 15. H010: cross-dataset Hodge versus normalized adjacency
 
@@ -349,8 +375,8 @@ A completed confirmatory artifact should also record the triangle census under t
 
 Compare complete structured outputs rather than visually comparing headline medians alone. At minimum inspect:
 
-- git commit SHA;
-- Python and dependency versions;
+- git commit SHA when recorded or recovered from history;
+- Python and dependency versions when recorded;
 - dataset and model names;
 - exact seed set;
 - per-seed test accuracies;
@@ -367,9 +393,11 @@ If a current-code rerun differs materially from an archived result, first determ
 For each empirical result, use this precedence:
 
 1. the preregistered hypothesis file for the decision rule;
-2. the committed JSON artifact for the raw result;
+2. the committed JSON artifact for the raw historical result;
 3. the Markdown artifact for a human-readable rendering of that result;
 4. [`LEADERBOARD.md`](LEADERBOARD.md) and [`STATUS.md`](STATUS.md) for the audited current interpretation;
 5. the historical Version 0.0.2 research report only for the H001-H008c historical snapshot it explicitly covers.
+
+An invalidation notice in the current hypothesis/evidence documents supersedes the scientific interpretation of an older artifact without deleting that artifact from the audit trail.
 
 The benchmark CLI itself reports generic BH significance at alpha=0.05. Some preregistered sub-hypotheses use stricter thresholds, so the hypothesis file controls the scientific verdict when those differ.
