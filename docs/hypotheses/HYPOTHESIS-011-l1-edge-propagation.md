@@ -6,23 +6,19 @@ nav_order: 13
 
 # Hypothesis 011: Does L_1 edge-level message passing capture structural signal that L_0 node-level propagation cannot?
 
-**Status.** Partially resolved 2026-05-25. NCI1 result: L_1 does not significantly outperform MLP (p_BH = 0.096) and underperforms gin-residual (p_BH = 0.007). Expected given that 96% of NCI1 graphs have 0 triangles — L_1's up-Laplacian component is effectively zero. The triangle-rich COLLAB follow-up is tracked as [H011b](HYPOTHESIS-011b-l1-collab.md): its directional smoke result is complete, while the full statistical run exceeded the GitHub Actions time limit and remains pending on higher-compute hardware.
+**Status.** Partially resolved 2026-05-25. The NCI1 arm is complete. `l1-hodge-residual` does not have a significant positive difference from MLP (p_BH = 0.0957), has no significant difference from `hodge-mp-residual` (p_BH = 0.0787), and is lower than `gin-residual` (p_BH = 0.00676). H47, H48, and H49 are therefore refuted under their preregistered rules. H50 was not completed as a meaningful higher-order comparison because MUTAG has zero triangles. The triangle-rich follow-up is tracked as [H011b](HYPOTHESIS-011b-l1-collab.md); its directional smoke run is complete, while the full statistical run exceeded the GitHub Actions time limit and remains pending on higher-compute hardware.
 
-**Falsification target.** Whether the 1-Hodge Laplacian L_1 (operating on edge features, encoding shared-triangle adjacency) provides classification-relevant structural information beyond what L_0-based methods capture. This is the first experiment in this series that uses genuinely higher-order topological information.
+**Falsification target.** Whether the 1-Hodge Laplacian L_1, operating on edge features, provides classification-relevant information beyond the tested L_0-based methods under this matched-capacity architecture.
 
-**Why this is the mathematically motivated next step.** The entire H001-H010 investigation used L_0, the 0-th Hodge Laplacian on nodes. L_0 = D - A is algebraically equivalent to the graph Laplacian, which is the same structural information that GCN, GIN, and GAT access. H008-c proved that the choice of L_0-based operator is secondary to the residual architecture. But the Hodge theory's central contribution is not L_0 — it is the existence of HIGHER-ORDER Laplacians L_k that encode qualitatively different structural information.
+**Why test L_1.** H001-H010 use node-level operators. The Hodge hierarchy becomes genuinely higher-order at k >= 1 because L_k acts on k-simplices and combines lower-incidence and upper-coincidence structure. H011 therefore moves the experiment from node space to edge space rather than treating L_0 as representative of all Hodge methods.
 
-**The L_1 Hodge decomposition.** The edge space of a graph decomposes as:
+For an oriented 2-dimensional simplicial complex,
 
-    C_1 = im(∂_1^T) ⊕ ker(L_1) ⊕ im(∂_2)
+    L_1 = B_1^T B_1 + B_2 B_2^T
 
-- **im(∂_1^T):** gradient component — edge flows derivable from a node-level potential (conservative flows)
-- **ker(L_1):** harmonic component — edge flows that are cycles not bounding any triangle (topological holes, β_1)
-- **im(∂_2):** curl component — edge flows derivable from triangle orientations
+and the edge space decomposes orthogonally into gradient, harmonic, and curl subspaces under the usual real-coefficient Hodge decomposition. The decomposition itself is specific to L_1. This experiment, however, tests one particular neural use of L_1 as a propagation operator. It is not a generic test of every model that could use higher-order Hodge information.
 
-This decomposition is unique to the Hodge Laplacian. No L_0-based method can access it. L_1 propagation mixes edge features based on co-boundary adjacency (edges sharing a triangle), which encodes cycle and ring structure directly.
-
-**Relevance to molecular classification.** Aromatic rings, ring systems, and functional group topology are primary determinants of mutagenicity (MUTAG) and anti-cancer activity (NCI1). L_1 message passing detects these structures through shared-triangle adjacency — edges within the same ring or ring system are L_1-adjacent and exchange features during propagation.
+A further distinction matters for interpretation. The up-Laplacian term B_2 B_2^T couples edges through shared 2-simplices (triangles in a clique complex). Ordinary 5- and 6-cycles do not become 2-simplices merely because they are rings. The original molecular motivation therefore overstated the connection between aromatic rings and shared-triangle adjacency. The post-preregistration triangle census below is the correct structural check.
 
 ---
 
@@ -36,7 +32,9 @@ Edge-level message passing on L_1 with external residual:
 4. Pool edges to graph: graph_emb = sum(e')
 5. Classify: head(graph_emb)
 
-The clique complex is constructed with max_dim=2 (nodes, edges, triangles) so that L_1 includes the up-Laplacian component ∂_2 ∂_2^T, which encodes shared-triangle structure.
+The clique complex is constructed with max_dim=2 so that L_1 includes both the edge-incidence down term and, when triangles exist, the up-Laplacian term.
+
+For exact harmonic edge modes, the L_1 propagation term has zero response; the external residual preserves the input edge representation. The architecture should therefore be interpreted as one fixed L_1 filtering design, not as direct readout of every component of the Hodge decomposition.
 
 ## 2. Capacity matching
 
@@ -47,47 +45,82 @@ The clique complex is constructed with max_dim=2 (nodes, edges, triangles) so th
 | `gin-residual` | 2338 (adjacency, node-level) |
 | `mlp-baseline` | 2338 |
 
-The L_1 arm has identical parameter count to the L_0 Hodge arm — the only difference is the Laplacian (L_1 vs L_0) and the feature level (edges vs nodes).
+The L_1 arm has the same reported parameter count as the L_0 Hodge arm. The representation level differs: the L_1 arm propagates and pools edge features, whereas the L_0 arms operate on node features.
 
 ## 3. Preregistered sub-hypotheses
 
+The table below preserves the preregistered decision rules.
+
 | ID | Sub-hypothesis | Prediction | Rationale | Falsified if |
 |---|---|---|---|---|
-| **H47** | l1-hodge-residual strictly outperforms mlp-baseline on NCI1 | p_BH < 0.05 | L_1 propagation accesses structural information (ring/cycle topology) that MLP cannot read from node features | p_BH >= 0.05 |
-| **H48** | l1-hodge-residual outperforms hodge-mp-residual (L_0) on NCI1 | Uncertain — L_1 captures different structure but edge-level pooling may lose node-level discrimination | The L_1 and L_0 propagations access orthogonal structural information; either could dominate | p_BH >= 0.05 (no significant difference) |
-| **H49** | l1-hodge-residual outperforms gin-residual on NCI1 | Uncertain — gin-residual is the current best arm (0.629) | L_1 would need to exceed the already-strong adjacency-based result | gin-residual strictly beats l1-hodge at p_BH < 0.01 |
-| **H50** | l1-hodge-residual shows larger advantage on MUTAG than NCI1 (relative to MLP) | MUTAG advantage > NCI1 advantage | MUTAG mutagenicity is determined by aromatic ring topology, which L_1 directly encodes via shared-triangle adjacency | MUTAG advantage <= NCI1 advantage |
+| **H47** | l1-hodge-residual strictly outperforms mlp-baseline on NCI1 | p_BH < 0.05 | L_1 propagation may access edge-space structural information unavailable to an MLP on node features | p_BH >= 0.05 |
+| **H48** | l1-hodge-residual outperforms hodge-mp-residual (L_0) on NCI1 | Uncertain | L_1 and L_0 operate on different representation spaces; either could dominate | p_BH >= 0.05 (no significant difference) |
+| **H49** | l1-hodge-residual outperforms gin-residual on NCI1 | Uncertain; gin-residual is the current best arm (0.629) | L_1 would need to exceed the already-strong adjacency-based result | gin-residual strictly beats l1-hodge at p_BH < 0.01 |
+| **H50** | l1-hodge-residual shows larger advantage on MUTAG than NCI1 (relative to MLP) | MUTAG advantage > NCI1 advantage | Original preregistration expected ring structure to favor L_1 | MUTAG advantage <= NCI1 advantage |
 
 ## 4. Outcome decision tree
 
 | Pattern | Interpretation |
 |---|---|
-| H47 + H48 confirmed (L_1 beats both MLP and L_0) | **Higher-order Hodge structure provides unique classification signal.** L_1 captures ring/cycle topology that L_0-based methods miss. This is the vindication of the Hodge theory applied to GNN classification. |
-| H47 confirmed, H48 refuted (L_1 beats MLP but not L_0) | L_1 captures structural signal but L_0 already captures it equivalently or better. The higher-order decomposition adds computational cost without classification benefit. |
-| H47 refuted (L_1 does not beat MLP) | Edge-level message passing with sum-of-endpoint initialisation fails to learn at this capacity/epoch budget. Possible causes: edge feature initialisation is too information-lossy, or the edge-to-graph pooling (sum over edges) discards per-node discrimination that sum-over-nodes preserves. |
+| H47 + H48 confirmed | The tested L_1 edge-propagation architecture provides a positive difference from MLP and L_0 Hodge under the NCI1 protocol. |
+| H47 confirmed, H48 refuted | The tested L_1 architecture separates from MLP but not from the L_0 Hodge arm. |
+| H47 refuted | The tested L_1 architecture does not produce the preregistered positive difference from MLP at this configuration. This does not falsify higher-order Hodge methods in general. |
 
 ## 5. Experimental design
 
-- **Datasets:** NCI1 (10 epochs) and MUTAG (20 epochs), matched to prior experiments.
+- **Datasets:** NCI1 (10 epochs) and originally MUTAG (20 epochs), matched to prior experiments.
 - **Models:** `l1-hodge-residual`, `hodge-mp-residual`, `gin-residual`, `mlp-baseline`.
 - **Seeds:** 30, matched.
 - **Optimiser:** Adam(lr=1e-2), matched.
 - **Hidden dim:** 32, matched.
-- **Statistical procedure:** Pairwise paired Wilcoxon, BH-FDR at alpha=0.05.
+- **Statistical procedure:** Pairwise paired Wilcoxon, BH-FDR at alpha=0.05, with the stricter H49 falsification threshold preserved as preregistered.
 
-## 6. Implementation notes
+## 6. Structural check after preregistration
 
-L_1 is computed inside `forward_one` from the L_0 Laplacian: the edge set is extracted from L_0's off-diagonal entries, the clique complex is constructed with max_dim=2, and `hodge_laplacian(sc, k=1)` returns L_1. This avoids interface changes to the GraphSample dataclass or the training loop. The per-graph overhead is negligible at the tested graph sizes (18-30 nodes).
+The triangle census was performed after preregistration and before interpreting the result:
 
-**Critical structural observation (discovered after preregistration, before results).** Triangle counts in the tested datasets:
-- MUTAG: **0 triangles in all 188 graphs.** Molecular graphs are sparse; aromatic rings are 5-6 cycles, not 3-cliques.
-- NCI1: **96% of graphs (3961/4110) have 0 triangles.** Only 149 graphs have any triangle; maximum is 3.
+- MUTAG: 0 triangles in all 188 graphs.
+- NCI1: 3961 of 4110 graphs (96%) have 0 triangles; only 149 graphs contain any triangle, with a maximum of 3.
 
-This means L_1's up-Laplacian component ∂_2 ∂_2^T (shared-triangle adjacency) is effectively zero for nearly all graphs. L_1 degenerates to the down-Laplacian ∂_1^T ∂_1 (edges sharing a vertex), which encodes the same neighbourhood structure as L_0. A negative H011 result should be interpreted as "these datasets lack the higher-order simplicial structure that L_1 is designed to exploit" rather than "L_1 message passing is uninformative in general."
+Therefore the up-Laplacian B_2 B_2^T is zero on MUTAG and zero for almost all NCI1 graphs. In those cases L_1 contains only its down-Laplacian edge-incidence term B_1^T B_1. That operator is not the same matrix as L_0 because it acts on edge space, but the intended shared-triangle interaction is absent.
 
-Testing L_1 on datasets with rich triangle structure (social networks, collaboration graphs, protein contact maps) is the appropriate follow-up if H011 produces a null result on these molecular benchmarks.
+This structural fact makes NCI1 a poor test of the specific higher-order triangle mechanism and makes the preregistered MUTAG rationale invalid for the clique-complex construction. H011b was created to test L_1 on triangle-rich COLLAB instead.
 
-## 7. Reproduction
+## 7. NCI1 resolved outcome
+
+Artifact: `notebooks/results/h011_nci1_l1_30seeds.{json,md}`. The Markdown artifact records git commit `7076c1097c28d08eb99351abec693d3c7d8086f3` and 30 seeds.
+
+### Per-arm accuracy
+
+| Arm | Median accuracy (95% bootstrap CI) |
+|---|---|
+| `l1-hodge-residual` | 0.590 [0.525, 0.615] |
+| `hodge-mp-residual` | 0.609 [0.581, 0.625] |
+| `gin-residual` | 0.629 [0.607, 0.641] |
+| `mlp-baseline` | 0.523 [0.513, 0.566] |
+
+### Pairwise results involving L_1
+
+| Comparison | median Delta | p_BH | r | Interpretation |
+|---|---|---|---|---|
+| L_1 vs L_0 Hodge | -0.0195 | 0.0787 | -0.308 | No significant difference detected |
+| L_1 vs gin-residual | -0.0389 | 0.00676 | -0.533 | gin-residual significantly higher; crosses H49's preregistered 0.01 falsification threshold |
+| L_1 vs MLP | +0.0669 | 0.0957 | +0.267 | No significant positive difference detected |
+
+### Sub-hypotheses
+
+- **H47:** **REFUTED.** p_BH = 0.0957 for L_1 versus MLP, above the preregistered 0.05 threshold.
+- **H48:** **REFUTED UNDER ITS STATED RULE.** L_1 does not significantly outperform L_0 Hodge; p_BH = 0.0787.
+- **H49:** **REFUTED.** gin-residual is higher than L_1 by 3.89 pp with p_BH = 0.00676, crossing H49's preregistered 0.01 falsification threshold.
+- **H50:** **NOT RESOLVED.** The planned MUTAG comparison does not test the intended triangle-based higher-order mechanism because MUTAG contains no triangles. The triangle-rich follow-up is H011b.
+
+### Interpretation
+
+The NCI1 result does not support the tested L_1 architecture as an improvement over the node-level baselines. More importantly, NCI1 is structurally unsuitable for the intended up-Laplacian question because almost all graphs have no 2-simplices in the clique complex. H011 therefore narrows the question but does not answer whether L_1 is useful on triangle-rich data.
+
+The correct frontier is H011b on COLLAB. Its one-seed smoke result is directional only and is not a statistical claim.
+
+## 8. Reproduction
 
 ```bash
 python -m benchmarks.hodge \
