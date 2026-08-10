@@ -9,13 +9,16 @@ where L_tilde_k is a symmetrically normalized Hodge Laplacian of dimension k
 built from a SimplicialComplex, x is an (n_k, in_features) tensor of features
 on the k-simplices, and W is a learnable (in_features, out_features) matrix.
 
-For k = 0 on a graph-like complex, L_tilde_0 is the normalized graph Laplacian
-I - D^{-1/2} A D^{-1/2}. It is not the standard Kipf-Welling GCN propagation
-operator, which is adjacency-based and uses self-loop renormalization. For
-k = 1, Hodge propagation combines the down-Laplacian contribution from shared
-vertices with the up-Laplacian contribution from shared 2-simplices. This is a
-minimal building block for simplicial neural-network research, not a complete
-batched simplicial architecture.
+For k = 0 on a graph-like complex and restricted to positive-degree vertices,
+L_tilde_0 is I - D^{-1/2} A D^{-1/2}. The implementation uses the standard
+degree-support convention D^{-1/2}_ii = 0 for isolated vertices, so their
+normalized rows remain zero rather than taking a unit diagonal. This is not the
+standard Kipf-Welling GCN propagation operator, which is adjacency-based and
+uses self-loop renormalization. For k = 1, Hodge propagation combines the
+down-Laplacian contribution from shared vertices with the up-Laplacian
+contribution from shared 2-simplices. This is a minimal building block for
+simplicial neural-network research, not a complete batched simplicial
+architecture.
 
 References
 ----------
