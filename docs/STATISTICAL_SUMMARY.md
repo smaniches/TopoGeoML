@@ -3,147 +3,91 @@ title: Statistical summary
 nav_order: 4
 ---
 
-# Investigation-Wide Statistical Summary
+# Statistical Summary
 
-This document summarizes multiplicity, inferential scope, and the adaptive structure of the current TopoGeoML graph-classification investigation. It distinguishes the preregistered decision rules inside each experiment from retrospective analyses across the entire realized research program.
+This document records the inferential contract for the current TopoGeoML graph-classification investigation. It separates preregistered decisions inside each experiment from retrospective summaries across the evolving research program.
 
-## 1. Scope
+## 1. Current status
 
-- **Distinct pairwise comparisons in the realized record:** 59
-- **Total pairwise comparisons computed:** 76
-- **Repeated comparisons:** 17 of the 76 are repeated baseline comparisons that also appear in other hypothesis families
-- **Result files:** 22 JSON artifacts in `notebooks/results/`
-- **Preregistered hypothesis documents:** 14
-- **Resolved primary experiment documents:** 12
-- **Partially resolved:** H011 on NCI1
-- **Unresolved:** H011b on COLLAB
-- **Falsifiable sub-predictions:** 53
+TopoGeoML contains 14 preregistered hypothesis documents from H001 through H011b. The program is sequential and adaptive: later hypotheses were designed in response to earlier results, but each new hypothesis was committed before its own experiment was run.
 
-The 59-comparison set is used when reporting a de-duplicated investigation-wide sensitivity analysis. It is not treated as a globally preregistered family because the research questions themselves were generated sequentially from earlier results.
+H009 is currently invalidated by implementation audit. The archived H009 result is retained for provenance but is not valid evidence about a cellular-sheaf Laplacian. H39, H40, and H41 are unresolved until the sheaf operator is repaired, mathematically validated, and rerun under a corrected protocol.
+
+Because the previous investigation-wide 59-comparison and 76-entry sensitivity tables included H009 comparisons, those tables are withdrawn as current evidence. They should not be recomputed or quoted as a current project-level multiplicity result until the corrected H009 experiment has produced a valid result artifact.
+
+This withdrawal does not change the valid within-experiment results for H001-H008c or H010-H011. Those experiments use different implementations and retain their own preregistered decision rules and result artifacts.
 
 ## 2. Within-experiment inference
 
-Each preregistered experiment defines a comparison family and a decision rule before its corresponding result is observed. Pairwise Wilcoxon p-values are adjusted with Benjamini-Hochberg within the declared family.
+Each preregistered experiment defines its comparison family and decision rule before its result is observed. Pairwise Wilcoxon p-values are adjusted with Benjamini-Hochberg within the declared comparison family unless the hypothesis document states otherwise.
 
-The decision threshold is not always 0.05. Several sub-hypotheses explicitly use 0.01. Therefore:
+The decision threshold is not always 0.05. Some sub-hypotheses explicitly use 0.01. Therefore:
 
-- a BH-adjusted p-value below 0.05 is not automatically a preregistered confirmation if that sub-hypothesis required 0.01;
+- a BH-adjusted p-value below 0.05 is not automatically a preregistered confirmation when the declared rule requires 0.01;
 - a result between 0.01 and 0.05 can be conventionally significant while remaining inconclusive under a stricter preregistered rule;
-- the hypothesis documents, not a generic alpha, determine the confirmation or falsification label.
+- the hypothesis document, not a generic alpha value, determines the confirmation or falsification label;
+- a non-significant comparison is a failure to reject the null under the stated test and threshold, not evidence of equivalence.
 
-H009 H41 is the clearest example: sheaf-residual versus gin-residual has p_BH = 0.0137, but H41 preregistered p_BH < 0.01 as the strict underperformance threshold. H41 is therefore inconclusive under its own decision rule.
+The current evidence index in [`../LEADERBOARD.md`](../LEADERBOARD.md) uses this vocabulary explicitly and marks H009 as invalidated rather than assigning scientific verdicts to the historical sheaf artifact.
 
-## 3. Retrospective investigation-wide multiplicity sensitivity
+## 3. Investigation-wide multiplicity
 
-For transparency, the raw p-values from the realized program were also re-evaluated as one de-duplicated 59-comparison set. This produces the following retrospective sensitivity analysis:
+The research program was not specified as one fixed comparison family before any data were observed. H001-H011b were generated sequentially, with later questions motivated by earlier outcomes. A single retrospective BH correction across the realized program can be useful as a sensitivity analysis, but it is not equivalent to a prospectively specified program-level false-discovery-rate procedure.
 
-| Retrospective correction | Over 59 distinct comparisons | Over 76 computed entries including repeats |
-|---|---:|---:|
-| BH-adjusted p < 0.05 | 31/59 (53%) | 47/76 (62%) |
-| Bonferroni-adjusted p < 0.05 | 16/59 (27%) | 22/76 (29%) |
-| Not significant under BH at 0.05 | 28/59 (47%) | 29/76 (38%) |
+The repository previously reported a retrospective sensitivity analysis over 59 de-duplicated comparisons and 76 computed entries. That analysis included comparisons from the now-invalidated H009 experiment. It is therefore retained only in git history as part of the audit trail and is not a current project-level statistical claim.
 
-The 59-comparison version is the more meaningful of the two because it does not count the same raw comparison repeatedly. The 76-entry version is retained only to show what was actually computed in individual result files.
+After a corrected H009 rerun, any new investigation-wide analysis must be regenerated from the validated comparison set. The procedure must document:
 
-### Interpretation of the global BH table
+1. exactly which comparisons are included;
+2. which repeated baseline comparisons are de-duplicated;
+3. which raw p-values enter the correction;
+4. how invalidated or exploratory experiments are handled;
+5. that the resulting global correction is retrospective unless the full family was prospectively fixed.
 
-The investigation-wide BH calculation is a **retrospective robustness check**, not a claim that the adaptive program has a formally guaranteed 5% global false-discovery rate. The reason is structural:
+No current conclusion in TopoGeoML depends on preserving the withdrawn 59/76 table.
 
-1. H001-H011b were not all specified before any data were observed.
-2. Later hypotheses were chosen because of earlier outcomes.
-3. The resulting global comparison family is therefore adaptively generated rather than fixed in advance.
-4. Standard BH guarantees depend on assumptions about the tested family and dependence structure that have not been established for this adaptive selection process.
+## 4. Non-significance and equivalence
 
-The global BH result is still useful. It asks whether important comparisons remain small relative to the total realized testing burden. It should be read as a sensitivity analysis, not as a substitute for the preregistered within-experiment decision rules.
+TopoGeoML does not interpret `p >= alpha` as equality. Current documents use language such as "no significant difference detected" unless an explicit equivalence design was performed.
 
-Bonferroni over the realized 59-comparison set is also reported as a conservative sensitivity check. Because the global family was defined retrospectively, its adjusted thresholds likewise should not be presented as if they were prospectively specified confirmatory thresholds.
+A future equivalence claim should preregister an equivalence margin and a procedure designed to test that margin. The absence of a detected difference is not sufficient.
 
-### Selected comparisons under the 59-comparison sensitivity analysis
-
-| Comparison | p_raw | Rank of 59 | BH threshold at rank | Global BH < 0.05 | Bonferroni over 59 |
-|---|---:|---:|---:|---|---|
-| Hodge-residual vs MLP on NCI1 (H003) | 3.38 x 10^-3 | 22 | 1.86 x 10^-2 | Yes | No |
-| gin-residual vs MLP on NCI1 (H008c) | 4.03 x 10^-4 | 14 | 1.19 x 10^-2 | Yes | Yes |
-| Hodge-residual vs GIN on NCI1 (H008) | 2.12 x 10^-6 | 5 | 4.24 x 10^-3 | Yes | Yes |
-| gin-residual vs gin-normalised on NCI1 (H008c) | 1.73 x 10^-6 | 2 | 1.69 x 10^-3 | Yes | Yes |
-
-For H003, “survives global BH but not Bonferroni” means exactly what the table says for this retrospective 59-comparison sensitivity analysis. It does not mean that a lower alpha would help. A stricter alpha would make rejection harder. Stronger Bonferroni evidence would require a smaller observed p-value relative to the fixed 0.05/59 threshold.
-
-## 4. Non-significance, equivalence, and sensitivity
-
-A non-significant comparison is a failure to reject the null under the stated test and threshold. It is not evidence that two methods are equivalent.
-
-The project therefore uses language such as “no significant difference detected” rather than “equal,” “equivalent,” or “statistically indistinguishable” unless an explicit equivalence design is performed.
-
-The repository previously listed exact minimum-detectable-effect values for the paired Wilcoxon test without documenting a generative model or reproducible power calculation. Those values have been removed. Power for a signed-rank test depends on the distribution of paired differences, zero/tie structure, effect definition, and the planned decision threshold. A defensible prospective power statement should be produced by an explicit analytical model or simulation tied to the intended experiment.
-
-For a future equivalence claim, preregister an equivalence margin and an appropriate equivalence procedure rather than interpreting p > alpha as equality.
+The repository also does not publish exact minimum-detectable-effect values for the paired Wilcoxon test without a documented power model. Power depends on the distribution of paired differences, zero and tie structure, the effect definition, and the planned decision threshold. A prospective power statement should come from an explicit analytical model or simulation tied to the intended experiment.
 
 ## 5. Adaptive hypothesis generation
 
-The research program is sequential and adaptive:
+The research sequence is adaptive:
 
-- H001-H007 were designed in response to preceding results.
-- H008-H010 were designed after the earlier mechanism studies.
-- H011 was motivated by the conclusion that `L_0` does not provide a unique Hodge advantage.
+- H001-H007 developed the initial graph-classification and mechanism questions.
+- H008-H010 followed from the earlier operator and architecture results.
+- H011 followed from the conclusion that node-level `L_0` Hodge propagation did not show a unique advantage over the matched normalized-adjacency control.
 - H011b was created after the NCI1 triangle census showed that H011 was a poor test of a triangle-rich `L_1` mechanism.
 
-Each new hypothesis was committed before the corresponding new experiment ran. That protects the experiment from changing its prediction after seeing its own result.
+Preregistering each experiment before its own execution protects that experiment from changing its prediction after seeing its result. It does not turn the full adaptive program into one prospectively specified group-sequential design.
 
-It does **not** make the entire program equivalent to a single pre-specified group-sequential clinical-style design, and classical Pocock or O'Brien-Fleming stopping rules do not automatically apply to this adaptive hypothesis-generation process.
-
-The correct interpretation is:
-
-- individual hypothesis tests can be evaluated against their preregistered local rules;
-- the sequence of scientific questions is adaptive and should be reported as such;
-- the 59-comparison BH calculation is a retrospective multiplicity sensitivity analysis across the realized program;
-- independent replication on new data is the strongest next step for claims intended to generalize beyond this research sequence.
+For any result intended to support a broad external claim, the strongest next step is an independent confirmatory experiment with a fixed hypothesis, fixed comparison family, pre-specified endpoint, justified sensitivity analysis, fixed multiplicity procedure, and data not used to generate the hypothesis.
 
 ## 6. Configuration scope
 
-The main graph experiments are bounded to the following regime:
+The reported graph experiments are bounded to the configurations recorded in their hypothesis documents and result artifacts. Common settings include one message-passing layer, `hidden_dim=32`, 10 to 20 epochs, Adam at `1e-2`, no batch normalisation, and 30 seeded repetitions for confirmatory graph experiments.
 
-| Parameter | Current scope |
-|---|---|
-| Architecture depth | Primarily 1 layer; 2 layers for the deep-residual H001 arm |
-| Hidden dimension | Primarily 32 |
-| Training epochs | 10 to 20 |
-| Optimiser | Adam, lr=1e-2, no scheduler in the reported graph experiments |
-| Batch normalisation | None |
-| Seeds | Usually 30 for confirmatory graph experiments |
-| Datasets | MUTAG (188), PROTEINS (1113), NCI1 (4110); COLLAB H011b remains incomplete |
-| Split | Stratified 80/20 per seed in the reported graph-classification experiments |
+H011b preregisters a 30-seed COLLAB design. A separate 18-seed compute attempt exceeded the GitHub Actions time limit and is not a completed substitute for that design. The one-seed smoke result is directional infrastructure evidence only and licenses no statistical claim.
 
-H011b preregisters a 30-seed COLLAB design. A separate 18-seed compute attempt exceeded the GitHub Actions six-hour limit. That timed-out attempt is not a completed substitute for the preregistered 30-seed design and produces no statistical claim.
+Results at different depths, training budgets, hidden dimensions, optimizers, preprocessing choices, or datasets can differ. No claim of generality beyond the tested configuration is made.
 
-Results at different depths, normalization schemes, training budgets, hidden dimensions, optimizers, or datasets can differ. No claim of generality beyond the tested configuration is made.
+## 7. H009 repair requirement
 
-## 7. Current comparison counts
+A corrected H009 result may enter the validated record only after all of the following are satisfied:
 
-For the retrospective realized-family analysis:
+1. one restriction pair is constructed per undirected edge;
+2. the unnormalized learned operator is symmetric and positive semidefinite by construction;
+3. identity restrictions recover the ordinary graph Laplacian to numerical tolerance;
+4. gradients reach the restriction learner and downstream message-passing parameters;
+5. exact trainable-parameter counts are reported and the capacity protocol is satisfied or explicitly corrected before the rerun;
+6. a fresh 30-seed NCI1 result artifact is produced from the corrected commit;
+7. the evidence index and any investigation-wide multiplicity sensitivity analysis are regenerated from the validated result set.
 
-| Category | 59 distinct comparisons | 76 computed entries including repeats |
-|---|---:|---:|
-| BH-adjusted p < 0.05 | 31 | 47 |
-| Bonferroni-adjusted p < 0.05 | 16 | 22 |
-| Not significant under BH at 0.05 | 28 | 29 |
-| Total | 59 | 76 |
-
-These counts describe statistical significance under the stated retrospective corrections. They are not counts of “true discoveries,” and they are not counts of preregistered hypotheses confirmed, because individual hypotheses can use stricter decision thresholds or contain multiple comparisons.
-
-All computed comparisons remain in the public record, including regressions, non-significant results, and results that are inconclusive under their preregistered rules.
-
-## 8. Recommended confirmatory next step
-
-For any result intended to support a broad external claim, the preferred next step is an independent confirmatory experiment with:
-
-1. a fixed hypothesis and comparison family specified before data analysis;
-2. a pre-specified primary endpoint and effect direction;
-3. a justified sample-size or simulation-based sensitivity analysis;
-4. a fixed multiplicity procedure;
-5. a new dataset, held-out benchmark, or independent reproduction not used to generate the hypothesis.
-
-That design would separate hypothesis generation from confirmation and provide a cleaner basis for generalization.
+The historical H009 artifact remains public because preserving invalidated evidence is part of the audit trail.
 
 ## References
 
