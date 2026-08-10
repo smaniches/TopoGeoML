@@ -17,7 +17,7 @@ Implementation and test coverage do not by themselves establish downstream task 
 
 - Empirical values are taken from committed result artifacts in `notebooks/results/` or from the CI command that produces the invariant.
 - Pairwise graph experiments use their preregistered decision rules and within-family Benjamini-Hochberg correction.
-- The former investigation-wide 59-comparison and 76-entry sensitivity analysis is withdrawn as a current claim because it included invalidated H009 comparisons. See [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md).
+- The former investigation-wide 59-comparison and 76-entry sensitivity analysis is withdrawn as a current claim because it included invalidated H009 comparisons. With H009-R complete the validated comparison set exists, but the retrospective table has not been regenerated and remains withdrawn until it is, with documented inclusion rules. See [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md).
 - A non-significant comparison is reported as no significant difference detected, not as proof of equivalence.
 - Where a preregistered threshold differs from a conventional alpha=0.05 interpretation, the preregistered threshold controls the hypothesis verdict.
 - Invalidated experiments remain in the public record for provenance but are excluded from current scientific conclusions until corrected and rerun.
@@ -95,9 +95,25 @@ Implementation and test coverage do not by themselves establish downstream task 
 | Historical artifact | `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` retained for provenance only |
 | Implementation defect | The historical `sheaf-residual` model processed both orientations of each undirected edge independently. The resulting learned matrix was not guaranteed symmetric or positive semidefinite and was not, in general, the claimed `delta.T @ delta` scalar cellular-sheaf Laplacian. |
 | Capacity defect | On NCI1, `Linear(64, 2)` contributes 130 learner parameters, producing 2,468 total trainable parameters versus 2,338 for the fixed-operator controls. The difference is about 5.56%, slightly outside the stated 5% tolerance. |
-| Current status | H39, H40, and H41 are unresolved. The historical H009 pairwise statistics have no current inferential status for a sheaf-Laplacian claim. |
-| Required repair | One undirected edge representation, symmetric PSD construction, identity reduction to `L_0`, gradient tests, exact parameter accounting, and a fresh 30-seed NCI1 corrective replication from the repaired commit. |
+| Current status | The historical H009 pairwise statistics have no inferential status for a sheaf-Laplacian claim. H39, H40, and H41 are now resolved by the corrective replication H009-R (Claim 6b), not by this artifact. |
+| Repair completed | One undirected edge representation, symmetric PSD construction, identity reduction to `L_0`, gradient tests, and exact parameter accounting were established at merge `b89d196`; the fresh 30-seed NCI1 corrective replication was preregistered as H009-R and executed from commit `79329df`. |
 | Source document | `docs/hypotheses/HYPOTHESIS-009-sheaf-laplacian.md` contains the full invalidation and rerun requirements. |
+
+---
+
+## Claim 6b: The H009-R corrective replication resolves H39-H41 for the repaired scalar sheaf operator
+
+| Field | Evidence |
+|---|---|
+| Artifact | `notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}`, committed unmodified from GitHub Actions `Run Experiment` #8 (run ID 31419047248), artifact SHA-256 `3d595aa27a1c95ab258051ac1a152d4e4fc4a4d8b04012e3dcf605a6f93dc920` |
+| Preregistration | `docs/hypotheses/HYPOTHESIS-009R-sheaf-corrective-replication.md`, committed and merged before execution; decision rules for H39-H41 fixed in advance |
+| Model | `sheaf-residual` 2.0.0: one coboundary row per undirected edge, `L_F = delta.T @ delta` symmetric PSD by construction, invariant-tested; 2,403 parameters versus 2,338 for the controls (+2.78%, inside the 5% tolerance) |
+| H39 (sheaf vs MLP) | Supported. Median 0.604 versus 0.523; median Delta = +0.0809; p_BH = 4.74 x 10^-3 < 0.05; sheaf above MLP on 20/30 seeds |
+| H40 (sheaf vs Hodge) | Not supported. Median 0.604 versus 0.605; p_BH = 0.428. No significant difference detected; not an equivalence claim |
+| H41 (sheaf vs gin-residual) | Falsification condition not met. Median 0.604 versus 0.630; median Delta = -0.0262; p_BH = 0.0342, which does not cross the preregistered 0.01 threshold. Conventionally significant at 0.05, so the comparison is inconclusive under the stricter preregistered rule; the observed direction (sheaf below gin on 22/30 seeds) is reported without an equivalence or non-inferiority interpretation |
+| Supported conclusion | Under the fixed matched-capacity, one-layer, 10-epoch NCI1 protocol, the repaired learned scalar sheaf construction performs like the fixed Hodge operator: above the matched MLP, statistically indistinguishable from Hodge at this power, and directionally below the matched normalized-adjacency arm. |
+| Not supported | Any learned-sheaf advantage over fixed operators; sheaf-Hodge equivalence; generalization beyond this dataset, capacity, depth, and training budget; validation of the invalidated historical H009 numbers. |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models sheaf-residual hodge-mp-residual gin-residual mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` (bit-identical reproduction additionally requires the recorded dependency versions; the artifact records `torch` 2.13.0+cpu, `torch_geometric` 2.8.0.post1) |
 
 ---
 
@@ -143,7 +159,7 @@ Implementation and test coverage do not by themselves establish downstream task 
 
 ## Current unresolved evidence
 
-- H009 corrected sheaf replication: historical run invalidated; H39-H41 unresolved.
+- Investigation-wide multiplicity sensitivity table: the withdrawn 59/76 retrospective analysis has not been regenerated from the validated comparison set now that H009-R is complete; no current conclusion depends on it.
 - H011b COLLAB `L_1`: one-seed, one-epoch directional smoke result only; no statistical claim licensed.
 - `CubicalTopologyLoss` downstream segmentation benefit: implementation exists, but the powered end-to-end study is not complete.
 - Topology-divergence callback: exploratory, floor-limited, no non-overfitting negative control.

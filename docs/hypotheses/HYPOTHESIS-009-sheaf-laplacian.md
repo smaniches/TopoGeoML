@@ -6,7 +6,7 @@ nav_order: 11
 
 # Hypothesis 009: Does a learned sheaf Laplacian outperform fixed operators on NCI1?
 
-**Status: INVALIDATED BY IMPLEMENTATION AUDIT 2026-08-09. The H009 numerical artifact is retained for provenance but is not valid evidence for a sheaf-Laplacian claim. H39-H41 are unresolved pending a corrected rerun.**
+**Status: INVALIDATED BY IMPLEMENTATION AUDIT 2026-08-09. The H009 numerical artifact is retained for provenance but is not valid evidence for a sheaf-Laplacian claim. H39-H41 were resolved 2026-08-10 by the corrective replication [H009-R](HYPOTHESIS-009R-sheaf-corrective-replication.md): H39 supported, H40 not supported, H41 falsification condition not met.**
 
 The original experiment was preregistered and executed as intended, but a later implementation audit found that the `sheaf-residual` model did not construct the scalar cellular-sheaf Laplacian described by the hypothesis. This is an implementation invalidation, not a statistical reinterpretation.
 
@@ -43,13 +43,11 @@ The Hodge, normalized-adjacency, and MLP controls have 2,338 parameters. The she
 
 The archived result `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` remains in the repository because deleting an invalidated result would damage the audit trail. Its numbers describe the behavior of the historical implementation only. They must not be cited as evidence about a cellular sheaf Laplacian, Neural Sheaf Diffusion, or learned sheaf operators in general.
 
-Accordingly:
+Accordingly, at the time of invalidation:
 
-- H39 is **unresolved**;
-- H40 is **unresolved**;
-- H41 is **unresolved**;
+- H39, H40, and H41 became **unresolved** (they have since been resolved by the corrective replication [H009-R](HYPOTHESIS-009R-sheaf-corrective-replication.md), whose artifact — not this one — carries their verdicts);
 - H009 is excluded from the validated evidence index;
-- H009-specific comparisons are excluded from the investigation-wide multiplicity sensitivity analysis until a corrected rerun is available.
+- H009-specific comparisons are excluded from the investigation-wide multiplicity sensitivity analysis; the H009-R comparison family is the valid replacement.
 
 This invalidation does not alter the H001-H008c or H010-H011 result artifacts, which use different model implementations.
 
@@ -71,7 +69,7 @@ The decision rules below are preserved because they were specified before the or
 
 ## 4. Requirements for a valid H009 rerun
 
-A corrected H009 result is not accepted until all of the following are true:
+These requirements were satisfied by the `sheaf-residual` 2.0.0 repair (merge `b89d196`) and the preregistered [H009-R](HYPOTHESIS-009R-sheaf-corrective-replication.md) run, except that the optional investigation-wide sensitivity analysis (item 8) has not been regenerated. The list is preserved as written:
 
 1. **One restriction pair per undirected edge.** The model must canonicalize each graph edge once, for example with `i < j`, before predicting endpoint restrictions.
 2. **Construction test.** The learned operator must be assembled from that one edge set with symmetric off-diagonals and one diagonal contribution per endpoint incidence.

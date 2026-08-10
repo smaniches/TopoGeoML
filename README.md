@@ -32,9 +32,9 @@ The graph study asks whether Hodge-Laplacian propagation itself provides a uniqu
 
 H008c also shows that the tested external-residual adjacency formulation recovers performance after normalization with an internal self contribution does not. That causal statement is intentionally scoped. `gin-normalised` places a trainable self term inside the affine/nonlinear update, whereas `gin-residual` adds an identity skip outside the activation. The result identifies the successful tested self-path formulation; it does not prove that residual connections alone are the sole mechanism in arbitrary architectures.
 
-There is a narrow positive result. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points within the H003 comparison family (`p_BH = 4.83e-3`). Later operator ablations show that the improvement is not unique to the Hodge Laplacian. The former investigation-wide 59-comparison and 76-entry sensitivity analysis is withdrawn as a current claim because it included invalidated H009 comparisons.
+There is a narrow positive result. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points within the H003 comparison family (`p_BH = 4.83e-3`). Later operator ablations show that the improvement is not unique to the Hodge Laplacian. The former investigation-wide 59-comparison and 76-entry sensitivity analysis remains withdrawn as a current claim because it included invalidated H009 comparisons and has not been regenerated from the validated comparison set.
 
-H009 is not negative evidence about sheaf methods. A later implementation audit found that the historical `sheaf-residual` arm did not guarantee the cellular-sheaf Laplacian stated by the hypothesis and also missed its stated capacity tolerance. The archived H009 result remains public for provenance, but H39-H41 are unresolved until the operator is repaired and rerun.
+The sheaf question is now resolved by a corrective replication. The historical H009 run was invalidated by implementation audit (its arm did not guarantee the stated cellular-sheaf Laplacian and missed the capacity tolerance) and remains provenance only. The repaired, invariant-tested `sheaf-residual` 2.0.0 operator was rerun under the preregistered H009-R protocol: the learned scalar sheaf construction beats the matched MLP (`p_BH = 4.74e-3`), shows no significant difference from the fixed Hodge operator (`p_BH = 0.428`, not an equivalence claim), and sits below the matched normalized-adjacency arm without crossing H41's strict 0.01 falsification threshold (`p_BH = 0.0342`, inconclusive). Learned restriction maps added no measurable value over the fixed operator in this regime.
 
 The higher-order question also remains open. H011's NCI1 `L_1` arm does not significantly outperform MLP and is tested on a dataset where 96% of graphs have no triangles. The triangle-rich COLLAB follow-up H011b has only a one-seed directional smoke result so far.
 
@@ -193,7 +193,7 @@ The repository separates software correctness from empirical claims.
 - Package correctness is gated by tests, strict type checking, linting, dependency audit, and 100% line and branch coverage under the full-dependency package gate.
 - Empirical claims point to seeded result artifacts and reproduction commands.
 - Pairwise graph experiments use paired Wilcoxon tests and Benjamini-Hochberg correction within their declared families.
-- The former investigation-wide 59/76 sensitivity analysis is withdrawn until a validated comparison set is rebuilt after H009 repair.
+- The former investigation-wide 59/76 sensitivity analysis remains withdrawn; H009-R completes the validated comparison set, but no regenerated table is claimed yet.
 - Non-significance is reported as no detected difference at the tested power, not as statistical equivalence.
 - Smoke runs and exploratory diagnostics are not promoted to confirmatory claims.
 
@@ -203,7 +203,7 @@ The public contract is intentionally narrower than the code surface.
 
 - No claim says topology improves every ML task.
 - No claim says Hodge propagation is generally better than a well-tuned GNN.
-- The historical H009 result is not valid evidence about a cellular-sheaf Laplacian; a corrected implementation and fresh replication are required.
+- The historical H009 result is not valid evidence about a cellular-sheaf Laplacian; the corrected H009-R replication is the valid record, and it shows no learned-sheaf advantage over the fixed Hodge operator at the tested configuration.
 - No powered end-to-end result currently shows `CubicalTopologyLoss` improving medical-image segmentation.
 - The H011b COLLAB `L_1` experiment has a one-seed directional smoke result, but the full statistical run remains incomplete.
 - The topology-divergence callback result is exploratory because it is floor-limited and lacks a non-overfitting negative control.

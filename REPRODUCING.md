@@ -295,7 +295,7 @@ The historical H009 run is **not a current scientific reproduction target**. A l
 
 Archived evidence remains at `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` for provenance only. Do not rerun the currently registered historical `sheaf-residual` implementation and treat the result as evidence for H39-H41.
 
-The valid sequence is:
+The valid sequence was:
 
 1. repair the sheaf operator so one undirected edge defines one restriction pair and the unnormalized operator is symmetric PSD by construction;
 2. verify identity reduction to the ordinary graph Laplacian, gradient flow, isolated-vertex behavior, endpoint consistency, and exact trainable-parameter count;
@@ -303,7 +303,21 @@ The valid sequence is:
 4. preregister a corrective H009 replication before observing its result;
 5. run a fresh 30-seed NCI1 experiment and write a new artifact.
 
-Until that sequence is complete, H39-H41 remain unresolved and the historical H009 pairwise statistics have no current inferential status.
+That sequence is complete: the repair merged at `b89d196` (`sheaf-residual` 2.0.0), the corrective protocol was preregistered as `docs/hypotheses/HYPOTHESIS-009R-sheaf-corrective-replication.md`, and the confirmatory artifact is `notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}`. The historical H009 pairwise statistics still have no inferential status; H39-H41 are resolved by H009-R.
+
+The current scientific reproduction command for the sheaf question is the H009-R protocol:
+
+```bash
+python -m benchmarks.hodge \
+  --datasets nci1 \
+  --models sheaf-residual hodge-mp-residual gin-residual mlp-baseline \
+  --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 \
+  --n-epochs 10 \
+  --output notebooks/results/h009r_nci1_sheaf_v2_30seeds.json \
+  --markdown notebooks/results/h009r_nci1_sheaf_v2_30seeds.md
+```
+
+Statistical conclusions reproduce across environments through the paired within-run design; bit-identical per-seed accuracies additionally require the dependency versions recorded in the artifact (`torch` 2.13.0+cpu, `torch_geometric` 2.8.0.post1).
 
 ## 15. H010: cross-dataset Hodge versus normalized adjacency
 
