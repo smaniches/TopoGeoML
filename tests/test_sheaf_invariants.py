@@ -114,7 +114,7 @@ def test_random_learned_operator_is_symmetric_positive_semidefinite() -> None:
         atol=1e-12,
     )
     eigenvalues = torch.linalg.eigvalsh(learned)
-    assert float(eigenvalues.min()) >= -1e-10
+    assert eigenvalues.detach().min().item() >= -1e-10
 
 
 def test_operator_is_consistent_under_node_permutation() -> None:
