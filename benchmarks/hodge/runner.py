@@ -188,7 +188,7 @@ def render_markdown(result: HodgeRunResult) -> str:
         deps = ", ".join(f"{k}={v}" for k, v in sorted(result.dependency_versions.items()))
         lines.append(f"- Dependencies: {deps}")
     lines.append("")
-    lines.append("## Per-(model x dataset) test accuracy")
+    lines.append("## Per-(model × dataset) test accuracy")
     lines.append("")
     lines.append("| Model | Dataset | Accuracy (median, 95% bootstrap CI) | n_seeds |")
     lines.append("|---|---|---|---|")
