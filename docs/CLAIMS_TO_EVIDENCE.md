@@ -1,25 +1,26 @@
 ---
-title: Claims → evidence
+title: Claims to evidence
 nav_order: 5
 ---
 
 # Claims to Evidence
 
-This document maps the current public claims in `README.md` and `STATUS.md` to code, CI, preregistration records, and result artifacts. It distinguishes three different kinds of statements:
+This document maps the current public claims in `README.md` and `STATUS.md` to code, CI, preregistration records, and result artifacts. It distinguishes three kinds of statements:
 
 1. **Software capability:** the implementation exists and is exercised by tests.
 2. **Software correctness invariant:** CI enforces a stated property such as package coverage.
 3. **Empirical claim:** a seeded or deterministic study supports a stated scientific conclusion within its declared scope.
 
-Implementation and test coverage do not by themselves establish downstream task benefit. Conversely, a negative result for one research architecture does not invalidate unrelated library components.
+Implementation and test coverage do not by themselves establish downstream task benefit. Conversely, a negative or invalidated result for one research architecture does not invalidate unrelated library components.
 
 ## Methodology
 
 - Empirical values are taken from committed result artifacts in `notebooks/results/` or from the CI command that produces the invariant.
 - Pairwise graph experiments use their preregistered decision rules and within-family Benjamini-Hochberg correction.
-- Investigation-wide multiplicity is reported over 59 distinct comparisons in [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md).
+- The former investigation-wide 59-comparison and 76-entry sensitivity analysis is withdrawn as a current claim because it included invalidated H009 comparisons. See [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md).
 - A non-significant comparison is reported as no significant difference detected, not as proof of equivalence.
 - Where a preregistered threshold differs from a conventional alpha=0.05 interpretation, the preregistered threshold controls the hypothesis verdict.
+- Invalidated experiments remain in the public record for provenance but are excluded from current scientific conclusions until corrected and rerun.
 
 ---
 
@@ -41,10 +42,9 @@ Implementation and test coverage do not by themselves establish downstream task 
 |---|---|
 | Artifact | `notebooks/results/nci1_hodge_ablation_30seeds.{json,md}` |
 | Comparison | `hodge-mp-residual` vs `mlp-baseline` |
-| Result | median Delta = +0.086; p_BH = 4.83 x 10^-3; Hodge median 0.609, MLP median 0.523 |
+| Result | median Delta = +0.086; within-experiment p_BH = 4.83 x 10^-3; Hodge median 0.609, MLP median 0.523 |
 | Reproduce | `python -m benchmarks.hodge --datasets nci1 --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
-| Investigation-wide BH | Survives, rank 22/59, threshold 1.86 x 10^-2 |
-| Bonferroni | Does not survive the investigation-wide Bonferroni threshold |
+| Investigation-wide sensitivity | The previous 59-comparison retrospective BH statement is withdrawn because that comparison family included invalidated H009 comparisons. |
 | Scope | NCI1, 30 seeds, 10 epochs, hidden_dim=32, matched-capacity protocol. Later operator controls show that the positive difference is not unique to the Hodge `L_0` operator. |
 
 ---
@@ -83,12 +83,25 @@ Implementation and test coverage do not by themselves establish downstream task 
 | MUTAG | gap from class prior +0.098; p_BH = 4.53 x 10^-6 |
 | PROTEINS | +0.088; p_BH = 1.41 x 10^-4 |
 | NCI1 | +0.071; p_BH = 1.93 x 10^-5 |
-| Reproduce | See `REPRODUCING.md` §H006 |
+| Reproduce | See `REPRODUCING.md` section H006 |
 | Scope | These are Hodge-architecture comparisons against theoretical class-prior controls under constant node features. They demonstrate exploitable graph structure in the three tested datasets, not a unique Hodge mechanism or a universal claim about graph datasets. |
 
 ---
 
-## Claim 6: The NCI1 `L_1` experiment does not establish a higher-order advantage
+## Claim 6: H009 is invalidated as evidence for a cellular-sheaf Laplacian
+
+| Field | Evidence |
+|---|---|
+| Historical artifact | `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` retained for provenance only |
+| Implementation defect | The historical `sheaf-residual` model processed both orientations of each undirected edge independently. The resulting learned matrix was not guaranteed symmetric or positive semidefinite and was not, in general, the claimed `delta.T @ delta` scalar cellular-sheaf Laplacian. |
+| Capacity defect | On NCI1, `Linear(64, 2)` contributes 130 learner parameters, producing 2,468 total trainable parameters versus 2,338 for the fixed-operator controls. The difference is about 5.56%, slightly outside the stated 5% tolerance. |
+| Current status | H39, H40, and H41 are unresolved. The historical H009 pairwise statistics have no current inferential status for a sheaf-Laplacian claim. |
+| Required repair | One undirected edge representation, symmetric PSD construction, identity reduction to `L_0`, gradient tests, exact parameter accounting, and a fresh 30-seed NCI1 corrective replication from the repaired commit. |
+| Source document | `docs/hypotheses/HYPOTHESIS-009-sheaf-laplacian.md` contains the full invalidation and rerun requirements. |
+
+---
+
+## Claim 7: The NCI1 `L_1` experiment does not establish a higher-order advantage
 
 | Field | Evidence |
 |---|---|
@@ -98,16 +111,16 @@ Implementation and test coverage do not by themselves establish downstream task 
 | L_1 vs gin-residual | median Delta = -0.0389; p_BH = 0.00676. H49 refuted under its preregistered 0.01 rule. |
 | Structural audit | 3961/4110 NCI1 graphs contain no triangles, so the `B_2 B_2^T` up-Laplacian term is absent for 96% of graphs. |
 | Supported conclusion | The tested NCI1 `L_1` arm does not outperform the node-level controls under the preregistered rules. NCI1 is also a poor test of the intended triangle-rich higher-order mechanism. |
-| Frontier | H011b on COLLAB is the correct triangle-rich follow-up. Its one-seed smoke result is directional only and the full statistical run remains incomplete. |
+| Frontier | H011b on COLLAB is the correct triangle-rich follow-up. Its one-seed smoke result is directional only and the preregistered 30-seed statistical run remains incomplete. |
 
 ---
 
-## Claim 7: The public library surface is implemented and tested, but downstream benefit is component-specific and often unproven
+## Claim 8: The public library surface is implemented and tested, but downstream benefit is component-specific and often unproven
 
 | Capability | Implementation | Test evidence | Claim boundary |
 |---|---|---|---|
 | Persistent-homology feature pipeline | `topogeoml/pipelines/feature_pipeline.py` | `tests/test_feature_pipeline.py`, full package gate | Implemented scikit-learn transformer; task-specific predictive benefit depends on data and model |
-| Differentiable Vietoris-Rips primitives and `TopologyRegularizer` | `topogeoml/nn/diff_ph.py` | `tests/test_diff_ph.py`, full package gate, diff-PH benchmark workflow | Gradient path is tested in exercised regimes; not a claim of globally smooth persistence or universal training improvement |
+| Differentiable Vietoris-Rips primitives and `TopologyRegularizer` | `topogeoml/nn/diff_ph.py` | `tests/test_diff_ph.py`, full package gate, path-conditional diff-PH benchmark workflow | Gradient path is tested in exercised regimes; not a claim of globally smooth persistence or universal training improvement |
 | Differentiable cubical persistence and `CubicalTopologyLoss` | `topogeoml/nn/cubical_diff_ph.py` | `tests/test_cubical_diff_ph.py`, full package gate | Implemented and gradient-tested; no powered end-to-end segmentation improvement claim yet |
 | Simplicial/Hodge algebra and fixed-complex neural primitive | `topogeoml/core/complexes.py`, `topogeoml/nn/hodge.py` | package tests and full coverage gate | Building blocks, not a full variable-topology simplicial training framework |
 | Signal topology | `topogeoml/signal/` | `tests/test_signal.py`, full package gate | Feature extraction implemented; downstream predictive value is domain-dependent |
@@ -116,7 +129,7 @@ Implementation and test coverage do not by themselves establish downstream task 
 
 ---
 
-## Claim 8: The preregistered series contains 14 hypothesis documents and 53 falsifiable sub-predictions
+## Claim 9: The preregistered series contains 14 hypothesis documents and 53 falsifiable sub-predictions
 
 | Field | Evidence |
 |---|---|
@@ -124,13 +137,14 @@ Implementation and test coverage do not by themselves establish downstream task 
 | Count | 14 documents |
 | Sub-predictions | H1-H3 (3) + H4-H7 (4) + H8-H12 (5) + H13-H17 (5) + H18-H21 (4) + H22-H25 (4) + H26-H27 (2) + H28-H32 (5) + H33-H35 (3) + H36-H38 (3) + H39-H41 (3) + H42-H46 (5) + H47-H50 (4) + H51-H53 (3) = 53 |
 | Verification | Git history for each hypothesis file supplies the preregistration timestamp; experiment artifacts were added later |
-| Sequential-design limitation | Hypothesis selection was sequential and informed by earlier results. The investigation-wide analysis addresses multiplicity across the resulting comparison set, but sequential hypothesis generation still limits broad confirmatory interpretation. |
+| Sequential-design limitation | Hypothesis selection was sequential and informed by earlier results. The former investigation-wide 59/76 sensitivity analysis is withdrawn until a validated comparison set is rebuilt after H009 repair. |
 
 ---
 
 ## Current unresolved evidence
 
+- H009 corrected sheaf replication: historical run invalidated; H39-H41 unresolved.
 - H011b COLLAB `L_1`: one-seed, one-epoch directional smoke result only; no statistical claim licensed.
 - `CubicalTopologyLoss` downstream segmentation benefit: implementation exists, but the powered end-to-end study is not complete.
 - Topology-divergence callback: exploratory, floor-limited, no non-overfitting negative control.
-- Independent external reproduction: per-seed graph accuracies and the investigation-wide statistical analysis have not yet been reproduced by an independent team.
+- Independent external reproduction: the validated empirical record has not yet been reproduced by an independent team.
