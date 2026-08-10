@@ -19,14 +19,14 @@ pip install -e ".[all]"
 
 ```bash
 # With full dependencies (torch installed):
-pytest --cov=topogeoml --cov-branch          # gated package: 100% line + branch
-pytest --cov=topogeoml --cov=benchmarks      # incl. research harness (~93%)
+pytest --cov=topogeoml --cov-branch          # required package gate: 100% line + branch
+pytest --cov=topogeoml --cov=benchmarks      # optional diagnostic view of research harness coverage
 
 # Without torch (dev-only install):
 pytest
 ```
 
-Expected: with full dependencies (`pip install -e ".[all]"`), the `topogeoml` package reaches 100% line and 100% branch coverage (enforced by the full-deps `coverage-gate` CI job at `--cov-fail-under=100`). The `benchmarks/` research harness is ~93% line: the cross-backend tests skip without the `torch-topological` backend (the `bench` extra), and a few hodge-analysis paths are partially covered (see [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claim 6). Without torch (dev-only install), torch-dependent tests skip cleanly and package coverage is partial (nn/ code paths not exercised).
+Expected: with full dependencies (`pip install -e ".[all]"`), the `topogeoml` package reaches 100% line and 100% branch coverage. The required full-deps `coverage-gate` CI job enforces that invariant with `--cov-fail-under=100`. The `benchmarks/` tree is research infrastructure outside the package coverage claim and is exercised through its own tests and dedicated benchmark workflows. See [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claims 1 and 6 for the exact verified package snapshot and scope. Without torch, torch-dependent tests skip cleanly and package coverage is partial because the `nn/` paths are not exercised.
 
 ## 3. Type check (30 seconds)
 
@@ -84,8 +84,8 @@ Each empirical claim maps to a JSON artifact and reproduction command:
 
 ## 7. Inspect limitations
 
-- [`LIMITATIONS.md`](LIMITATIONS.md) — what the toolkit does not do
-- [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) §4.5 — limitations of the empirical findings
+- [`LIMITATIONS.md`](LIMITATIONS.md) — current toolkit and research limitations
+- [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) §4.5 — historical Version 0.0.2 limitations through H008c
 - All results are bounded to: 1-layer, hidden_dim=32, 10-20 epochs, Adam(lr=1e-2), no batch normalisation, 3-4 TUDataset benchmarks
 
 ## 8. Preregistration audit
