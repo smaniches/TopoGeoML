@@ -1,36 +1,50 @@
 ---
 title: Limitations & scope
 nav_order: 7
-description: "What does not work, and the regime that bounds every result."
+description: "Scientific, statistical, and engineering limits of the current release."
 ---
 
 # Limitations & scope
 {: .no_toc }
 
-Honest accounting is part of the contract. This page summarises the bounds; the full, continuously-maintained list lives in the canonical [`LIMITATIONS.md`](https://github.com/smaniches/TopoGeoML/blob/main/LIMITATIONS.md) at the repository root.
+This page is the concise website summary. The canonical engineering and scientific limitations document is [`LIMITATIONS.md`](https://github.com/smaniches/TopoGeoML/blob/main/LIMITATIONS.md) at the repository root.
 
 {: .warning }
-> **The regime that bounds every accuracy number.** All empirical results come from a deliberately constrained *matched-capacity* protocol: 1 layer, hidden_dim = 32, 10–20 epochs, Adam(lr = 1e-2), no batch normalisation, no learning-rate schedule, ~1.4–2.3k parameters per arm. On NCI1 the best arm reaches ~0.61–0.63 and the MLP baseline ~0.52, versus the ~0.80+ that properly-trained GNNs reach in the literature; the standard GNN baselines (GIN, GAT) collapse to the class prior (0.500) under this protocol. **Every "outperforms X" statement is therefore *at equal, deliberately-constrained capacity*** — it isolates architectural mechanism and is not a benchmark-performance or expressiveness claim.
+> **Every graph-classification result is configuration-bound.** The main experiments are short-budget matched-capacity mechanism studies, primarily one layer, hidden_dim = 32, 10 to 20 epochs, Adam at `1e-2`, and no batch normalisation. They are not competitive benchmark submissions and do not establish state-of-the-art model quality.
 
 ## Empirical scope
 
-- **Datasets:** MUTAG (188), PROTEINS (1113), NCI1 (4110), COLLAB (5000, pending). One domain family (chemistry / proteins / social).
-- **Architecture:** one architectural class (one-layer Hodge MP / message passing). Deeper architectures, attention, polynomial filters, and full simplicial networks are untested.
-- **Statistical power:** minimum detectable effect |r| = 0.289 at n = 30. Null results are failures to reject at the tested power, not positive equality claims.
-- **Multiple testing:** the NCI1 Hodge-vs-MLP result survives investigation-wide Benjamini–Hochberg but **not** Bonferroni.
+- The H003 NCI1 Hodge-residual versus MLP comparison has a positive difference of +8.6 pp at the tested configuration and survives the retrospective 59-comparison BH sensitivity analysis, but not the corresponding Bonferroni sensitivity threshold.
+- Later H008c and H010 controls do not support a unique `L_0` Hodge advantage. The matched normalized-adjacency arm is higher on MUTAG and NCI1 under the declared H010 family threshold, while PROTEINS detects no significant operator difference.
+- H008c shows that the tested external-residual adjacency formulation recovers NCI1 performance after the normalized internal-self formulation does not. Because those formulations place and parameterize the self path differently, the result should not be generalized into a universal claim that residual connections alone are the sole mechanism.
+- H009 does not show a learned scalar sheaf improvement over fixed Hodge. H41 remains inconclusive under its own preregistered 0.01 falsification threshold.
+- H011 on NCI1 does not show a positive `L_1` advantage over the node-level controls. NCI1 is also structurally unsuitable for the intended triangle-rich mechanism because 96% of its graphs contain no triangles.
+- H011b on COLLAB remains unresolved. The one-seed smoke result is directional only; the preregistered 30-seed confirmatory run has not completed.
 
-## Toolkit scope (selected)
+## Statistical scope
 
-- Only Vietoris–Rips and cubical persistent homology ship; no alpha/witness complexes, no diagram distances (`bottleneck`/`wasserstein`) in the core.
-- The Hodge message-passing layer is a **minimal building block** (`σ(L̃ₖ x W + b)`), not a competitive simplicial neural network.
-- The embedding audit is a prototype with a heuristic significance threshold.
-- No GPU-batched persistence; large point clouds and dense clique complexes are compute-heavy.
+- A non-significant comparison is not an equivalence result. The project uses “no significant difference detected” unless an explicit equivalence procedure is performed.
+- The hypothesis sequence is adaptive: later hypotheses were generated from earlier results, although each new experiment was preregistered before its own result was observed.
+- The investigation-wide 59-comparison BH calculation is therefore reported as a retrospective multiplicity sensitivity analysis over the realized comparison set, not as a prospectively guaranteed 5% program-level FDR procedure.
+- Exact Wilcoxon power or minimum-detectable-effect guarantees are not stated without an explicit generative model or simulation. Future confirmatory studies should preregister a power or sensitivity analysis tied to the planned endpoint and threshold.
 
-## What is explicitly *not* claimed
+## Toolkit scope
 
-- "Topology helps graph classification" — **not supported** across datasets.
-- "Hodge is better than GNNs" — **refuted** (H008c; and the GNN baselines here are capacity-starved, not competitive).
-- "L₁ captures unique structural signal" — **not yet tested at rigor** (triangle-rich COLLAB run is pending).
-- Any result beyond the tested configuration.
+- `RipsFiltration` exposes Vietoris-Rips persistence. Alpha, Cech, witness, and general lower-star filtrations are not part of that public API.
+- Differentiable cubical persistence and `CubicalTopologyLoss` are implemented and gradient-tested, but no powered end-to-end segmentation study currently demonstrates downstream benefit.
+- The public feature pipeline provides persistence images and Betti curves. It is not a broad catalog of every persistence representation or diagram metric.
+- `HodgeMessagePassing` is a minimal fixed-complex building block, not a variable-topology batched simplicial neural-network framework.
+- The embedding audit is a prototype diagnostic with a heuristic persistence threshold, not an exact topological certification system.
+- Persistence and clique-complex construction can become expensive on large or dense inputs. The current package does not claim a general high-throughput GPU persistence backend.
 
-For the complete, authoritative list of failure modes and deferred features, see [`LIMITATIONS.md`](https://github.com/smaniches/TopoGeoML/blob/main/LIMITATIONS.md).
+## What is not claimed
+
+- Topology improves graph classification or machine learning in general.
+- Hodge propagation is generally better than a well-tuned GNN.
+- H008c proves a universal residual-only causal mechanism.
+- A non-significant result establishes equality.
+- The current `L_1` architecture provides unique higher-order signal on triangle-rich data.
+- `CubicalTopologyLoss` improves every segmentation task.
+- Results generalize beyond their stated datasets, architectures, training budgets, and statistical designs.
+
+For detailed numerical, API, numerical-stability, and platform limitations, use the canonical [`LIMITATIONS.md`](https://github.com/smaniches/TopoGeoML/blob/main/LIMITATIONS.md).
