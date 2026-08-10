@@ -4,49 +4,52 @@ parent: Hypotheses (H001–H011b)
 nav_order: 10
 ---
 
-# Hypothesis 008-c: Is the external residual the operative factor in the Hodge-GIN gap?
+# Hypothesis 008-c: Is the external residual formulation the operative factor in the Hodge-GIN gap?
 
-**Status.** Resolved 2026-05-24. H36 confirmed (gin-residual strictly outperforms gin-normalised); H37 confirmed in the first decision-tree row (gin-residual matches or exceeds Hodge — the external residual is the mechanism); H38 confirmed (gin-residual strictly outperforms MLP). See §6.
+**Status.** Resolved 2026-05-24. H36 confirmed: `gin-residual` exceeds `gin-normalised` at p_BH = 5.20 x 10^-6. H37 supports the substantive preregistered conclusion that there is no unique Hodge advantage: `gin-residual` has the higher median than `hodge-mp-residual` (+1.95 pp, p_BH = 0.0101), so the Hodge-superiority falsification condition is not met. H38 confirmed: `gin-residual` exceeds MLP at p_BH = 6.05 x 10^-4. The experiment shows that the tested external-residual formulation is sufficient to recover performance after normalization alone fails. It does not establish that an abstract residual connection, independent of its placement and self-path parameterization, is the sole causal mechanism.
 
-**Falsification target.** Whether adding an external residual connection to GIN's normalised aggregation recovers performance comparable to Hodge-MP-residual on NCI1. H008-b ruled out normalisation alone. Three candidate factors remain: (1) spectral vs spatial operator, (2) weight-propagation order, (3) external vs internal residual. This experiment isolates factor (3).
+**Falsification target.** Whether replacing the internal self contribution of the normalized GIN formulation with the same external identity skip used by the Hodge residual arm recovers NCI1 performance to at least the Hodge level. H008-b ruled out normalization alone.
 
 **Prior results.**
-- H008: GIN (raw A, internal self-loop) collapses to class prior (0.500) on NCI1.
-- H008-b: GIN with normalised aggregation (D^{-1/2}AD^{-1/2}, internal self-loop) also collapses to class prior (0.500).
-- Hodge-MP-residual: 0.609 on NCI1. Its residual is *external*: `act(L_tilde @ h @ W + b) + h`.
-- H001: The residual variant's verdict inverts across datasets (hurts on MUTAG, helps on NCI1).
+- H008: GIN with raw adjacency and an internal self contribution is at the class prior (0.500) on NCI1 under the matched-capacity protocol.
+- H008-b: GIN with normalized adjacency and the same internal self formulation is also at the class prior (0.500).
+- Hodge-MP-residual: 0.609 on NCI1. Its self path is external: `act(L_tilde @ h @ W + b) + h`.
 
-The external residual preserves the projected features through the propagation step, allowing the model to learn what to *add* to the per-node representation rather than what to *replace* it with. GIN's (1+eps)*h self-loop is functionally different: it is inside the MLP, so the nonlinearity is applied to the sum of the self-loop and the aggregation jointly.
+The tested difference is therefore not merely “has a self connection” versus “does not.” Both GIN formulations contain a self contribution. The distinction is where that contribution enters the computation. `gin-normalised` applies the learned transformation and nonlinearity jointly to `(1 + eps)h + A_norm h`; `gin-residual` applies the propagated affine/nonlinear path and then adds the identity representation outside the activation.
 
 ---
 
 ## 1. Design
 
-A single architectural modification: give normalised GIN the same external residual that the Hodge arm uses.
+The experiment gives normalized adjacency the same external residual architecture used by the Hodge residual arm.
 
-| Arm | Aggregation | Residual |
+| Arm | Update | Self path |
 |---|---|---|
-| `gin-normalised` (H008-b) | MLP((1+eps)*h + A_norm@h) | Internal (self-loop inside MLP) |
-| `gin-residual` (this experiment) | act(A_norm @ h @ W + b) + h | External (skip outside activation) |
-| `hodge-mp-residual` (control) | act(L_tilde @ h @ W + b) + h | External (skip outside activation) |
+| `gin-normalised` (H008-b) | `MLP((1+eps)*h + A_norm @ h)` | Trainable internal self term before the affine/nonlinear update |
+| `gin-residual` (this experiment) | `act(A_norm @ h @ W + b) + h` | External identity skip after activation |
+| `hodge-mp-residual` (control) | `act(L_tilde @ h @ W + b) + h` | External identity skip after activation |
 
-The `gin-residual` arm uses the normalised adjacency (I - L_tilde) for aggregation and an external residual, matching the Hodge arm's residual architecture exactly. The only remaining difference is the operator: normalised adjacency (low-pass, averages with neighbours) vs normalised Laplacian (high-pass, emphasises differences from neighbours).
+The `gin-residual` and Hodge residual arms match in architecture and differ only in propagation operator, which makes their comparison a clean operator ablation. The `gin-normalised` versus `gin-residual` comparison changes the self-path formulation, including the location of the self contribution relative to the learned affine map and nonlinearity; `gin-normalised` also has the trainable `eps` scalar. Therefore this comparison identifies the tested external-residual formulation as the successful design change, but it should not be interpreted as an operator-independent proof about every possible residual architecture.
 
 ## 2. Preregistered sub-hypotheses
 
+The table below preserves the preregistered decision rules.
+
 | ID | Sub-hypothesis | Prediction | Rationale | Falsified if |
 |---|---|---|---|---|
-| **H36** | `gin-residual` strictly beats `gin-normalised` on NCI1 | p_BH < 0.01 | The external residual is the architectural element that enables learning at this capacity; without it, the aggregated signal overwrites the projected features | p_BH >= 0.05 |
-| **H37** | `gin-residual` at least matches `hodge-mp-residual` on NCI1 | p_BH >= 0.05 | If the residual is the sole operative factor, then both arms — differing only in spectral (L_tilde) vs spatial (I-L_tilde) operator — should converge | Hodge strictly beats gin-residual at p_BH < 0.01 |
-| **H38** | `gin-residual` strictly beats `mlp-baseline` on NCI1 | p_BH < 0.05 | With the external residual enabling learning, the normalised adjacency should provide exploitable structural signal | p_BH >= 0.05 |
+| **H36** | `gin-residual` strictly beats `gin-normalised` on NCI1 | p_BH < 0.01 | Moving the self path outside the propagated nonlinear update should preserve the projected representation | p_BH >= 0.05 |
+| **H37** | `gin-residual` at least matches `hodge-mp-residual` on NCI1 | p_BH >= 0.05 | If Hodge has no unique operator advantage once architecture is matched, gin-residual should not be worse | Hodge strictly beats gin-residual at p_BH < 0.01 |
+| **H38** | `gin-residual` strictly beats `mlp-baseline` on NCI1 | p_BH < 0.05 | The matched external-residual adjacency arm should exploit graph structure beyond the MLP control | p_BH >= 0.05 |
+
+H37's tabulated prediction used non-significance as the literal “match” condition. The observed result is instead significant in the favorable direction for gin-residual. That does not constitute statistical equivalence, but it more directly rules out the Hodge-superiority falsification condition and supports the substantive “no unique Hodge advantage” question.
 
 ## 3. Outcome decision tree
 
 | Pattern | Interpretation |
 |---|---|
-| H36 + H37 + H38 confirmed | **The external residual is the mechanism.** Once the residual preserves the projected features, both spectral and spatial operators achieve comparable performance. The Hodge Laplacian does not confer a unique advantage — the architecture (residual placement) is what matters. |
-| H36 confirmed, H37 falsified (Hodge still beats gin-residual) | **The residual is necessary but the spectral operator contributes independently.** The Laplacian's high-pass filtering provides classification-relevant signal that normalised adjacency averaging does not. This would be evidence for a Hodge-specific structural signal. |
-| H36 refuted (gin-residual does not recover) | **The external residual alone is not sufficient.** The Hodge advantage involves the interaction between the spectral operator and the weight matrix (factor 2: L_tilde @ h @ W vs separate aggregation + MLP), not just the residual placement. |
+| H36 supported and Hodge does not outperform gin-residual | The external-residual formulation recovers the normalized-adjacency arm and no unique Hodge operator advantage remains in the matched architecture. |
+| H36 supported but Hodge still beats gin-residual at the preregistered falsification threshold | The external residual formulation helps, but the Hodge operator contributes independently. |
+| H36 refuted | The tested external-residual reformulation is not sufficient to recover the normalized-adjacency arm. |
 
 ## 4. Experimental design
 
@@ -64,12 +67,12 @@ Per-arm reports in `notebooks/results/h008c_nci1_gin_residual_30seeds.{json,md}`
 
 ### Per-arm accuracy
 
-| Arm | Median accuracy (BCa 95% CI) | vs MLP p_BH | Verdict |
+| Arm | Median accuracy (BCa 95% CI) | vs MLP p_BH | Result |
 |---|---|---|---|
-| **gin-residual** | **0.629 [0.607, 0.641]** | **6.05 x 10^-4** | **WINS (+10.6 pp)** |
-| hodge-mp-residual | 0.609 [0.581, 0.625] | 4.05 x 10^-3 | WINS (+8.6 pp) |
-| gin-normalised | 0.500 [0.500, 0.500] | 5.33 x 10^-5 | LOSES (-2.3 pp) |
-| mlp-baseline | 0.523 [0.513, 0.566] | -- | control |
+| `gin-residual` | 0.629 [0.607, 0.641] | 6.05 x 10^-4 | Positive difference from MLP |
+| `hodge-mp-residual` | 0.609 [0.581, 0.625] | 4.05 x 10^-3 | Positive difference from MLP |
+| `gin-normalised` | 0.500 [0.500, 0.500] | 5.33 x 10^-5 | Lower than MLP |
+| `mlp-baseline` | 0.523 [0.513, 0.566] | -- | Control |
 
 ### Pairwise comparisons
 
@@ -83,38 +86,23 @@ Per-arm reports in `notebooks/results/h008c_nci1_gin_residual_30seeds.{json,md}`
 
 ### Sub-hypotheses resolved
 
-- **H36** (gin-residual beats gin-normalised): **CONFIRMED.** gin-residual (0.629) strictly outperforms gin-normalised (0.500) at p_BH = 5.20 x 10^-6, r = +1.000. The external residual recovers learning from class-prior collapse.
-- **H37** (gin-residual matches Hodge): **CONFIRMED in the first decision-tree row.** gin-residual (0.629) not only matches but slightly exceeds Hodge (0.609). The difference is significant at p_BH = 0.010, r = +0.400, favouring gin-residual. The external residual is sufficient — the choice of spectral vs spatial operator is secondary.
-- **H38** (gin-residual beats MLP): **CONFIRMED.** gin-residual (0.629) strictly outperforms MLP (0.523) at p_BH = 6.05 x 10^-4, r = +0.600.
+- **H36:** **CONFIRMED.** gin-residual 0.629 exceeds gin-normalised 0.500 at p_BH = 5.20 x 10^-6, crossing the preregistered 0.01 threshold.
+- **H37:** **SUPPORTED IN THE FAVORABLE DIRECTION, NOT AS AN EQUIVALENCE CLAIM.** gin-residual is 1.95 pp higher than Hodge with p_BH = 0.0101. Hodge does not satisfy H37's preregistered falsification condition. The result rules out a unique Hodge advantage in this matched architecture, but it is not statistical evidence of equality.
+- **H38:** **CONFIRMED.** gin-residual 0.629 exceeds MLP 0.523 at p_BH = 6.05 x 10^-4.
 
 ### Interpretation
 
-The result corresponds to the first row of the preregistered decision tree: **the external residual is the mechanism.**
+Three conclusions are supported by the observed ablation:
 
-The ablation series H008 → H008-b → H008-c systematically isolated three candidate factors:
+1. Normalizing the internal-self GIN formulation is not enough to recover performance on NCI1 under this protocol (H008-b).
+2. The tested external-residual adjacency formulation recovers performance strongly (H008-c).
+3. Once the Hodge and adjacency arms use the same external-residual computation, the adjacency arm is not worse and in fact has the higher observed median. Therefore the Hodge `L_0` operator has no unique advantage in this experiment.
 
-| Factor | Tested by | Outcome |
-|---|---|---|
-| Degree normalisation | H008-b (gin-normalised) | Does not recover (still at class prior) |
-| Spectral vs spatial operator | H008-c (gin-residual uses I-L_tilde, Hodge uses L_tilde) | gin-residual matches or exceeds Hodge — operator choice is secondary |
-| **External residual placement** | **H008-c (gin-residual adds external skip)** | **Recovers from class-prior collapse to 0.629 — the operative factor** |
-
-The Hodge Laplacian (L_tilde, high-pass spectral operator) does not confer a unique classification advantage on NCI1 at this configuration. The critical architectural element is the external residual connection (`act(propagation @ W + b) + h`), which preserves the projected features through the propagation step. Without it, both GIN variants (normalised and unnormalised) fail to learn. With it, even the normalised adjacency operator (low-pass, I - L_tilde) slightly outperforms the Hodge Laplacian.
+The causal statement must remain scoped. H008-c changes the placement and parameterization of the self path between `gin-normalised` and `gin-residual`. It therefore supports the external-residual formulation as the operative tested architectural change, not a universal theorem that residual connections alone explain message-passing performance.
 
 ### Scoped claim
 
-> Under the matched-capacity protocol on NCI1 (30 seeds, 10 epochs, hidden_dim=32), the external residual connection is the operative architectural factor that enables topology-aware classification above MLP baseline. With external residual, both Hodge (L_tilde, 0.609) and normalised-adjacency (I - L_tilde, 0.629) arms outperform MLP (0.523). Without external residual, both normalised and unnormalised GIN collapse to class prior (0.500). The choice of spectral operator (high-pass vs low-pass) is secondary to the residual architecture at this configuration.
-
-### What the H003-H008c arc establishes
-
-The complete investigation arc, from the initial NCI1 positive claim (H003) through mechanism elimination (H004-H007) and architecture comparison (H008-H008c), converges on a specific finding:
-
-1. Topology-aware message passing outperforms no-topology MLP on NCI1 (+8-10 pp).
-2. The advantage requires an external residual connection; without it, message-passing architectures fail to learn.
-3. The advantage is not specific to the Hodge Laplacian — normalised adjacency aggregation with external residual performs comparably or better.
-4. The mechanism is architectural (residual placement), not operator-specific (Laplacian vs adjacency).
-
----
+> Under the matched-capacity NCI1 protocol (30 seeds, 10 epochs, hidden_dim=32), changing normalized adjacency from the tested internal-self formulation to the matched external-residual formulation raises median accuracy from 0.500 to 0.629. In the matched external-residual architecture, normalized adjacency reaches 0.629 and Hodge `L_0` reaches 0.609, so no unique Hodge operator advantage is supported. This result is specific to the tested architectures and does not establish that residual placement is the sole mechanism in other models or datasets.
 
 ## 6. Reproduction
 
