@@ -28,11 +28,15 @@ TopoGeoML is most useful when topology is a plausible source of signal or a desi
 
 ## What the graph study established
 
-The graph study asks whether Hodge-Laplacian propagation itself provides a unique classification advantage. Across the tested matched-capacity configurations, the answer is no. Once an external residual connection is present, normalised-adjacency propagation performs comparably to or better than the Hodge operator. The operative architectural factor in H008c is the external residual, not the `L_0` Hodge operator.
+The graph study asks whether Hodge-Laplacian propagation itself provides a unique classification advantage. Across the tested matched-capacity configurations, no unique `L_0` Hodge advantage is supported. In H008c on NCI1, a normalized-adjacency arm using the same external identity-skip architecture as Hodge reaches 0.629 versus 0.609 for Hodge. H010 then finds a significant adjacency advantage on MUTAG, no significant operator difference on PROTEINS, and the same favorable adjacency direction on NCI1.
 
-There is still a narrow positive result. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points (`p_BH = 4.83e-3`). That result survives investigation-wide Benjamini-Hochberg correction but not Bonferroni, and H008c shows that the improvement is not unique to the Hodge Laplacian.
+H008c also shows that the tested external-residual adjacency formulation recovers performance after normalization with an internal self contribution does not. That causal statement is intentionally scoped. `gin-normalised` places a trainable self term inside the affine/nonlinear update, whereas `gin-residual` adds an identity skip outside the activation. The result identifies the successful tested self-path formulation; it does not prove that residual connections alone are the sole mechanism in arbitrary architectures.
 
-This matters for users. TopoGeoML does not present `L_0` Hodge propagation as a universal GNN upgrade. The negative result removes an unjustified use case while leaving the reusable topology features, losses, diagnostics, signal tools, and higher-order research primitives intact.
+There is still a narrow positive result. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points (`p_BH = 4.83e-3`). That result survives investigation-wide Benjamini-Hochberg correction but not Bonferroni, and the later operator ablations show that the improvement is not unique to the Hodge Laplacian.
+
+The higher-order question also remains open. H011's NCI1 `L_1` arm does not significantly outperform MLP and is tested on a dataset where 96% of graphs have no triangles. The triangle-rich COLLAB follow-up H011b has only a one-seed directional smoke result so far.
+
+This matters for users. TopoGeoML does not present `L_0` Hodge propagation as a universal GNN upgrade. The negative and inconclusive results remove unjustified use cases while leaving the reusable topology features, losses, diagnostics, signal tools, and higher-order research primitives intact.
 
 See [`STATUS.md`](STATUS.md), [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md), [`LEADERBOARD.md`](LEADERBOARD.md), and [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) for the current evidence record. The older [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) is explicitly preserved as the Version 0.0.2 historical snapshot through H008c.
 
