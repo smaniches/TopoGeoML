@@ -20,7 +20,7 @@ The repaired model is `sheaf-residual` version `2.0.0`.
 
 ## 1. Purpose
 
-H009-R is a corrective replication intended to resolve the original H39-H41 questions using the mathematical operator that H009 meant to test.
+H009-R is a corrective replication intended to resolve the original H39-H41 questions using the mathematical operator that H009 meant to test. It is not a new hypothesis family and does not add new sub-prediction IDs; the project still contains 14 original hypothesis documents and 53 original falsifiable sub-predictions, with H009-R serving as a preregistered corrective protocol for H39-H41.
 
 It is not an independent replication because the invalidated historical H009 numbers are already known. Its value is narrower: the decision rules are fixed before observing any result from the repaired implementation, the repaired operator is tested against explicit mathematical invariants, and the new result will be kept separate from the invalid historical artifact.
 
