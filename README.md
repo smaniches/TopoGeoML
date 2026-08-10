@@ -32,11 +32,13 @@ The graph study asks whether Hodge-Laplacian propagation itself provides a uniqu
 
 H008c also shows that the tested external-residual adjacency formulation recovers performance after normalization with an internal self contribution does not. That causal statement is intentionally scoped. `gin-normalised` places a trainable self term inside the affine/nonlinear update, whereas `gin-residual` adds an identity skip outside the activation. The result identifies the successful tested self-path formulation; it does not prove that residual connections alone are the sole mechanism in arbitrary architectures.
 
-There is still a narrow positive result. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points (`p_BH = 4.83e-3`). That result survives investigation-wide Benjamini-Hochberg correction but not Bonferroni, and the later operator ablations show that the improvement is not unique to the Hodge Laplacian.
+There is a narrow positive result. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points within the H003 comparison family (`p_BH = 4.83e-3`). Later operator ablations show that the improvement is not unique to the Hodge Laplacian. The former investigation-wide 59-comparison and 76-entry sensitivity analysis is withdrawn as a current claim because it included invalidated H009 comparisons.
+
+H009 is not negative evidence about sheaf methods. A later implementation audit found that the historical `sheaf-residual` arm did not guarantee the cellular-sheaf Laplacian stated by the hypothesis and also missed its stated capacity tolerance. The archived H009 result remains public for provenance, but H39-H41 are unresolved until the operator is repaired and rerun.
 
 The higher-order question also remains open. H011's NCI1 `L_1` arm does not significantly outperform MLP and is tested on a dataset where 96% of graphs have no triangles. The triangle-rich COLLAB follow-up H011b has only a one-seed directional smoke result so far.
 
-This matters for users. TopoGeoML does not present `L_0` Hodge propagation as a universal GNN upgrade. The negative and inconclusive results remove unjustified use cases while leaving the reusable topology features, losses, diagnostics, signal tools, and higher-order research primitives intact.
+This matters for users. TopoGeoML does not present `L_0` Hodge propagation as a universal GNN upgrade. The negative, inconclusive, and invalidated results remove unjustified use cases while leaving the reusable topology features, losses, diagnostics, signal tools, and higher-order research primitives intact.
 
 See [`STATUS.md`](STATUS.md), [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md), [`LEADERBOARD.md`](LEADERBOARD.md), and [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) for the current evidence record. The older [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) is explicitly preserved as the Version 0.0.2 historical snapshot through H008c.
 
@@ -46,7 +48,7 @@ TopoGeoML 0.0.6 is beta scientific software. Public APIs can change before 1.0.
 
 Required CI enforces 100% line and 100% branch coverage on the importable `topogeoml` package under full dependencies. Mypy strict mode and ruff are enforced in CI. The `benchmarks/` tree is separate research infrastructure and is not included in the package-coverage claim. The exact verified test and coverage snapshot is recorded in [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md).
 
-The project reports negative, null, exploratory, and positive findings separately. A non-significant comparison is not treated as proof of equivalence. Positive equality would require an explicit equivalence procedure such as TOST.
+The project reports negative, null, exploratory, invalidated, and positive findings separately. A non-significant comparison is not treated as proof of equivalence. An equivalence claim would require a preregistered equivalence margin and an appropriate equivalence procedure.
 
 ## Installation
 
@@ -148,7 +150,7 @@ out = layer(x)
 print(out.shape)  # torch.Size([5, 8])
 ```
 
-At `k=0`, the normalized Hodge operator is the normalized graph Laplacian `I - D^{-1/2} A D^{-1/2}`. It is not the standard Kipf-Welling GCN propagation operator. `HodgeMessagePassing` is a fixed-complex research building block, not a claim of state-of-the-art graph classification.
+At `k=0`, the normalized Hodge operator is the normalized graph Laplacian. On positive-degree vertices it has the familiar form `I - D^{-1/2} A D^{-1/2}`; isolated vertices follow the implementation's zero degree-support convention and keep zero normalized rows. It is not the standard Kipf-Welling GCN propagation operator. `HodgeMessagePassing` is a fixed-complex research building block, not a claim of state-of-the-art graph classification.
 
 ## Implemented library surface
 
@@ -191,7 +193,7 @@ The repository separates software correctness from empirical claims.
 - Package correctness is gated by tests, strict type checking, linting, dependency audit, and 100% line and branch coverage under the full-dependency package gate.
 - Empirical claims point to seeded result artifacts and reproduction commands.
 - Pairwise graph experiments use paired Wilcoxon tests and Benjamini-Hochberg correction within their declared families.
-- Investigation-wide multiplicity is reported separately in [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md).
+- The former investigation-wide 59/76 sensitivity analysis is withdrawn until a validated comparison set is rebuilt after H009 repair.
 - Non-significance is reported as no detected difference at the tested power, not as statistical equivalence.
 - Smoke runs and exploratory diagnostics are not promoted to confirmatory claims.
 
@@ -201,6 +203,7 @@ The public contract is intentionally narrower than the code surface.
 
 - No claim says topology improves every ML task.
 - No claim says Hodge propagation is generally better than a well-tuned GNN.
+- The historical H009 result is not valid evidence about a cellular-sheaf Laplacian; a corrected implementation and fresh replication are required.
 - No powered end-to-end result currently shows `CubicalTopologyLoss` improving medical-image segmentation.
 - The H011b COLLAB `L_1` experiment has a one-seed directional smoke result, but the full statistical run remains incomplete.
 - The topology-divergence callback result is exploratory because it is floor-limited and lacks a non-overfitting negative control.
