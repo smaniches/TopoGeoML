@@ -49,7 +49,7 @@ The following floor is enforced:
 - **No Python sample loops** for numerical computation (construction loops permitted)
 - **Reproducible RNG:** `random_state=42` / `np.random.default_rng(42)` or seed passed explicitly
 - **Provenance dict** on every fit + every benchmark cell
-- **100% line and 100% branch coverage** on the `topogeoml/` package with full dependencies, enforced by the full-deps `coverage-gate` CI job (`--cov-branch --cov-fail-under=100`); the `benchmarks/` research harness is high but below 100% (cross-backend tests need the `bench` extra) and is intentionally outside the gated scope.
+- **100% line and 100% branch coverage** on the `topogeoml/` package with full dependencies, enforced by the full-deps `coverage-gate` CI job (`--cov-branch --cov-fail-under=100`); the `benchmarks/` research harness is outside the gated package scope.
 - **ruff clean** across all source directories
 - **Every empirical claim** must point to either a literature citation or an in-repo experiment
 
@@ -58,7 +58,7 @@ The following floor is enforced:
 ## Testing
 
 ```bash
-pytest                                           # full suite (504 tests)
+pytest                                           # full suite
 pytest -m "not slow"                             # skip slow tests
 pytest --cov=topogeoml --cov=benchmarks          # with coverage
 ruff check topogeoml tests benchmarks scripts notebooks  # lint

@@ -1,111 +1,150 @@
 ---
-title: Claims → evidence
+title: Claims to evidence
 nav_order: 5
 ---
 
 # Claims to Evidence
 
-Principal numerical and empirical claims in the README, mapped to evidence artifacts, reproduction commands, expected tolerances, and limitations. Per-arm statistics in the Empirical Evidence tables are sourced directly from the JSON artifacts listed below; this document maps the summary-level claims, not every individual table cell.
+This document maps the current public claims in `README.md` and `STATUS.md` to code, CI, preregistration records, and result artifacts. It distinguishes three kinds of statements:
+
+1. **Software capability:** the implementation exists and is exercised by tests.
+2. **Software correctness invariant:** CI enforces a stated property such as package coverage.
+3. **Empirical claim:** a seeded or deterministic study supports a stated scientific conclusion within its declared scope.
+
+Implementation and test coverage do not by themselves establish downstream task benefit. Conversely, a negative or invalidated result for one research architecture does not invalidate unrelated library components.
 
 ## Methodology
 
-- Claims are extracted from README.md as of the current commit.
-- Each claim must have a JSON artifact in `notebooks/results/` or a CI command that produces it.
-- Tolerances account for hardware-specific floating-point variation (see [REPRODUCING.md](https://github.com/smaniches/TopoGeoML/blob/main/REPRODUCING.md) §Expected Numerical Variation).
-- "Survives global BH" indicates whether the claim's p-value survives investigation-wide Benjamini-Hochberg correction across the 59 distinct comparisons (of 76 total computed; see [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md)).
+- Empirical values are taken from committed result artifacts in `notebooks/results/` or from the CI command that produces the invariant.
+- Pairwise graph experiments use their preregistered decision rules and within-family Benjamini-Hochberg correction.
+- The former investigation-wide 59-comparison and 76-entry sensitivity analysis is withdrawn as a current claim because it included invalidated H009 comparisons. See [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md).
+- A non-significant comparison is reported as no significant difference detected, not as proof of equivalence.
+- Where a preregistered threshold differs from a conventional alpha=0.05 interpretation, the preregistered threshold controls the hypothesis verdict.
+- Invalidated experiments remain in the public record for provenance but are excluded from current scientific conclusions until corrected and rerun.
 
 ---
 
-## Claim 1: "504 tests; 100% line and 100% branch coverage on the `topogeoml` package with torch installed"
+## Claim 1: The importable `topogeoml` package is gated at 100% line and 100% branch coverage under full dependencies
 
-| Field | Value |
+| Field | Evidence |
 |---|---|
-| Evidence | `pytest --cov=topogeoml --cov-branch` (with `pip install -e ".[all]"`) reports 100% line **and** 100% branch coverage on the importable `topogeoml` package. |
-| Artifact | CI reports coverage on every push. The dedicated full-deps `coverage-gate` job (`.github/workflows/ci.yml`, Python 3.11 / ubuntu) installs `.[all]` (torch CPU wheels) and runs `pytest -m "not gpu" --cov=topogeoml --cov-branch --cov-fail-under=100`, failing the build below 100%. |
-| Tolerance | Exact: `pytest -m "not gpu"` under `pip install -e ".[all]"` (the full-deps `coverage-gate` environment) reports 504 passing tests. The suite defines 509 `def test_` functions; parametrization plus optional-dependency skips resolve to 504 passing test items in that environment. |
-| Limitation | The default `test` CI job installs `.[dev]` (no torch), so `topogeoml/nn/` code paths are import-skipped and package coverage is below 100% in that job (reported, not gated there). The separate `coverage-gate` job installs `.[all]` and **does** gate the package at 100% line + 100% branch under `--cov-branch`. `__init__.py` files are omitted per `pyproject.toml [tool.coverage.run]`. The `benchmarks/` research harness is **not** at 100% and is deliberately outside the gated scope (the gate is `--cov=topogeoml`; see Claim 6). |
+| CI command | `pytest -m "not gpu" --cov=topogeoml --cov-branch --cov-fail-under=100` after `pip install -e ".[all]"` |
+| Workflow | `.github/workflows/ci.yml`, full-dependency coverage gate |
+| Verified snapshot | At merge commit `9ddfa0d8156637bfd1d42ec9609f299ce337bf00`: **507 passed, 35 skipped; 1,297 statements, 0 missed; 402 branches, 0 partial; 100.00% package coverage** |
+| Maintained invariant | The exact test-item count can change as regression tests are added. The maintained invariant is 100% line and 100% branch coverage on the importable `topogeoml` package in the required full-dependency gate. |
+| Scope | `benchmarks/` is research infrastructure outside the package-coverage claim. The default dev-only test matrix can skip torch-dependent paths; the full-dependency gate is authoritative for the package coverage statement. |
 
 ---
 
-## Claim 2: NCI1 positive difference (+8.6 pp, p_BH = 4.83 x 10^-3)
+## Claim 2: Hodge-residual has a narrow positive difference from MLP on NCI1
 
-| Field | Value |
+| Field | Evidence |
 |---|---|
-| Evidence | `notebooks/results/nci1_hodge_ablation_30seeds.json` |
-| Artifact key | `pairwise_comparisons[hodge-mp-residual vs mlp-baseline]` |
-| Reproduce | `python -m benchmarks.hodge --datasets nci1 --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
-| Expected | median_diff: 0.086 +/- 0.005; p_BH: 4.83e-3 +/- factor of 2 |
-| Survives global BH | Yes (rank 22/59, threshold 1.86e-2) |
-| Survives Bonferroni | No (threshold 6.58e-4) |
-| Limitation | One dataset (NCI1), one configuration (1-layer, hidden_dim=32, 10 epochs). Does not replicate on MUTAG or PROTEINS at this configuration. Subsequent ablation (H008-c) showed the operative factor is the external residual, not the Hodge Laplacian. |
+| Artifact | `notebooks/results/nci1_hodge_ablation_30seeds.{json,md}` |
+| Comparison | `hodge-mp-residual` vs `mlp-baseline` |
+| Result | median Delta = +0.086; within-experiment p_BH = 4.83 x 10^-3; Hodge median 0.609, MLP median 0.523 |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-classifier hodge-mp-normalised hodge-mp-residual hodge-mp-deep-residual mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
+| Investigation-wide sensitivity | The previous 59-comparison retrospective BH statement is withdrawn because that comparison family included invalidated H009 comparisons. |
+| Scope | NCI1, 30 seeds, 10 epochs, hidden_dim=32, matched-capacity protocol. Later operator controls show that the positive difference is not unique to the Hodge `L_0` operator. |
 
 ---
 
-## Claim 3: "topology-aware message passing with external residual outperforms MLP by 8-10 pp"
+## Claim 3: No unique `L_0` Hodge advantage is supported by the matched operator controls
 
-| Field | Value |
+| Field | Evidence |
 |---|---|
-| Evidence | `notebooks/results/h008c_nci1_gin_residual_30seeds.json` |
-| Artifact key | `pairwise_comparisons[gin-residual vs mlp-baseline]`: Delta +0.106, p_BH = 6.05e-4 |
-| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models gin-residual mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
-| Expected | median_diff: 0.106 +/- 0.005; p_BH < 0.001 |
-| Survives global BH | Yes |
-| Survives Bonferroni | Yes |
-| Limitation | NCI1 only. Does not hold on MUTAG (gin-residual matches MLP) or PROTEINS (not significantly different). |
+| H008c NCI1 | `gin-residual` 0.629 vs Hodge 0.609; median Delta = +0.0195; p_BH = 1.01 x 10^-2 |
+| H010 MUTAG | `gin-residual` 0.789 vs Hodge 0.750; p_BH = 7.44 x 10^-3 |
+| H010 PROTEINS | Hodge 0.686 vs `gin-residual` 0.675; p_BH = 0.292, so no significant operator difference is detected |
+| Artifacts | `notebooks/results/h008c_nci1_gin_residual_30seeds.{json,md}` and `notebooks/results/h010_{mutag,proteins}_operator_30seeds.{json,md}` |
+| Preregistrations | `docs/hypotheses/HYPOTHESIS-008c-gin-residual.md`, `docs/hypotheses/HYPOTHESIS-010-cross-dataset-operator.md` |
+| Supported conclusion | No tested dataset provides evidence that the matched Hodge `L_0` arm is superior to the normalized-adjacency arm. MUTAG and NCI1 favor the adjacency arm at the H010 alpha=0.05 family threshold; PROTEINS detects no significant difference. |
+| Not supported | A universal claim that adjacency is always superior, or that the H010 H44 dataset-level mechanism was identified. H44 remains inconclusive. |
 
 ---
 
-## Claim 4: "external residual connection — not the Hodge Laplacian specifically — as the operative architectural factor"
+## Claim 4: The tested external-residual adjacency formulation recovers NCI1 performance after normalization with an internal self path does not
 
-| Field | Value |
+| Field | Evidence |
 |---|---|
-| Evidence (H008) | `notebooks/results/h008_nci1_gin_gat_30seeds.json` — GIN/GAT without external residual collapse to class prior |
-| Evidence (H008-b) | `notebooks/results/h008b_nci1_gin_normalised_30seeds.json` — normalised GIN without external residual also collapses |
-| Evidence (H008-c) | `notebooks/results/h008c_nci1_gin_residual_30seeds.json` — gin-residual (with external residual) achieves 0.629 vs Hodge 0.609 |
-| Reproduce | See [REPRODUCING.md](https://github.com/smaniches/TopoGeoML/blob/main/REPRODUCING.md) §H008, §H008-b, §H008-c |
-| Limitation | Tested at one capacity point (1-layer, 32 hidden). Standard GIN/GAT with batch normalisation and multiple layers were not tested. |
+| H008b | `gin-normalised` median 0.500 on NCI1 |
+| H008c | `gin-residual` median 0.629; `gin-residual` vs `gin-normalised` p_BH = 5.20 x 10^-6 |
+| Implementation | `benchmarks/hodge/models.py` shows `gin-normalised` uses `MLP((1+eps)h + A_norm h)`, while `gin-residual` uses `act(A_norm h W + b) + h` |
+| Supported conclusion | The external-residual formulation is a successful tested architectural change and removes any need to invoke a unique Hodge operator effect in this NCI1 comparison. |
+| Causal limitation | The two GIN formulations differ in placement and parameterization of the self path. The experiment does not prove that residual connections, abstracted from their exact computation form, are the sole causal mechanism in arbitrary models or datasets. |
 
 ---
 
-## Claim 5: "graph-structural signal on all 3 datasets (all p_BH < 5 x 10^-4)"
+## Claim 5: Graph-structural classification signal is detected on the three tested datasets under constant features
 
-| Field | Value |
+| Field | Evidence |
 |---|---|
-| Evidence | `notebooks/results/h006_{mutag,proteins,nci1}_constant_30seeds.json` |
-| Artifact key | Hodge accuracy vs class prior per dataset |
-| Reproduce | See [REPRODUCING.md](https://github.com/smaniches/TopoGeoML/blob/main/REPRODUCING.md) §H006 |
-| Expected | MUTAG: gap +0.098, p = 4.53e-6; PROTEINS: gap +0.088, p = 1.41e-4; NCI1: gap +0.071, p = 1.93e-5 |
-| Survives global BH | Yes (all three) |
-| Limitation | These p-values are from the Hodge-vs-class-prior comparison within the H006 resolver, not the Hodge-vs-MLP comparison in the raw JSON. The class prior is the theoretical baseline (majority-class accuracy), not the MLP's constant-feature accuracy. |
+| Artifact | `notebooks/results/h006_{mutag,proteins,nci1}_constant_30seeds.{json,md}` |
+| MUTAG | gap from class prior +0.098; p_BH = 4.53 x 10^-6 |
+| PROTEINS | +0.088; p_BH = 1.41 x 10^-4 |
+| NCI1 | +0.071; p_BH = 1.93 x 10^-5 |
+| Reproduce | See `REPRODUCING.md` section H006, including the `benchmarks.hodge.h006_analysis` resolver step that performs the class-prior tests and family correction |
+| Scope | These are Hodge-architecture comparisons against theoretical class-prior controls under constant node features. They demonstrate exploitable graph structure in the three tested datasets, not a unique Hodge mechanism or a universal claim about graph datasets. |
 
 ---
 
-## Claim 6: Coverage on the library and the benchmark harness
+## Claim 6: H009 is invalidated as evidence for a cellular-sheaf Laplacian
 
-| Field | Value |
+| Field | Evidence |
 |---|---|
-| Evidence | `pytest --cov=topogeoml --cov=benchmarks --cov-report=term` |
-| Library (`topogeoml`) | **100% line and 100% branch coverage** with torch installed (`pip install -e ".[all]"`, `--cov-branch`). Verified module-by-module: every `topogeoml/*` file reports 0 missed lines and 0 partial branches. Enforced by the `coverage-gate` CI job at `--cov-fail-under=100`. |
-| Benchmark harness (`benchmarks`) | **Not 100%.** With `[all]` (torch + torch-geometric + GUDHI) the combined `topogeoml+benchmarks` line coverage is ~93%. The gap splits two ways: (a) the larger share is in cross-backend modules (`cli.py`, `axes/speed.py`, `axes/stability.py`, `backends/torch_topological.py`, `benchmarks/runner.py`) whose tests skip without the `torch-topological` backend (the `bench` extra); (b) a residual ~82 lines are in the hodge analysis modules (`hodge/datasets.py`, `hodge/h006_analysis.py`, `hodge/h007_analysis.py`, `hodge/runner.py`) that are genuinely partial within tests that *do* run, and would **not** be recovered by any backend install. We could not install `torch-topological` on Python 3.11–3.13 in our environment (its `giotto-ph` dependency has no compatible wheel), so the exact post-`bench` figure was not measured here; the (b) lines remain regardless. |
-| Limitation | The historical "100% on `topogeoml` and `benchmarks`" claim is **stale** and is not currently reproducible: the `benchmarks/` harness is below 100% even with the full optional stack. The library package itself is at 100% line + 100% branch and is the gated scope. Closing the remaining `benchmarks/` gap is tracked as research-harness debt, not a release blocker. The default `test` CI job installs `.[dev]` (no torch) and reports coverage without gating it; the separate `coverage-gate` job installs `.[all]` and gates the package (only) at 100% line + branch. |
+| Historical artifact | `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` retained for provenance only |
+| Implementation defect | The historical `sheaf-residual` model processed both orientations of each undirected edge independently. The resulting learned matrix was not guaranteed symmetric or positive semidefinite and was not, in general, the claimed `delta.T @ delta` scalar cellular-sheaf Laplacian. |
+| Capacity defect | On NCI1, `Linear(64, 2)` contributes 130 learner parameters, producing 2,468 total trainable parameters versus 2,338 for the fixed-operator controls. The difference is about 5.56%, slightly outside the stated 5% tolerance. |
+| Current status | H39, H40, and H41 are unresolved. The historical H009 pairwise statistics have no current inferential status for a sheaf-Laplacian claim. |
+| Required repair | One undirected edge representation, symmetric PSD construction, identity reduction to `L_0`, gradient tests, exact parameter accounting, and a fresh 30-seed NCI1 corrective replication from the repaired commit. |
+| Source document | `docs/hypotheses/HYPOTHESIS-009-sheaf-laplacian.md` contains the full invalidation and rerun requirements. |
 
 ---
 
-## Claim 7: "preregistered hypothesis series (H001-H011, 50+ falsifiable sub-predictions)"
+## Claim 7: The NCI1 `L_1` experiment does not establish a higher-order advantage
 
-| Field | Value |
+| Field | Evidence |
 |---|---|
-| Evidence | `docs/hypotheses/HYPOTHESIS-*.md` (14 files) |
-| Sub-prediction count | H1-H3 (3) + H4-H7 (4) + H8-H12 (5) + H13-H17 (5) + H18-H21 (4) + H22-H25 (4) + H26-H27 (2) + H28-H32 (5) + H33-H35 (3) + H36-H38 (3) + H39-H41 (3) + H42-H46 (5) + H47-H50 (4) + H51-H53 (3) = 53 |
-| Preregistration verification | `git log --format="%H %ai" -- docs/hypotheses/HYPOTHESIS-008-gin-gat-comparison.md | tail -1` — commit timestamp precedes experiment result timestamp. Replace the filename with any hypothesis document to verify. |
-| Limitation | Hypothesis selection was sequential (each informed by the prior). This is acknowledged in [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md) §4 as legitimate sequential testing, not p-hacking. |
+| Artifact | `notebooks/results/h011_nci1_l1_30seeds.{json,md}` |
+| L_1 vs MLP | median Delta = +0.0669; p_BH = 0.0957. H47 refuted. |
+| L_1 vs L_0 Hodge | median Delta = -0.0195; p_BH = 0.0787. H48 refuted under its stated rule. |
+| L_1 vs gin-residual | median Delta = -0.0389; p_BH = 0.00676. H49 refuted under its preregistered 0.01 rule. |
+| Structural audit | 3961/4110 NCI1 graphs contain no triangles, so the `B_2 B_2^T` up-Laplacian term is absent for 96% of graphs. |
+| Supported conclusion | The tested NCI1 `L_1` arm does not outperform the node-level controls under the preregistered rules. NCI1 is also a poor test of the intended triangle-rich higher-order mechanism. |
+| Frontier | H011b on COLLAB is the correct triangle-rich follow-up. Its one-seed smoke result is directional only and the preregistered 30-seed statistical run remains incomplete. |
 
 ---
 
-## Claims not yet independently validated
+## Claim 8: The public library surface is implemented and tested, but downstream benefit is component-specific and often unproven
 
-The following claims have not been reproduced outside the original compute environment:
+| Capability | Implementation | Test evidence | Claim boundary |
+|---|---|---|---|
+| Persistent-homology feature pipeline | `topogeoml/pipelines/feature_pipeline.py` | `tests/test_feature_pipeline.py`, full package gate | Implemented scikit-learn transformer; task-specific predictive benefit depends on data and model |
+| Differentiable Vietoris-Rips primitives and `TopologyRegularizer` | `topogeoml/nn/diff_ph.py` | `tests/test_diff_ph.py`, full package gate, path-conditional diff-PH benchmark workflow | Gradient path is tested in exercised regimes; not a claim of globally smooth persistence or universal training improvement |
+| Differentiable cubical persistence and `CubicalTopologyLoss` | `topogeoml/nn/cubical_diff_ph.py` | `tests/test_cubical_diff_ph.py`, full package gate | Implemented and gradient-tested; no powered end-to-end segmentation improvement claim yet |
+| Simplicial/Hodge algebra and fixed-complex neural primitive | `topogeoml/core/complexes.py`, `topogeoml/nn/hodge.py` | package tests and full coverage gate | Building blocks, not a full variable-topology simplicial training framework |
+| Signal topology | `topogeoml/signal/` | `tests/test_signal.py`, full package gate | Feature extraction implemented; downstream predictive value is domain-dependent |
+| Embedding audit | `topogeoml/audits/embedding_audit.py` | `tests/test_embedding_audit.py`, full package gate | Prototype diagnostic with heuristic persistence threshold, not an exact topological certification tool |
+| Experiment configuration/provenance | `topogeoml/experiments/configs.py` and related package modules | package tests and full coverage gate | Reproducibility utility, not cryptographic provenance or transactional storage guarantee |
 
-- All per-seed accuracies (hardware-dependent floating-point variation expected)
-- The investigation-wide BH analysis (computed from the archived JSON artifacts; a third party should re-run the analysis script to verify)
-- COLLAB L_1 experiment (H011-b) — pending GitHub Actions completion
+---
+
+## Claim 9: The preregistered series contains 14 hypothesis documents and 53 falsifiable sub-predictions
+
+| Field | Evidence |
+|---|---|
+| Hypothesis documents | H001, H002, H003, H004, H005, H006, H007, H008, H008b, H008c, H009, H010, H011, H011b |
+| Count | 14 documents |
+| Sub-predictions | H1-H3 (3) + H4-H7 (4) + H8-H12 (5) + H13-H17 (5) + H18-H21 (4) + H22-H25 (4) + H26-H27 (2) + H28-H32 (5) + H33-H35 (3) + H36-H38 (3) + H39-H41 (3) + H42-H46 (5) + H47-H50 (4) + H51-H53 (3) = 53 |
+| Verification | Git history for each hypothesis file supplies the preregistration timestamp; experiment artifacts were added later |
+| Sequential-design limitation | Hypothesis selection was sequential and informed by earlier results. The former investigation-wide 59/76 sensitivity analysis is withdrawn until a validated comparison set is rebuilt after H009 repair. |
+
+---
+
+## Current unresolved evidence
+
+- H009 corrected sheaf replication: historical run invalidated; H39-H41 unresolved.
+- H011b COLLAB `L_1`: one-seed, one-epoch directional smoke result only; no statistical claim licensed.
+- `CubicalTopologyLoss` downstream segmentation benefit: implementation exists, but the powered end-to-end study is not complete.
+- Topology-divergence callback: exploratory, floor-limited, no non-overfitting negative control.
+- Independent external reproduction: the validated empirical record has not yet been reproduced by an independent team.

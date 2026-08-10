@@ -1,143 +1,90 @@
 ---
 title: H009 · Sheaf Laplacian
-parent: Hypotheses (H001–H011b)
+parent: Hypotheses (H001-H011b)
 nav_order: 11
 ---
 
 # Hypothesis 009: Does a learned sheaf Laplacian outperform fixed operators on NCI1?
 
-**Status.** Resolved 2026-05-25. H39 confirmed (sheaf outperforms MLP at p_BH = 0.017); H40 refuted (sheaf does not outperform Hodge, p_BH = 0.797); H41 refuted (sheaf strictly underperforms gin-residual at p_BH = 0.014). The learned sheaf Laplacian adds no value over fixed operators at this configuration. See §7.
+**Status: INVALIDATED BY IMPLEMENTATION AUDIT 2026-08-09. The H009 numerical artifact is retained for provenance but is not valid evidence for a sheaf-Laplacian claim. H39-H41 are unresolved pending a corrected rerun.**
 
-**Falsification target.** Whether a data-dependent sheaf Laplacian — where edge-level restriction maps are learned from node features — outperforms both the fixed Hodge Laplacian and the fixed normalised adjacency on NCI1 under the matched-capacity protocol with external residual.
+The original experiment was preregistered and executed as intended, but a later implementation audit found that the `sheaf-residual` model did not construct the scalar cellular-sheaf Laplacian described by the hypothesis. This is an implementation invalidation, not a statistical reinterpretation.
 
-**Prior results motivating this hypothesis.** H008-c established that the external residual is the operative architectural factor for NCI1 classification at this capacity. The choice between L_tilde (high-pass) and I - L_tilde (low-pass) as the fixed propagation operator is secondary (gin-residual 0.629 vs Hodge 0.609). Both operators use a *fixed* propagation matrix determined entirely by graph structure. A learned sheaf Laplacian replaces this fixed operator with a data-dependent one, where the propagation weights are predicted from node features. This is the natural escalation: if the operator doesn't matter when fixed, does a *learned* operator add value?
+## 1. Why the original H009 result is invalid
 
-**Theoretical context.** A cellular sheaf on a graph assigns a vector space (stalk) to each node and a linear map (restriction map) to each edge. The sheaf Laplacian L_F = delta^T delta, where delta is the sheaf coboundary operator, generalises the graph Laplacian: when all restriction maps are the identity, L_F reduces to L_0. Neural Sheaf Diffusion (Bodnar et al. 2022, NeurIPS) learns the restriction maps from node features, making the propagation operator a function of the data. This is strictly more expressive than any fixed-Laplacian method (Hansen & Ghrist 2019).
+A scalar cellular sheaf on an undirected graph assigns one pair of endpoint restriction scalars to each undirected edge `e = {i, j}`. With an orientation chosen only for construction, the coboundary row for that edge contains the two endpoint restrictions and the sheaf Laplacian is
 
----
+`L_F = delta.T @ delta`.
 
-## 1. Design
+Consequently:
 
-For scalar stalks (stalk dimension d_s = 1), the sheaf Laplacian simplifies to a learned weighted Laplacian with PSD guarantee:
+- `L_F` is symmetric positive semidefinite;
+- for an edge `{i, j}`, the off-diagonal entries are the same in both directions;
+- the diagonal contains one squared restriction contribution per incident undirected edge;
+- in the identity-restriction case, the scalar construction reduces to the ordinary graph Laplacian `L_0`.
 
-- For each edge e = {i, j}, a small network predicts restriction scalars f_{i<-e}, f_{j<-e} from the projected node features.
-- Off-diagonal: L_F[i,j] = -f_{i<-e} * f_{j<-e}
-- Diagonal: L_F[i,i] = sum_{e containing i} f_{i<-e}^2
-- L_F is PSD by construction (L_F = delta^T delta).
-- Symmetric normalisation: L_F_tilde = D_F^{-1/2} L_F D_F^{-1/2}
+The implementation used in the archived H009 run violates that construction. `GraphSample.laplacian` is a symmetric graph Laplacian and therefore stores both off-diagonal orientations `(i, j)` and `(j, i)`. `_SheafResidualGraphClassifier.forward_one` consumed every off-diagonal entry independently, predicted a separate restriction pair for each orientation, assigned `L_F[i, j]` and `L_F[j, i]` from those independent predictions, and accumulated both orientations into the diagonal.
 
-Propagation with external residual: h' = act(L_F_tilde @ proj(x) @ W + b) + proj(x)
+Therefore the matrix used in H009 was not guaranteed to be symmetric or positive semidefinite and was not, in general, representable as the claimed `delta.T @ delta`. Even if every predicted restriction were exactly one, the diagonal contributions would be counted twice, so the construction would not reduce to the ordinary graph Laplacian as claimed.
 
-This generalises the Hodge arm (which is the special case f = 1 for all edges).
+### Capacity-accounting error
 
-| Arm | Operator | Learned? | Residual |
+The original document also misstated the parameter count. At `input_dim=37` and `hidden_dim=32`:
+
+- `proj_in`: 1,216 parameters;
+- `sheaf_learner = Linear(64, 2)`: 130 parameters, not 65;
+- message-passing weight and bias: 1,056 parameters;
+- classifier head: 66 parameters;
+- total `sheaf-residual`: **2,468 parameters**.
+
+The Hodge, normalized-adjacency, and MLP controls have 2,338 parameters. The sheaf arm is therefore about **5.56% larger**, slightly outside the experiment's stated 5% matched-capacity tolerance. This discrepancy is secondary to the invalid operator construction but must also be corrected before a rerun.
+
+## 2. Consequence for the scientific record
+
+The archived result `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` remains in the repository because deleting an invalidated result would damage the audit trail. Its numbers describe the behavior of the historical implementation only. They must not be cited as evidence about a cellular sheaf Laplacian, Neural Sheaf Diffusion, or learned sheaf operators in general.
+
+Accordingly:
+
+- H39 is **unresolved**;
+- H40 is **unresolved**;
+- H41 is **unresolved**;
+- H009 is excluded from the validated evidence index;
+- H009-specific comparisons are excluded from the investigation-wide multiplicity sensitivity analysis until a corrected rerun is available.
+
+This invalidation does not alter the H001-H008c or H010-H011 result artifacts, which use different model implementations.
+
+## 3. Original preregistered question
+
+**Falsification target.** Whether a data-dependent scalar sheaf Laplacian, where edge-level restriction maps are learned from node features, outperforms both the fixed Hodge Laplacian and the fixed normalized adjacency on NCI1 under the matched-capacity protocol with an external residual.
+
+**Theoretical construction intended by the preregistration.** For each undirected edge `e = {i, j}`, one learned pair of scalar restrictions `f_{i<-e}` and `f_{j<-e}` defines the edge's coboundary row. The resulting `L_F = delta.T @ delta` is symmetric positive semidefinite. The identity-restriction case recovers the ordinary graph Laplacian.
+
+### Original preregistered sub-hypotheses
+
+The decision rules below are preserved because they were specified before the original run. They will be reused only if the corrected implementation and capacity-matching protocol remain materially faithful to the intended experiment.
+
+| ID | Sub-hypothesis | Prediction | Falsified if |
 |---|---|---|---|
-| `sheaf-residual` | L_F_tilde (learned sheaf Laplacian) | Yes | External |
-| `hodge-mp-residual` | L_tilde (fixed graph Laplacian) | No | External |
-| `gin-residual` | I - L_tilde (fixed normalised adjacency) | No | External |
-| `mlp-baseline` | None | N/A | N/A |
+| **H39** | `sheaf-residual` strictly beats `mlp-baseline` on NCI1 | `p_BH < 0.05` | `p_BH >= 0.05` |
+| **H40** | `sheaf-residual` strictly beats `hodge-mp-residual` on NCI1 | uncertain | `p_BH >= 0.05` or sheaf < Hodge |
+| **H41** | `sheaf-residual` at least matches `gin-residual` on NCI1 | `p_BH >= 0.05` or sheaf > gin-residual | sheaf strictly underperforms gin-residual at `p_BH < 0.01` |
 
-## 2. Capacity matching
+## 4. Requirements for a valid H009 rerun
 
-| Arm | Params (NCI1, input_dim=37, hidden_dim=32) |
-|---|---|
-| sheaf-residual | ~2403 (proj_in 1216 + sheaf_learner 65 + mp_weight 1056 + head 66) |
-| hodge-mp-residual | 2338 |
-| gin-residual | 2338 |
-| mlp-baseline | 2338 |
+A corrected H009 result is not accepted until all of the following are true:
 
-The sheaf arm has ~2.8% more parameters due to the sheaf learner (65 params). This is within the 5% tolerance used in H001 and documented as acceptable for the matched-capacity protocol.
+1. **One restriction pair per undirected edge.** The model must canonicalize each graph edge once, for example with `i < j`, before predicting endpoint restrictions.
+2. **Construction test.** The learned operator must be assembled from that one edge set with symmetric off-diagonals and one diagonal contribution per endpoint incidence.
+3. **PSD test.** For randomized small graphs and randomized model parameters, the constructed unnormalized `L_F` must be symmetric to numerical tolerance and have no materially negative eigenvalues beyond floating-point tolerance.
+4. **Identity-reduction test.** With all endpoint restrictions fixed to one, `L_F` must equal the ordinary combinatorial `L_0` exactly to numerical tolerance.
+5. **Gradient test.** Gradients must reach both the restriction learner and the downstream message-passing parameters through a real loss.
+6. **Capacity accounting.** The corrected arm's exact trainable-parameter count must be reported from `model.parameters()` and brought within the preregistered tolerance or the capacity change must be explicitly preregistered as a corrected protocol.
+7. **Fresh result artifact.** The 30-seed NCI1 experiment must be rerun from the corrected commit. Historical H009 numbers cannot be recycled.
+8. **Fresh multiplicity analysis.** Only the corrected H009 comparisons may enter the investigation-wide sensitivity analysis.
 
-## 3. Preregistered sub-hypotheses
+## 5. Historical artifact
 
-| ID | Sub-hypothesis | Prediction | Rationale | Falsified if |
-|---|---|---|---|---|
-| **H39** | sheaf-residual strictly beats mlp-baseline on NCI1 | p_BH < 0.05 | A learned operator with external residual should at minimum capture the structural signal that gin-residual and Hodge both capture | p_BH >= 0.05 |
-| **H40** | sheaf-residual strictly beats hodge-mp-residual on NCI1 | Uncertain — the learned operator may or may not improve over fixed L_tilde at 10 epochs | 10 epochs may be insufficient for the sheaf learner to converge; the additional parameters may also overfit at this sample size | p_BH >= 0.05 or sheaf < hodge |
-| **H41** | sheaf-residual at least matches gin-residual on NCI1 | p_BH >= 0.05 or sheaf > gin-residual | The learned operator should be at least as expressive as the fixed normalised adjacency | sheaf strictly underperforms gin-residual at p_BH < 0.01 |
-
-## 4. Outcome decision tree
-
-| Pattern | Interpretation |
-|---|---|
-| H39 + H40 confirmed (sheaf beats Hodge and MLP) | A learned propagation operator provides classification-relevant structure that fixed operators miss. The data-dependent restriction maps capture edge-level interactions that uniform propagation cannot. |
-| H39 confirmed, H40 refuted (sheaf matches Hodge but beats MLP) | The learned operator does not improve over fixed operators at this capacity and epoch budget. The sheaf learner's 65 additional parameters are insufficient to learn meaningful edge-level structure, or 10 epochs is too short for convergence. |
-| H39 refuted (sheaf does not beat MLP) | The sheaf learner fails to converge at this configuration. Possible causes: overfitting (additional parameters on 4110 graphs), optimisation difficulty (joint learning of restriction maps and classification weights), or insufficient epoch budget. |
-
-## 5. Experimental design
-
-- **Dataset:** NCI1 (4110 graphs), identical to H003-H008c.
-- **Models:** `sheaf-residual`, `hodge-mp-residual`, `gin-residual`, `mlp-baseline`.
-- **Seeds:** 30, matched.
-- **Epochs:** 10, matched.
-- **Optimiser:** Adam(lr=1e-2), matched.
-- **Hidden dim:** 32, matched.
-- **Statistical procedure:** Pairwise paired Wilcoxon, BH-FDR at alpha=0.05.
-
-## 6. Reproduction
-
-```bash
-python -m benchmarks.hodge \
-  --datasets nci1 \
-  --models sheaf-residual hodge-mp-residual gin-residual mlp-baseline \
-  --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 \
-  --n-epochs 10 \
-  --output notebooks/results/h009_nci1_sheaf_30seeds.json \
-  --markdown notebooks/results/h009_nci1_sheaf_30seeds.md
-```
-
-## 7. Resolved outcome (2026-05-25, 30 seeds x 10 epochs, 4 arms, NCI1)
-
-Per-arm reports in `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}`.
-
-### Per-arm accuracy
-
-| Arm | Median accuracy (BCa 95% CI) | vs MLP p_BH | Verdict |
-|---|---|---|---|
-| gin-residual | 0.629 [0.607, 0.641] | 2.42 x 10^-3 | WINS (+10.6 pp) |
-| hodge-mp-residual | 0.609 [0.581, 0.625] | 1.01 x 10^-2 | WINS (+8.6 pp) |
-| sheaf-residual | 0.604 [0.564, 0.619] | 1.68 x 10^-2 | WINS (+8.1 pp) |
-| mlp-baseline | 0.523 [0.513, 0.566] | -- | control |
-
-### Key comparisons
-
-| Comparison | median Delta | p_BH | r | Interpretation |
-|---|---|---|---|---|
-| sheaf vs Hodge | -0.005 | 0.797 | +0.133 | Indistinguishable |
-| sheaf vs gin-residual | -0.025 | 1.37 x 10^-2 | -0.467 | Sheaf underperforms |
-| gin-residual vs Hodge | +0.020 | 1.52 x 10^-2 | +0.400 | gin-residual slightly ahead |
-
-### Sub-hypotheses resolved
-
-- **H39** (sheaf beats MLP): **CONFIRMED.** sheaf-residual (0.604) outperforms MLP (0.523) at p_BH = 1.68 x 10^-2, r = +0.333. The learned operator, like both fixed operators with external residual, captures structural signal above the no-topology baseline.
-- **H40** (sheaf beats Hodge): **REFUTED.** sheaf-residual (0.604) is statistically indistinguishable from Hodge (0.609) at p_BH = 0.797. The learned restriction maps do not improve over the fixed identity maps (which reduce the sheaf Laplacian to the standard graph Laplacian) at this configuration.
-- **H41** (sheaf matches gin-residual): **REFUTED.** sheaf-residual (0.604) strictly underperforms gin-residual (0.629) at p_BH = 1.37 x 10^-2, r = -0.467.
-
-### Interpretation
-
-The learned sheaf Laplacian does not improve over fixed operators at this configuration. All three topology-aware arms with external residual produce comparable accuracy (0.604-0.629), with gin-residual (fixed normalised adjacency) performing best and the sheaf Laplacian performing worst among the three. The 130 additional sheaf-learner parameters and per-graph dense Laplacian construction provide no measurable benefit.
-
-Two factors likely contribute:
-1. **Insufficient training budget.** The sheaf learner must jointly learn restriction maps and classification weights in 10 epochs. At convergence, the sheaf approach's additional expressiveness may manifest, but the current epoch budget may be insufficient for the sheaf parameters to specialise.
-2. **Scalar stalks are minimally expressive.** The scalar-stalk sheaf Laplacian learns one restriction scalar per (node, edge) pair. Bodnar et al. (2022) use vector-valued stalks (d_s > 1) with full matrix restriction maps, which are substantially more expressive. The scalar reduction may be too constrained to capture edge-level heterogeneity.
-
-### What the full H003-H009 arc establishes
-
-| Hypothesis | Question | Finding |
-|---|---|---|
-| H003 | Does Hodge beat MLP on NCI1? | Yes (+8.6 pp) |
-| H004 | Is sample size the mechanism? | No |
-| H005 | Is feature dimensionality the mechanism? | No |
-| H006 | Does topology carry class signal? | Yes (all 3 datasets) |
-| H007 | Which structural proxy explains the gain? | None individually |
-| H008 | Does Hodge beat GIN/GAT? | Yes, but GIN/GAT lack external residual |
-| H008-b | Does normalisation close the gap? | No |
-| H008-c | Does the external residual close the gap? | **Yes — gin-residual matches/exceeds Hodge** |
-| H009 | Does a learned operator improve further? | **No — fixed operators suffice** |
-
-**Consolidated conclusion:** On NCI1 at this configuration, topology-aware message passing with an external residual connection outperforms no-topology MLP by 8-10 pp. The critical factor is the external residual architecture, not the choice of propagation operator (fixed Laplacian, fixed adjacency, or learned sheaf). The propagation operator is secondary: all three variants perform comparably once the residual is present.
-
----
+The 2026-05-25 H009 run produced a median accuracy of 0.604 for the historical `sheaf-residual` implementation. That number is retained solely as provenance for the invalidated implementation and has no current inferential status.
 
 ## References
 

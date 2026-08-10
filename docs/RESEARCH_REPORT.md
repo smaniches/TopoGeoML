@@ -7,6 +7,8 @@ nav_order: 2
 
 **Version 0.0.2** | Santiago Maniches (ORCID: [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)) | TOPOLOGICA LLC
 
+> **Historical snapshot.** This report is the Version 0.0.2 research record through H008c and is preserved as written. The current project state through H011b is maintained in [STATUS.md](https://github.com/smaniches/TopoGeoML/blob/main/STATUS.md), [STATISTICAL_SUMMARY.md](STATISTICAL_SUMMARY.md), and [CLAIMS_TO_EVIDENCE.md](CLAIMS_TO_EVIDENCE.md).
+
 ---
 
 ## Abstract
