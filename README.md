@@ -36,7 +36,7 @@ Differentiable persistent-homology layers, Hodge message passing, and a benchmar
 
 ## Status
 
-**A research investigation with a primarily negative headline result, plus a working toolkit.** The library is internally consistent (504 tests; 100% line and 100% branch coverage on the `topogeoml` package when run with full dependencies, gated in CI; the `benchmarks/` research harness is below 100% — see [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claim 6), type-checked with mypy in strict mode, and statistically validated with investigation-wide FDR control (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md)).
+**A research investigation with a primarily negative headline result, plus a working toolkit.** Required CI enforces 100% line and 100% branch coverage on the `topogeoml` package under full dependencies. The `benchmarks/` research harness is outside that package coverage claim and is exercised through dedicated benchmark workflows; see [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claim 6. The code is type-checked with mypy in strict mode, and the investigation uses investigation-wide FDR control (see [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md)).
 
 **Primary finding (negative).** Across 14 preregistered hypotheses (H001–H011b, 53 falsifiable sub-predictions), encoding topological structure via the Hodge Laplacian does **not** confer a unique advantage for graph classification on any tested dataset. Once an external residual connection is present, a normalised *adjacency* operator matches or exceeds the Hodge Laplacian; on NCI1, without that residual both fall to near the class prior (~0.51 vs a 0.50 prior), while on MUTAG and PROTEINS the no-residual arms still sit above it. The operative architectural factor is the residual connection, not the topology (see H008c).
 
@@ -324,7 +324,7 @@ The package enforces the following floor:
 - No Python sample loops for numerical computation (construction loops permitted)
 - `random_state=42` / `np.random.default_rng(42)` for reproducible RNG
 - Provenance metadata (model, seed, platform, dependency versions) on every benchmark cell
-- 100% line and 100% branch coverage on the library (`topogeoml/`) with full dependencies, enforced by a dedicated full-deps CI gate (`--cov-branch --cov-fail-under=100`); the `benchmarks/` research harness is high but below 100% and is intentionally out of the gated scope (see [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claim 6)
+- 100% line and 100% branch coverage on the library (`topogeoml/`) with full dependencies, enforced by a dedicated full-deps CI gate (`--cov-branch --cov-fail-under=100`); the `benchmarks/` research harness is outside the gated package scope and is exercised through dedicated benchmark workflows
 - ruff clean across all source directories
 - Every empirical claim in any docstring or README must point to either a literature citation or an in-repo experiment (negative results count and are shipped)
 
@@ -333,12 +333,12 @@ The package enforces the following floor:
 ## Testing
 
 ```bash
-pytest                          # 504 tests
+pytest                          # full suite
 pytest -m "not slow"            # skip slow tests
 pytest --cov=topogeoml --cov=benchmarks  # with coverage
 ```
 
-Coverage is 100% line **and** 100% branch on the `topogeoml/` package (with torch installed), proven by the full-deps `coverage-gate` CI job, which installs `.[all]` (torch CPU wheels) and fails below 100% under `--cov-branch`. The `benchmarks/` research harness is ~93% line: cross-backend tests skip without the `torch-topological` backend (the `bench` extra), and a few hodge-analysis paths are partially covered. The harness is deliberately kept out of the gated scope (the gate is `--cov=topogeoml`), so the 100% gate is not diluted by harness gaps. Torch-gated tests skip cleanly when torch is not installed. See [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claim 6.
+Coverage is 100% line **and** 100% branch on the `topogeoml/` package under the full-dependency `coverage-gate` CI job, which installs `.[all]` and fails below 100% under `--cov-branch`. The `benchmarks/` tree is research infrastructure outside that package coverage invariant and is exercised through its own tests and dedicated benchmark workflows. No 100% coverage claim is made for `benchmarks/`. See [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claims 1 and 6 for the exact verified package snapshot and scope.
 
 ---
 
@@ -346,7 +346,7 @@ Coverage is 100% line **and** 100% branch on the `topogeoml/` package (with torc
 
 **v0.0.6 (current).** The current package and citable version — a documentation-accuracy and packaging-hygiene release over v0.0.5 (corrected `rips_diagram_torch` docstring that wrongly claimed a truncating `max_edge_length` raises `NotImplementedError`; removed the empty `topogeoml.services` package and the dropped `api` extra; reconciled stale test-count and hypothesis-count claims across the metadata files); no code-behaviour changes and no new empirical results.
 
-**v0.0.5.** A correctness and reviewer-driven precision release over v0.0.4 (scale-invariant Hodge isolated-simplex normalization, a corrected differentiable Rips H0 reconstruction under `max_edge_length`, full essential-bar counting in the Betti regularization loss, a real cubical-complex `gradcheck` test, and statistical-claim doc-honesty fixes); no new empirical results. Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). 504 tests; 100% line and 100% branch coverage on the `topogeoml` package with full dependencies, gated in CI (the `benchmarks/` harness is below 100%); type-checked with mypy strict in CI.
+**v0.0.5.** A correctness and reviewer-driven precision release over v0.0.4 (scale-invariant Hodge isolated-simplex normalization, a corrected differentiable Rips H0 reconstruction under `max_edge_length`, full essential-bar counting in the Betti regularization loss, a real cubical-complex `gradcheck` test, and statistical-claim doc-honesty fixes); no new empirical results. Primary finding negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (H008c). One narrow, regime-bound positive difference on NCI1 (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not Bonferroni; absolute accuracy ~20 pp below SOTA — see regime caveat). Preregistered hypothesis series H001–H011b (including GIN/GAT comparison, residual-placement ablation, sheaf Laplacian, and L_1 edge-level propagation). Full academic infrastructure (CITATION.cff, Zenodo DOI, reproduction guide, investigation-wide statistical summary). Package line and branch coverage was fully gated in CI; type checking used mypy strict.
 
 **Next.** Cross-domain validation (DD, COLLAB, social-network benchmarks). DRIVE retinal-vessel segmentation with `CubicalTopologyLoss` (Dice + BCE + λ·topo vs baseline). Continued mechanism ablation (spectral vs spatial operator isolation). The bar remains paired Wilcoxon p < 0.01 after BH correction.
 
