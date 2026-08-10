@@ -43,7 +43,7 @@ Implementation and test coverage do not by themselves establish downstream task 
 | Artifact | `notebooks/results/nci1_hodge_ablation_30seeds.{json,md}` |
 | Comparison | `hodge-mp-residual` vs `mlp-baseline` |
 | Result | median Delta = +0.086; within-experiment p_BH = 4.83 x 10^-3; Hodge median 0.609, MLP median 0.523 |
-| Reproduce | `python -m benchmarks.hodge --datasets nci1 --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models hodge-mp-classifier hodge-mp-normalised hodge-mp-residual hodge-mp-deep-residual mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
 | Investigation-wide sensitivity | The previous 59-comparison retrospective BH statement is withdrawn because that comparison family included invalidated H009 comparisons. |
 | Scope | NCI1, 30 seeds, 10 epochs, hidden_dim=32, matched-capacity protocol. Later operator controls show that the positive difference is not unique to the Hodge `L_0` operator. |
 
@@ -83,7 +83,7 @@ Implementation and test coverage do not by themselves establish downstream task 
 | MUTAG | gap from class prior +0.098; p_BH = 4.53 x 10^-6 |
 | PROTEINS | +0.088; p_BH = 1.41 x 10^-4 |
 | NCI1 | +0.071; p_BH = 1.93 x 10^-5 |
-| Reproduce | See `REPRODUCING.md` section H006 |
+| Reproduce | See `REPRODUCING.md` section H006, including the `benchmarks.hodge.h006_analysis` resolver step that performs the class-prior tests and family correction |
 | Scope | These are Hodge-architecture comparisons against theoretical class-prior controls under constant node features. They demonstrate exploitable graph structure in the three tested datasets, not a unique Hodge mechanism or a universal claim about graph datasets. |
 
 ---
