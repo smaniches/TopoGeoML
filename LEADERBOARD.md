@@ -10,6 +10,7 @@ The filename is retained for stable links, but this document is an evidence inde
 - **Refuted:** a preregistered falsification condition is satisfied.
 - **Inconclusive:** neither the preregistered confirmation condition nor the falsification condition is satisfied, or the data do not test the intended mechanism cleanly.
 - **Exploratory:** the design is intentionally nonconfirmatory.
+- **Invalidated:** a later implementation audit shows that the executed experiment did not instantiate the mathematical or computational object stated by the hypothesis. The historical artifact is retained for provenance but is not current evidence for that claim.
 - **Pending:** the preregistered experiment is incomplete and licenses no statistical claim.
 
 Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg correction within their declared comparison family unless the source document states otherwise. Investigation-wide multiplicity is reported separately in [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md). Deterministic analyses are labeled as such rather than being forced into a seeded-test template.
@@ -73,7 +74,7 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 | Domain | Graph classification, H003 |
 | Setup | NCI1, 4110 graphs, 30 seeds, 10 epochs, hidden_dim=32 |
 | Result | Hodge-residual 0.609 [0.581, 0.625] vs MLP 0.523 [0.513, 0.566]; median Delta = +0.086; p_BH = 4.83 x 10^-3; r = +0.533 |
-| Investigation-wide correction | Survives Benjamini-Hochberg over the 59 distinct comparisons; does not survive Bonferroni |
+| Investigation-wide correction | The previously reported 59-comparison retrospective sensitivity analysis included invalidated H009 comparisons and is withdrawn pending recomputation after a corrected H009 rerun. |
 | Scope | Later H008c/H010 operator controls show that this positive difference is not unique to the Hodge `L_0` operator. |
 | Artifact | `notebooks/results/nci1_hodge_ablation_30seeds.{json,md}` |
 | Preregistered | `docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md` |
@@ -188,20 +189,19 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 
 ---
 
-## Claim 12: The tested scalar learned sheaf operator does not improve over fixed Hodge on NCI1
+## Claim 12: H009 is invalidated as evidence for a learned cellular-sheaf Laplacian
 
 | Field | Value |
 |---|---|
-| Status | **H39 confirmed; H40 refuted; H41 inconclusive at its preregistered threshold** |
+| Status | **Invalidated by implementation audit; H39-H41 unresolved** |
 | Domain | H009 |
-| sheaf vs MLP | sheaf 0.604 vs MLP 0.523; p_BH = 1.68 x 10^-2, crossing H39's preregistered 0.05 threshold |
-| sheaf vs Hodge | median Delta = -0.005; p_BH = 0.797. No significant improvement detected; H40 refuted. |
-| sheaf vs gin-residual | median Delta = -0.025; p_BH = 1.37 x 10^-2; r = -0.467 |
-| H41 decision | **Inconclusive.** H41 required p_BH < 0.01 to declare strict sheaf underperformance. The observed 0.0137 is below 0.05 but does not cross the preregistered falsification threshold. |
-| Interpretation | The scalar learned sheaf operator provides no supported improvement over the fixed Hodge operator at this configuration. The experiment does not establish that learned sheaf methods are generally inferior. |
-| Artifact | `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` |
+| Defect | The historical `sheaf-residual` implementation processed both orientations of each undirected edge independently. The resulting matrix was not guaranteed symmetric or positive semidefinite and was not, in general, the claimed `delta.T @ delta` sheaf Laplacian. |
+| Capacity error | `Linear(64, 2)` has 130 trainable parameters, not 65. On NCI1 the historical sheaf arm has 2,468 parameters versus 2,338 for the fixed-operator controls, about 5.56% larger and slightly outside the stated 5% tolerance. |
+| Historical artifact | The archived run reports sheaf median 0.604 and its pairwise statistics. Those numbers describe the historical implementation only and have no current inferential status for a cellular-sheaf claim. |
+| Current scientific status | H39, H40, and H41 are unresolved until the operator is corrected, its mathematical invariants are tested, capacity is accounted for exactly, and the 30-seed NCI1 experiment is rerun from the corrected commit. |
+| Artifact | `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` retained for provenance only |
 | Preregistered | `docs/hypotheses/HYPOTHESIS-009-sheaf-laplacian.md` |
-| Reproduce | See the H009 hypothesis document |
+| Reproduce | Do not treat the historical command as a current scientific reproduction. See the H009 invalidation and rerun requirements in the hypothesis document. |
 
 ---
 
@@ -274,7 +274,7 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 | Type checking | mypy strict on `topogeoml/` |
 | Every-PR validation | Python 3.11/3.12 Linux/macOS CI, full-dependency package coverage/dependency audit, and the MUTAG/PROTEINS/NCI1 Hodge smoke matrix |
 | Path-conditional validation | The diff-PH benchmark runs on PRs that change `topogeoml/nn/diff_ph.py`, `benchmarks/**`, or `.github/workflows/benchmark.yml`; it is not an unconditional check on unrelated PRs |
-| Registered benchmark arms | 11 |
+| Registered benchmark arms | 11, including the invalidated historical `sheaf-residual` arm pending repair; registry presence is not evidence validity |
 | DOI | [10.5281/zenodo.20365816](https://doi.org/10.5281/zenodo.20365816) |
 
 ## Adding new evidence
@@ -286,4 +286,4 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 5. Update the statistical summary if the comparison family or investigation-wide multiplicity changes.
 6. Merge only after the result artifact, hypothesis interpretation, public summary, and required CI agree.
 
-Negative, null, inconclusive, and positive outcomes all remain part of the record.
+Negative, null, inconclusive, invalidated, and positive outcomes all remain part of the record.
