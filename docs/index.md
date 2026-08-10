@@ -45,7 +45,7 @@ On NCI1 (4110 chemical-compound graphs), a one-layer message-passing classifier 
 | Persistence vectorizers + pipeline | `topogeoml.core`, `topogeoml.pipelines` | persistence images, Betti curves; sklearn-compatible |
 | Statistical machinery | `benchmarks.stats` | BCa + block + percentile bootstrap; Wilcoxon, Mann–Whitney, BH-FDR |
 
-Quality floor: 504 tests; 100% line and 100% branch coverage on the `topogeoml` package with full dependencies, gated in CI (the `benchmarks/` research harness is below 100%); mypy strict; ruff clean.
+Quality floor: required CI with 100% line and 100% branch coverage on the `topogeoml` package under full dependencies; mypy strict; ruff clean. The `benchmarks/` research harness is outside the package coverage invariant and is exercised by dedicated benchmark workflows.
 
 ## How the investigation was run
 
@@ -57,7 +57,7 @@ Quality floor: 504 tests; 100% line and 100% branch coverage on the `topogeoml` 
 
 ## Start here
 
-- [Research report]({% link RESEARCH_REPORT.md %}) — the full structured technical write-up (H001–H007 arc).
+- [Research report]({% link RESEARCH_REPORT.md %}) — historical Version 0.0.2 structured report through H008c.
 - [Hypotheses (H001–H011b)]({% link hypotheses/index.md %}) — every preregistration and its resolved outcome.
 - [Statistical summary]({% link STATISTICAL_SUMMARY.md %}) — multiple-testing burden, power, and FDR across the whole investigation.
 - [Claims → evidence]({% link CLAIMS_TO_EVIDENCE.md %}) — each claim mapped to the artefact that backs it.
