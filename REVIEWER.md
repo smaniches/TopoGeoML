@@ -1,99 +1,121 @@
 # Reviewer Guide
 
-A 10-minute path to verify this repository's claims.
+This is the shortest practical verification path for the current repository. Runtime depends on network access, dependency cache state, CPU/GPU availability, and platform. No fixed completion time is claimed.
 
-## 1. Install (2 minutes)
+## 1. Install
+
+From a clean checkout:
 
 ```bash
 git clone https://github.com/smaniches/TopoGeoML.git
 cd TopoGeoML
 
-# Core (type checking, lint, non-torch tests):
+# Development checks without the full optional stack.
 pip install -e ".[dev]"
 
-# Full (all tests, coverage, reproduction of empirical results):
+# Authoritative full-dependency package gate and research tooling.
 pip install -e ".[all]"
 ```
 
-## 2. Run tests (3 minutes)
+## 2. Verify the package coverage invariant
+
+The required full-dependency CI gate is equivalent to:
 
 ```bash
-# With full dependencies (torch installed):
-pytest --cov=topogeoml --cov-branch          # required package gate: 100% line + branch
-pytest --cov=topogeoml --cov=benchmarks      # optional diagnostic view of research harness coverage
+pytest -m "not gpu" \
+  --cov=topogeoml \
+  --cov-branch \
+  --cov-fail-under=100
+```
 
-# Without torch (dev-only install):
+Expected contract: 100% line and 100% branch coverage on the importable `topogeoml` package. The exact verified snapshot for the current main baseline is recorded in [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claim 1.
+
+The `benchmarks/` tree is research infrastructure and is not included in the 100% package-coverage claim.
+
+For the lighter dev-only test matrix:
+
+```bash
 pytest
 ```
 
-Expected: with full dependencies (`pip install -e ".[all]"`), the `topogeoml` package reaches 100% line and 100% branch coverage. The required full-deps `coverage-gate` CI job enforces that invariant with `--cov-fail-under=100`. The `benchmarks/` tree is research infrastructure outside the package coverage claim and is exercised through its own tests and dedicated benchmark workflows. See [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) Claims 1 and 6 for the exact verified package snapshot and scope. Without torch, torch-dependent tests skip cleanly and package coverage is partial because the `nn/` paths are not exercised.
+Torch-dependent paths can skip without the corresponding optional dependencies, so the dev-only run is not the authoritative package-coverage proof.
 
-## 3. Type check (30 seconds)
+## 3. Type check
 
 ```bash
 mypy topogeoml
 ```
 
-Expected: 0 errors.
+Expected: zero mypy errors under the repository configuration.
 
-## 4. Lint (15 seconds)
+## 4. Lint
 
 ```bash
 ruff check topogeoml tests benchmarks scripts notebooks
 ```
 
-Expected: all checks passed.
+Expected: all configured ruff checks pass.
 
-## 5. Reproduce one result (~2 minutes)
+## 5. Exercise the graph benchmark path
 
-The primary finding is **negative** — encoding topological structure via the Hodge
-Laplacian confers no unique advantage once an external residual connection is present
-(see [`docs/index.md`](docs/index.md) and [`STATUS.md`](STATUS.md)). The narrow positive
-lead is on **NCI1** (+8.6 pp, p_BH = 4.83 × 10⁻³; survives investigation-wide BH but not
-Bonferroni; regime-bound — see the caveat in the README).
-
-The fastest way to exercise the exact code path behind those findings is a short smoke of
-the Hodge benchmark CLI (the full NCI1 headline is the same command at scale; see
-[`REPRODUCING.md`](REPRODUCING.md) §H003). Requires full dependencies (`.[all]`):
+A short smoke run is useful for checking that the real benchmark pipeline executes, but it is not a reproduction of a 30-seed scientific claim:
 
 ```bash
-# ~2 min: 3 seeds x 5 epochs on MUTAG (188 graphs). Smoke of the real
-# benchmarks.hodge code path; not the full headline result.
-python -m benchmarks.hodge --datasets mutag --seeds 0 1 2 --n-epochs 5
+python -m benchmarks.hodge \
+  --datasets mutag \
+  --seeds 0 1 2 \
+  --n-epochs 5
 ```
 
-Expected: a Markdown comparison table is printed and a JSON artifact is written to
-`benchmarks/hodge/leaderboard/current.json`. The full headline (NCI1, 30 seeds,
-10 epochs, ~2 h CPU) is documented in [`REPRODUCING.md`](REPRODUCING.md) §H003.
+For exact confirmatory designs, use [`REPRODUCING.md`](REPRODUCING.md) and the corresponding preregistration file rather than extrapolating from a smoke run.
 
-> The topology-divergence watchdog
-> (`python notebooks/topology_predicts_divergence.py --n-seeds 30`, ~15 min CPU)
-> is reproducible too, but it is **exploratory (floor-limited, no control yet)**, not a
-> headline claim — the topology watchdog fires at its earliest possible step every seed,
-> so the data show only that it is never *slower* than the loss watchdog, not that it
-> anticipates divergence (see README §1).
+The current graph result should be reviewed in two layers:
+
+1. H003 contains a narrow positive NCI1 Hodge-residual versus MLP difference (+8.6 pp, p_BH = 4.83 x 10^-3) under the matched-capacity protocol.
+2. H008c and H010 show that this difference is not unique to the Hodge `L_0` operator. Normalized adjacency in the matched external-residual architecture is at least as strong in the tested controls. H008c identifies the successful external-residual self-path formulation, but the causal claim is scoped because the internal-self and external-residual formulations are not computationally identical.
+
+See [`STATUS.md`](STATUS.md) and [`LEADERBOARD.md`](LEADERBOARD.md) for the audited current interpretation.
 
 ## 6. Inspect the evidence chain
 
-Each empirical claim maps to a JSON artifact and reproduction command:
-
-- [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) — every README claim with evidence path, command, and tolerance
-- [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md) — investigation-wide FDR analysis (59 distinct comparisons; 76 total computed)
-- [`LEADERBOARD.md`](LEADERBOARD.md) — per-claim status table
-- [`REPRODUCING.md`](REPRODUCING.md) — full reproduction guide
+- [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md): public claims mapped to code, tests, CI, artifacts, and limitations
+- [`LEADERBOARD.md`](LEADERBOARD.md): complete empirical evidence index through H011, plus the pending H011b frontier
+- [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md): within-experiment rules and retrospective investigation-wide multiplicity sensitivity analysis
+- [`REPRODUCING.md`](REPRODUCING.md): reproduction commands
+- [`STATUS.md`](STATUS.md): current software and research state
 
 ## 7. Inspect limitations
 
-- [`LIMITATIONS.md`](LIMITATIONS.md) — current toolkit and research limitations
-- [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) §4.5 — historical Version 0.0.2 limitations through H008c
-- All results are bounded to: 1-layer, hidden_dim=32, 10-20 epochs, Adam(lr=1e-2), no batch normalisation, 3-4 TUDataset benchmarks
+- [`LIMITATIONS.md`](LIMITATIONS.md): canonical current engineering and scientific limitations
+- [`docs/limitations.md`](docs/limitations.md): concise documentation-site summary
+- [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md): historical Version 0.0.2 report through H008c, explicitly labeled as historical
 
-## 8. Preregistration audit
+Important current boundaries include:
 
-Every hypothesis document in `docs/hypotheses/` was committed before its experiment ran. The git history serves as the timestamp. To verify:
+- most graph studies use one layer, hidden_dim=32, and short training budgets;
+- non-significance is not treated as equivalence;
+- the 59-comparison global BH analysis is a retrospective sensitivity analysis over an adaptively generated research program, not a prospectively guaranteed program-level FDR procedure;
+- H011b COLLAB remains incomplete at the preregistered 30-seed design;
+- `CubicalTopologyLoss` is implemented and gradient-tested, but downstream segmentation benefit is not yet established by a powered study.
+
+## 8. Audit preregistration
+
+Git history is the preregistration timestamp. For example:
 
 ```bash
-git log --format="%H %ai %s" -- docs/hypotheses/HYPOTHESIS-008-gin-gat-comparison.md | tail -1
+git log --format="%H %ai %s" \
+  -- docs/hypotheses/HYPOTHESIS-008-gin-gat-comparison.md
 ```
 
-Compare the commit timestamp to the experiment result timestamp in the corresponding JSON artifact.
+For a specific hypothesis, compare the earliest preregistration commit with the timestamp/provenance recorded in the corresponding result artifact. The current hypothesis documents preserve the decision rules and separately document any post-result corrections to interpretation.
+
+## 9. Review current source, not historical summaries
+
+The canonical current interpretation is distributed intentionally:
+
+- software capability: `README.md`, package source, tests;
+- scientific result: hypothesis file plus committed result artifact;
+- cross-experiment interpretation: `STATUS.md`, `LEADERBOARD.md`, `docs/STATISTICAL_SUMMARY.md`;
+- historical narrative: `docs/RESEARCH_REPORT.md` only.
+
+A reviewer should not infer current H009-H011 status from the historical Version 0.0.2 report.
