@@ -16,14 +16,15 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 
 ---
 
-## Claim 1: "504 tests; 100% line and 100% branch coverage on the `topogeoml` package with torch installed"
+## Claim 1: "100% line and 100% branch coverage on the `topogeoml` package under the required full-dependency gate"
 
 | Field | Value |
 |---|---|
-| Evidence | `pytest --cov=topogeoml --cov-branch` (with `pip install -e ".[all]"`) reports 100% line **and** 100% branch coverage on the importable `topogeoml` package. |
-| Artifact | CI reports coverage on every push. The dedicated full-deps `coverage-gate` job (`.github/workflows/ci.yml`, Python 3.11 / ubuntu) installs `.[all]` (torch CPU wheels) and runs `pytest -m "not gpu" --cov=topogeoml --cov-branch --cov-fail-under=100`, failing the build below 100%. |
-| Tolerance | Exact: `pytest -m "not gpu"` under `pip install -e ".[all]"` (the full-deps `coverage-gate` environment) reports 504 passing tests. The suite defines 509 `def test_` functions; parametrization plus optional-dependency skips resolve to 504 passing test items in that environment. |
-| Limitation | The default `test` CI job installs `.[dev]` (no torch), so `topogeoml/nn/` code paths are import-skipped and package coverage is below 100% in that job (reported, not gated there). The separate `coverage-gate` job installs `.[all]` and **does** gate the package at 100% line + 100% branch under `--cov-branch`. `__init__.py` files are omitted per `pyproject.toml [tool.coverage.run]`. The `benchmarks/` research harness is **not** at 100% and is deliberately outside the gated scope (the gate is `--cov=topogeoml`; see Claim 6). |
+| Evidence | `pytest -m "not gpu" --cov=topogeoml --cov-branch --cov-fail-under=100` after `pip install -e ".[all]"`. |
+| Artifact | The dedicated full-deps `coverage-gate` job in `.github/workflows/ci.yml` installs `.[all]` with the CPU torch wheel set and fails the build below 100% package coverage. |
+| Verified snapshot | At merge commit `9ddfa0d8156637bfd1d42ec9609f299ce337bf00`, the required full-deps gate reported **507 passed, 35 skipped; 1,297 statements, 0 missed; 402 branches, 0 partial; 100.00% package coverage**. |
+| Invariant | The number of collected test items may increase as regression tests are added. The maintained invariant is 100% line and 100% branch coverage on the importable `topogeoml` package under the required full-dependency gate. |
+| Limitation | The default `test` CI job installs `.[dev]` without torch, so `topogeoml/nn/` code paths may be import-skipped and package coverage is reported rather than gated there. The separate full-deps gate is the authoritative package-coverage check. The `benchmarks/` research harness is outside this package coverage claim; see Claim 6. |
 
 ---
 
@@ -80,14 +81,13 @@ Principal numerical and empirical claims in the README, mapped to evidence artif
 
 ---
 
-## Claim 6: Coverage on the library and the benchmark harness
+## Claim 6: Coverage scope for the library and research harness
 
 | Field | Value |
 |---|---|
-| Evidence | `pytest --cov=topogeoml --cov=benchmarks --cov-report=term` |
-| Library (`topogeoml`) | **100% line and 100% branch coverage** with torch installed (`pip install -e ".[all]"`, `--cov-branch`). Verified module-by-module: every `topogeoml/*` file reports 0 missed lines and 0 partial branches. Enforced by the `coverage-gate` CI job at `--cov-fail-under=100`. |
-| Benchmark harness (`benchmarks`) | **Not 100%.** With `[all]` (torch + torch-geometric + GUDHI) the combined `topogeoml+benchmarks` line coverage is ~93%. The gap splits two ways: (a) the larger share is in cross-backend modules (`cli.py`, `axes/speed.py`, `axes/stability.py`, `backends/torch_topological.py`, `benchmarks/runner.py`) whose tests skip without the `torch-topological` backend (the `bench` extra); (b) a residual ~82 lines are in the hodge analysis modules (`hodge/datasets.py`, `hodge/h006_analysis.py`, `hodge/h007_analysis.py`, `hodge/runner.py`) that are genuinely partial within tests that *do* run, and would **not** be recovered by any backend install. We could not install `torch-topological` on Python 3.11–3.13 in our environment (its `giotto-ph` dependency has no compatible wheel), so the exact post-`bench` figure was not measured here; the (b) lines remain regardless. |
-| Limitation | The historical "100% on `topogeoml` and `benchmarks`" claim is **stale** and is not currently reproducible: the `benchmarks/` harness is below 100% even with the full optional stack. The library package itself is at 100% line + 100% branch and is the gated scope. Closing the remaining `benchmarks/` gap is tracked as research-harness debt, not a release blocker. The default `test` CI job installs `.[dev]` (no torch) and reports coverage without gating it; the separate `coverage-gate` job installs `.[all]` and gates the package (only) at 100% line + branch. |
+| Library (`topogeoml`) | **100% line and 100% branch coverage** under the required full-dependency gate. Every importable `topogeoml/*` file in that gate reports no missed lines and no partial branches. |
+| Research harness (`benchmarks`) | Outside the package coverage invariant. The benchmark tree is research infrastructure and is exercised through its own tests and dedicated benchmark workflows, including diff-PH and the required Hodge smoke matrix. No 100% coverage claim is made for `benchmarks/`. |
+| Limitation | The repository's 100% coverage statement is deliberately scoped to the distributable `topogeoml` package. It must not be interpreted as a 100% coverage claim for the experimental benchmark harness. |
 
 ---
 
@@ -108,4 +108,4 @@ The following claims have not been reproduced outside the original compute envir
 
 - All per-seed accuracies (hardware-dependent floating-point variation expected)
 - The investigation-wide BH analysis (computed from the archived JSON artifacts; a third party should re-run the analysis script to verify)
-- COLLAB L_1 experiment (H011-b) — pending GitHub Actions completion
+- The full H011-b COLLAB L_1 statistical experiment remains pending; the repository currently contains only the smoke result
