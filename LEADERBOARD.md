@@ -8,7 +8,7 @@ The discipline of the table:
 - **Equality** = p_BH ≥ 0.05 OR CI overlaps zero; method is *not significantly worse* but not significantly better either.
 - **Negative** = strict regression; the comparison method underperforms the baseline at p_BH < 0.05 with CI strictly below zero.
 - **Exploratory** = a directional signal exists but the design cannot yet support a positive/negative conclusion (e.g. a censored magnitude with no negative control). Reported for transparency; not counted as a confirmed claim.
-- **Pending** = experiment is running or queued; results will land in a future PR.
+- **Pending** = the preregistered experiment is incomplete; no claim is licensed until the specified run and statistical analysis finish.
 
 > **Important — read before citing: capacity regime.** Every accuracy number below is obtained under a deliberately constrained *matched-capacity* protocol (1 layer, hidden_dim=32, 10–20 epochs, no batch normalisation, ~1.4–2.3k parameters per arm). This isolates architectural *mechanism* at fixed capacity. It is **not** a benchmark-performance comparison: absolute accuracies (0.50–0.79) sit well below literature SOTA (e.g. properly-trained GNNs reach ~0.80+ on NCI1), and under this protocol the standard GNN baselines (GIN, GAT) collapse to the class prior (0.500) on NCI1. Phrases like "outperforms GIN/GAT" mean "at equal, severely-limited capacity" — **not** "is a better graph classifier." The investigation's *primary* finding is negative: the Hodge Laplacian confers no unique advantage over a normalised-adjacency operator once an external residual is present (Claim 11 / H008c).
 
@@ -210,11 +210,11 @@ The discipline of the table:
 
 | Metric | Value |
 |---|---|
-| Total tests | 500 |
-| Coverage | **100% line and 100% branch** on the `topogeoml/` package (full deps), gated in CI (`--cov-branch --cov-fail-under=100`); `benchmarks/` harness ~93% (cross-backend tests need the `bench` extra), outside the gated scope |
+| Test suite | Required CI matrix; exact verified full-dependency snapshot is recorded in `docs/CLAIMS_TO_EVIDENCE.md` Claim 1 |
+| Package coverage | **100% line and 100% branch** on `topogeoml/` under full dependencies, enforced by the required coverage gate; no 100% coverage claim is made for `benchmarks/` |
 | Ruff clean across `topogeoml tests benchmarks scripts notebooks` | Yes |
 | Mypy strict on `topogeoml/` | **0 errors** |
-| CI workflows | 8 (4 test matrix + 2 CodeQL + benchmark-hodge + experiment runner) — all green on main |
+| Required PR validation | Python 3.11/3.12 on Linux and macOS; full-dependency coverage and dependency audit; CodeQL Python and Actions; diff-PH benchmark; required Hodge smoke on MUTAG, PROTEINS, and NCI1 |
 | Registered model arms | 11 (4 Hodge + MLP + GIN + GIN-normalised + GIN-residual + GAT + sheaf-residual + L1-Hodge-residual) |
 | Lockfile / Dockerfile | None — deliberate; library is a research toolkit, not a deployment artefact |
 | DOI | [10.5281/zenodo.20365816](https://doi.org/10.5281/zenodo.20365816) |
