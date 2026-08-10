@@ -245,9 +245,10 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 | Field | Value |
 |---|---|
 | Status | **Pending, no statistical claim licensed** |
-| Dataset | COLLAB, 5000 graphs, triangle-rich |
+| Dataset | COLLAB, 5000 graphs, triangle-rich follow-up target |
 | Smoke result | One seed, one epoch: L_1 0.668 vs MLP 0.520. Directional only. |
-| Full run | The attempted multi-seed GitHub Actions run exceeded the six-hour limit. The preregistered full experiment remains incomplete. |
+| Confirmatory design | 30 seeds, 10 epochs. A separate 18-seed compute attempt exceeded the GitHub Actions time limit and is not a completed substitute for the preregistered design. |
+| Required final audit | The completed artifact must record the triangle census under the exact dataset loader and preprocessing. |
 | Preregistered | `docs/hypotheses/HYPOTHESIS-011b-l1-collab.md` |
 
 ---
@@ -271,7 +272,8 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 | Package coverage | 100% line and 100% branch on `topogeoml/` under the required full-dependency gate; no 100% coverage claim is made for `benchmarks/` |
 | Lint | ruff enforced across the declared source/research paths |
 | Type checking | mypy strict on `topogeoml/` |
-| Required PR validation | Python 3.11/3.12 on Linux and macOS; full-dependency coverage and dependency audit; CodeQL Python and Actions; diff-PH benchmark; required Hodge smoke matrix |
+| Every-PR validation | Python 3.11/3.12 Linux/macOS CI, full-dependency package coverage/dependency audit, and the MUTAG/PROTEINS/NCI1 Hodge smoke matrix |
+| Path-conditional validation | The diff-PH benchmark runs on PRs that change `topogeoml/nn/diff_ph.py`, `benchmarks/**`, or `.github/workflows/benchmark.yml`; it is not an unconditional check on unrelated PRs |
 | Registered benchmark arms | 11 |
 | DOI | [10.5281/zenodo.20365816](https://doi.org/10.5281/zenodo.20365816) |
 
