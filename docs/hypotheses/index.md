@@ -11,7 +11,7 @@ description: "The preregistered hypothesis series and its resolved outcomes."
 Each hypothesis below was written with falsifiable sub-predictions and a pre-specified outcome decision tree, then committed to git before its experiment ran. The commit history is the preregistration timestamp. Results were appended afterwards, with the original predictions preserved for audit.
 
 {: .note }
-> The primary conclusion of this series is negative and specific: at the tested configurations, the Hodge `L_0` operator does not provide a unique advantage once an external residual is present. H008c identifies the external residual as the operative architectural factor in that experiment. Null results, refutations, positive differences, and unresolved tests are kept distinct below.
+> The primary conclusion of this series is negative and specific: at the tested configurations, no unique `L_0` Hodge advantage is supported once the Hodge and normalized-adjacency arms use the same external-residual architecture. H008c shows that the tested external-residual adjacency formulation recovers NCI1 performance after the internal-self normalized formulation does not; that result is scoped to the tested self-path formulations and is not a universal causal claim about residual connections. Null results, refutations, positive differences, and unresolved tests are kept distinct below.
 
 ## Outcomes at a glance
 
@@ -23,13 +23,13 @@ Each hypothesis below was written with falsifiable sub-predictions and a pre-spe
 | **H004** | Is sample size the mechanism behind the cross-dataset sign change? | Sample size alone does not reproduce the MUTAG sign reversal |
 | **H005** | Is feature dimensionality the mechanism? | Feature dimensionality alone does not explain the result; NCI1 retains a graph-aware advantage after projection |
 | **H006** | Is graph-structural classification signal present under constant features? | Yes on the three tested datasets; the cross-dataset ordering is inverted relative to the full-feature Hodge-versus-MLP differences |
-| **H007** | Does one tested structural proxy explain the full-feature pattern? | No tested proxy explains it individually |
-| **H008** | Does the NCI1 result hold against GIN and GAT at matched capacity? | In this deliberately constrained regime, GIN and GAT collapse to class prior while Hodge-residual does not |
-| **H008b** | Does degree normalisation explain the GIN-Hodge gap? | Refuted; normalisation alone does not recover the result |
-| **H008c** | Is the external residual the operative factor? | Confirmed in the tested NCI1 ablation; normalized adjacency with the same residual performs comparably to or better than Hodge |
-| **H009** | Does a learned sheaf Laplacian beat the fixed operators? | No supported improvement in the tested configuration |
-| **H010** | Does high-pass Hodge propagation beat low-pass adjacency cross-dataset? | No supported cross-dataset advantage for the Hodge operator |
-| **H011** | Does `L_1` edge propagation capture signal that `L_0` cannot on NCI1? | Inconclusive for the higher-order question because NCI1 is almost triangle-free |
+| **H007** | Does one tested structural proxy explain the full-feature pattern? | None of the five tested proxies tracks the full-feature cross-dataset pattern |
+| **H008** | Does the NCI1 result hold against GIN and GAT at matched capacity? | In this deliberately constrained regime, GIN and GAT are at class prior while Hodge-residual is not; H008 alone does not isolate the mechanism |
+| **H008b** | Does degree normalisation explain the GIN-Hodge gap? | Refuted; normalisation with the tested internal-self formulation does not recover the result |
+| **H008c** | Does the matched external-residual adjacency formulation recover performance and remove a unique Hodge advantage? | Yes on NCI1. gin-residual reaches 0.629 versus Hodge 0.609; the result identifies the successful tested self-path formulation, not a universal residual-only mechanism |
+| **H009** | Does a learned scalar sheaf Laplacian beat the fixed operators? | No supported improvement over the fixed Hodge operator; H41 is inconclusive because p_BH = 0.0137 does not cross its preregistered 0.01 falsification threshold |
+| **H010** | Does the Hodge-versus-adjacency gap follow a dataset-level operator mechanism? | No unique Hodge advantage is detected; H44 remains inconclusive because no dataset-level correlate was established |
+| **H011** | Does `L_1` edge propagation capture signal that `L_0` cannot on NCI1? | H47-H49 are refuted under their stated rules; the higher-order question remains unresolved because 96% of NCI1 graphs contain no triangles |
 | **H011b** | Does `L_1` help on triangle-rich COLLAB? | Unresolved; one-seed directional smoke result only, full run compute-constrained |
 
 A non-significant test is not an equivalence result. The individual preregistration files preserve the original hypotheses and appended outcomes; current inferential terminology is summarized in [`../STATISTICAL_SUMMARY.md`](../STATISTICAL_SUMMARY.md).
