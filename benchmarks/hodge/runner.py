@@ -1,7 +1,13 @@
 """
-Hodge-bench runner — orchestrates models × datasets and compares the
-HodgeMP-based classifier against the MLP baseline with paired
-Wilcoxon + Benjamini-Hochberg correction.
+Hodge-benchmark runner for seeded graph-classification comparisons.
+
+The runner executes the requested model-by-dataset cells, performs paired
+Wilcoxon comparisons across shared seeds, and applies Benjamini-Hochberg
+correction at alpha=0.05 within each dataset's requested model family.
+
+The generic alpha=0.05 report is descriptive. Scientific hypothesis verdicts
+must use the preregistered threshold in the corresponding hypothesis document,
+which can be stricter than 0.05.
 """
 
 from __future__ import annotations
@@ -79,11 +85,17 @@ def run(
     feature_projection_dim: int | None = None,
     constant_features: bool = False,
 ) -> HodgeRunResult:
-    """Run the classification axis on every (model × dataset × seed) cell.
+    """Run the classification axis on every requested model/dataset/seed cell.
 
-    When at least two models are present per dataset, also compute the
-    pairwise Wilcoxon comparisons across the shared seed list and apply
-    Benjamini-Hochberg FDR correction at α=0.05.
+    When at least two models are present for a dataset, compute paired
+    Wilcoxon comparisons over the shared seed list and apply Benjamini-Hochberg
+    correction at alpha=0.05 within that requested model family.
+
+    ``model_names=None`` means every model currently registered in ``MODELS``.
+    ``dataset_names=None`` means every dataset currently registered in
+    ``DATASETS``. Historical reproduction must therefore pass the original
+    model and dataset families explicitly; otherwise registry growth can change
+    both the executed experiment and the BH-adjusted p-values.
     """
     if model_names is None:
         model_names = list(MODELS)
@@ -124,7 +136,7 @@ def run(
             result.reports.append(report)
             per_dataset_reports.setdefault(dataset_name, []).append(report)
 
-    # Pairwise comparisons (only meaningful when ≥ 2 models per dataset).
+    # Pairwise comparisons (only meaningful when at least two models are present).
     for dataset_name, reports in per_dataset_reports.items():
         if len(reports) < 2:  # pragma: no cover
             continue
@@ -133,7 +145,6 @@ def run(
             for j in range(i + 1, len(reports)):
                 r_a = reports[i]
                 r_b = reports[j]
-                # Match by seed.
                 seed_map_a = {c.seed: c.test_accuracy for c in r_a.cells}
                 seed_map_b = {c.seed: c.test_accuracy for c in r_b.cells}
                 common = sorted(set(seed_map_a) & set(seed_map_b))
@@ -155,7 +166,7 @@ def run(
 
 
 def write_result(result: HodgeRunResult, path: Path) -> None:
-    """Atomic JSON write."""
+    """Atomically write a result JSON file on the same filesystem."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(result.as_dict(), indent=2, sort_keys=True))
@@ -163,7 +174,7 @@ def write_result(result: HodgeRunResult, path: Path) -> None:
 
 
 def render_markdown(result: HodgeRunResult) -> str:
-    """Render the Hodge-bench result as Markdown."""
+    """Render benchmark results without converting generic p-values into hypotheses."""
     lines: list[str] = []
     lines.append("# TopoGeoML Hodge subsystem benchmark")
     lines.append("")
@@ -177,7 +188,7 @@ def render_markdown(result: HodgeRunResult) -> str:
         deps = ", ".join(f"{k}={v}" for k, v in sorted(result.dependency_versions.items()))
         lines.append(f"- Dependencies: {deps}")
     lines.append("")
-    lines.append("## Per-(model × dataset) test accuracy")
+    lines.append("## Per-(model x dataset) test accuracy")
     lines.append("")
     lines.append("| Model | Dataset | Accuracy (median, 95% bootstrap CI) | n_seeds |")
     lines.append("|---|---|---|---|")
@@ -191,30 +202,35 @@ def render_markdown(result: HodgeRunResult) -> str:
     lines.append("")
 
     if result.pairwise_comparisons:
-        lines.append("## Pairwise Wilcoxon signed-rank (paired) + Benjamini-Hochberg FDR")
+        lines.append("## Paired Wilcoxon plus Benjamini-Hochberg correction")
         lines.append("")
-        lines.append("| Dataset | A | B | median Δ | p_raw | p_BH | Effect (r) | Verdict |")
+        lines.append(
+            "The final column reports generic BH significance at alpha=0.05 for this "
+            "requested model family. It is not a preregistered hypothesis verdict."
+        )
+        lines.append("")
+        lines.append("| Dataset | A | B | median delta | p_raw | p_BH | Effect (r) | BH at 0.05 |")
         lines.append("|---|---|---|---|---|---|---|---|")
         for c in result.pairwise_comparisons:
-            verdict = {
-                "significant": f"**{c['arm_a_name']} ≠ {c['arm_b_name']}**",
-                "not_significant": "no diff",
-                "underpowered": "underpowered",
-            }.get(c["kind"], "?")
-            p_raw_str = f"{c['p_value_raw']:.3e}" if not np.isnan(c["p_value_raw"]) else "—"
+            bh_status = {
+                "significant": "significant",
+                "not_significant": "not significant",
+                "underpowered": "insufficient paired samples",
+            }.get(c["kind"], "unknown")
+            p_raw_str = f"{c['p_value_raw']:.3e}" if not np.isnan(c["p_value_raw"]) else "n/a"
             p_bh_str = (
                 f"{c['p_value_bh_adjusted']:.3e}"
-                if c["p_value_bh_adjusted"] is not None else "—"
+                if c["p_value_bh_adjusted"] is not None else "n/a"
             )
             lines.append(
                 f"| {c['dataset']} | `{c['arm_a_name']}` | `{c['arm_b_name']}` "
                 f"| {c['median_diff']:+.4f} | {p_raw_str} | {p_bh_str} "
-                f"| {c['effect_size']:.3f} | {verdict} |"
+                f"| {c['effect_size']:.3f} | {bh_status} |"
             )
         lines.append("")
         lines.append(
-            "_No claim made without a statistically significant result after "
-            "BH correction at α=0.05._"
+            "_Use the corresponding preregistration to determine the scientific "
+            "decision threshold. Some TopoGeoML sub-hypotheses require p_BH < 0.01._"
         )
 
     return "\n".join(lines)
