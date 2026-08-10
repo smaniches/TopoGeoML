@@ -6,15 +6,17 @@ If observed behavior contradicts the public API documentation, treat that as a d
 
 ## 1. Scientific claims are configuration-bound
 
-The graph-classification investigation uses a deliberately constrained matched-capacity regime: primarily one message-passing layer, `hidden_dim=32`, 10 to 20 epochs, Adam at `1e-2`, no batch normalisation, and fixed TUDataset splits across seeded repetitions. Those experiments are mechanism studies, not competitive benchmark submissions.
+The graph-classification investigation uses a deliberately constrained matched-capacity regime: primarily one message-passing layer, `hidden_dim=32`, 10 to 20 epochs, Adam at `1e-2`, no batch normalisation, and deterministic stratified train/test splits generated separately for each seed. Model arms within the same seed share the same split, while different seeds use different deterministic splits. Those experiments are mechanism studies, not competitive benchmark submissions.
 
-The strongest current conclusion is negative and specific: on the tested graph-classification configurations, the Hodge Laplacian does not provide a unique advantage once an external residual connection is present. H008c shows that a normalised-adjacency operator with the same external residual matches or exceeds the Hodge operator in that regime.
+The strongest current architecture conclusion is negative and specific: on the tested graph-classification configurations, the Hodge `L_0` operator does not provide a unique advantage over a matched normalized-adjacency external-residual control. H008c and H010 support that scoped conclusion. They do not establish that one propagation operator is universally superior.
 
-The NCI1 Hodge-residual versus MLP comparison is a positive-difference result at the tested configuration (`median delta = +0.086`, paired Wilcoxon `p_BH = 4.83e-3`) and survives the investigation-wide Benjamini-Hochberg correction, but not Bonferroni. It does not establish that Hodge propagation is generally superior to graph neural networks or to adjacency propagation.
+The NCI1 Hodge-residual versus MLP comparison is a positive-difference result at the tested configuration (`median delta = +0.086`, within-experiment paired Wilcoxon `p_BH = 4.83e-3`). It does not establish that Hodge propagation is generally superior to graph neural networks or to adjacency propagation. The previous investigation-wide 59-comparison and 76-entry sensitivity tables are withdrawn as current evidence because they included comparisons from the invalidated H009 experiment.
+
+H009 is invalidated by implementation audit. The historical `sheaf-residual` matrix was not guaranteed to be the claimed symmetric positive-semidefinite cellular-sheaf Laplacian, and the historical parameter count was also misstated. The old H009 artifact remains public for provenance but must not be cited as evidence about learned sheaf operators until the implementation is repaired and the experiment is rerun.
 
 Non-significant pairwise tests are reported as failures to detect a difference at the tested power. They are not equivalence results unless an equivalence procedure is explicitly performed. See [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md) and [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md).
 
-H011b, the triangle-rich COLLAB test of edge-level `L_1` propagation, has only a directional smoke result. The full statistical experiment exceeded the GitHub Actions time limit and remains unresolved. No cross-domain `L_1` claim is licensed from the smoke run.
+H011b, the triangle-rich COLLAB test of edge-level `L_1` propagation, has only a directional smoke result. A separate 18-seed compute attempt exceeded the GitHub Actions time limit, but the preregistered confirmatory design is 30 seeds. No cross-domain `L_1` claim is licensed until that design is completed.
 
 The topology-divergence callback result is exploratory. In the published experiment the topology trigger fires at its earliest possible step on every seed, and no non-overfitting negative control was run. The result shows that the trigger was not later than the loss trigger under that experiment; it does not establish anticipatory prediction of divergence.
 
@@ -68,7 +70,7 @@ Betti curves and persistence images are summaries, not lossless representations 
 
 `HodgeMessagePassing` is a minimal fixed-complex layer. It stores one Laplacian as a module buffer and does not implement variable-topology graph batching, multi-rank message passing, attention, learned incidence maps, or a complete simplicial neural-network architecture.
 
-At `k=0`, TopoGeoML's normalized Hodge operator is a normalized graph Laplacian, not the standard Kipf-Welling GCN propagation operator. The distinction between high-pass Laplacian propagation and adjacency-based propagation is central to H008c and should not be collapsed in interpretation.
+At `k=0`, TopoGeoML's normalized Hodge operator is a normalized graph Laplacian, not the standard Kipf-Welling GCN propagation operator. On positive-degree vertices, the usual identity is `I - D^{-1/2} A D^{-1/2}`; isolated vertices follow the implementation's zero degree-support convention and retain zero normalized rows. The distinction between high-pass Laplacian propagation and adjacency-based propagation is central to H008c and should not be collapsed in interpretation.
 
 ## 6. Embedding-audit limits
 
@@ -98,7 +100,7 @@ The benchmark harness is research infrastructure and is not part of the 100% pac
 
 TopoGeoML does not claim to replace GUDHI, ripser, PyTorch Geometric, or broad topological-deep-learning frameworks. It composes narrower primitives into a typed, inspectable research workflow with provenance, scikit-learn integration, differentiable topology losses, simplicial operators, signal features, and explicit claim-to-evidence discipline.
 
-It does not claim that topology improves every machine-learning task, that Hodge propagation is universally superior, that its differentiable persistence backend is the fastest available implementation, or that the current graph-classification results generalize beyond the tested configurations.
+It does not claim that topology improves every machine-learning task, that Hodge propagation is universally superior, that the historical H009 run is valid sheaf evidence, that its differentiable persistence backend is the fastest available implementation, or that the current graph-classification results generalize beyond the tested configurations.
 
 ## 10. Version stability
 
