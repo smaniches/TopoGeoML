@@ -1,72 +1,64 @@
 ---
 title: Overview
 nav_order: 1
-description: "What TopoGeoML is, what it found, and what it does not claim."
+description: "TopoGeoML software, evidence, and scientific scope."
 ---
 
 # TopoGeoML
 {: .no_toc }
 
-**A preregistered, self-falsifying investigation into topology-aware graph classification — plus a differentiable-TDA toolkit.**
+**TopoGeoML is a topology-aware machine learning library with an attached preregistered research record.**
 
-TopoGeoML asks one question and tries hard to answer it honestly: *does encoding topological structure via the Hodge Laplacian improve graph classification beyond what node features already provide?* The question was tested across 14 preregistered hypotheses (53 falsifiable sub-predictions), with the hypothesis documents committed to git **before** each experiment ran.
+The installed package provides persistent-homology features for ordinary ML pipelines, differentiable Vietoris-Rips and cubical topology primitives for PyTorch, simplicial and Hodge operators, topology features for signals, embedding diagnostics, and reproducible experiment metadata.
 
-This site is the navigable record of that investigation. It is written to inform, not to sell. Every accuracy figure on it is bounded by the regime caveat below.
+The graph-classification investigation is one application of those tools. Its negative result is important because it narrows where Hodge propagation should be used, but it does not define the value of the library.
 
----
+## Software surface
 
-## Primary finding — negative
-
-Encoding topological structure via the Hodge Laplacian does **not** confer a unique advantage for graph classification on any tested dataset. Once an external residual connection is present, a plain normalised-*adjacency* operator matches or slightly exceeds the Hodge Laplacian; without that residual, both collapse to the class prior. **The operative architectural factor is the residual connection, not the topology** (hypothesis H008c).
-
-This refutes the strong "topology helps graph classification" hypothesis at the tested configuration. It is reported with the same prominence as any positive result — that is the point of the project.
-
-## Secondary finding — positive, narrow
-
-On NCI1 (4110 chemical-compound graphs), a one-layer message-passing classifier *with* an external residual outperforms a matched-capacity MLP baseline by 8–10 percentage points (paired Wilcoxon p_BH = 4.83 × 10⁻³; survives investigation-wide Benjamini–Hochberg correction but not Bonferroni).
-
-{: .warning }
-> **Read before citing any accuracy number.** All results are obtained under a deliberately constrained *matched-capacity* protocol (1 layer, hidden_dim = 32, 10–20 epochs, no batch normalisation, ~1.4–2.3k parameters per arm). Under this protocol the standard GNN baselines (GIN, GAT) **collapse to the class prior (0.500)** on NCI1, and the best arm reaches only ~0.61–0.63 — roughly **20 percentage points below the ~0.80+ that properly-trained GNNs achieve** on this benchmark in the literature. These comparisons isolate *architectural mechanism at fixed capacity*; they are **not** statements about leaderboard performance, and a phrase like "outperforms GIN/GAT" means only "at equal, severely-limited capacity."
-
-## What this is — and is not
-
-- **It is** a rigorous, reproducible research investigation and a small (~7K LOC) toolkit of correct, citable, type-checked topology-aware layers and a statistical harness.
-- **It is not** a production training framework, a competitive benchmark entry, or evidence that topological methods beat well-tuned GNNs. No claim of generality beyond the tested configuration is made.
-
----
-
-## What is in the toolkit
-
-| Component | Module | Notes |
+| Use case | Module | Scope |
 |---|---|---|
-| Differentiable persistent homology (Rips) | `topogeoml.nn.diff_ph` | autograd through critical-edge indexing (Hofer 2017 / Carrière 2021) |
-| Differentiable cubical PH + topology loss | `topogeoml.nn.cubical_diff_ph` | `CubicalTopologyLoss` for image-segmentation training |
-| Hodge Laplacian message-passing layer | `topogeoml.nn.hodge` | one round of `σ(L̃ₖ x W + b)`; a minimal building block, not a SOTA architecture |
-| Persistence vectorizers + pipeline | `topogeoml.core`, `topogeoml.pipelines` | persistence images, Betti curves; sklearn-compatible |
-| Statistical machinery | `benchmarks.stats` | BCa + block + percentile bootstrap; Wilcoxon, Mann–Whitney, BH-FDR |
+| Point-cloud topology as ML features | `topogeoml.pipelines.TopologyFeaturePipeline` | scikit-learn compatible persistence images and Betti curves |
+| Differentiable Vietoris-Rips topology | `topogeoml.nn.diff_ph` | PyTorch critical-value routing and topology regularization |
+| Differentiable cubical topology | `topogeoml.nn.cubical_diff_ph` | `CubicalTopologyLoss` and persistence diagrams for image-like tensors |
+| Simplicial and Hodge computation | `topogeoml.core`, `topogeoml.nn.hodge` | complexes, boundary operators, Hodge Laplacians, minimal fixed-complex message passing |
+| Signal topology | `topogeoml.signal` | Takens embedding and sliding-window persistent-homology features |
+| Embedding diagnostics | `topogeoml.audits` | prototype topology audit with a heuristic significance threshold |
+| Reproducible research | `benchmarks/`, `docs/`, `notebooks/` | seeded experiments, statistical analysis, provenance, and claim-to-evidence mapping |
 
-Quality floor: required CI with 100% line and 100% branch coverage on the `topogeoml` package under full dependencies; mypy strict; ruff clean. The `benchmarks/` research harness is outside the package coverage invariant and is exercised by dedicated benchmark workflows.
+Required CI enforces 100% line and 100% branch coverage on the importable `topogeoml` package under full dependencies, together with mypy strict and ruff. The `benchmarks/` tree is research infrastructure outside the package-coverage invariant.
+
+## Graph-classification finding
+
+Across the tested matched-capacity graph-classification configurations, the Hodge `L_0` operator does not provide a unique advantage once an external residual connection is present. H008c shows that normalised-adjacency propagation with the same external residual performs comparably to or better than the Hodge operator in that regime. The operative architectural factor identified by that experiment is the residual connection, not the Hodge Laplacian itself.
+
+A narrow positive result remains. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points (`p_BH = 4.83 x 10^-3`). The comparison survives investigation-wide Benjamini-Hochberg correction but not Bonferroni, and H008c shows that the improvement is not unique to Hodge propagation.
+
+These experiments are mechanism studies at deliberately constrained capacity. They are not benchmark-performance claims and they do not establish that TopoGeoML should replace well-tuned graph neural networks.
+
+## Statistical language
+
+A non-significant pairwise test is reported as no detected difference at the tested power. It is not proof of equivalence. An explicit equivalence procedure would be required to make an equality claim.
+
+Smoke runs and exploratory diagnostics are also kept separate from confirmatory results. In particular, the H011b COLLAB `L_1` experiment has only a directional smoke result, and the topology-divergence callback study is exploratory because it is floor-limited and lacks a non-overfitting negative control.
 
 ## How the investigation was run
 
-- **Preregistration.** Each hypothesis was committed to git with falsifiable sub-predictions and a pre-specified outcome decision tree *before* the experiment ran.
-- **Statistics.** 30 seeds per experiment, paired Wilcoxon signed-rank with Benjamini–Hochberg FDR control, BCa bootstrap confidence intervals; investigation-wide correction across the 59 distinct comparisons (76 computed in total).
-- **Negative results shipped.** 28 of the 59 distinct comparisons (47%), and 29 of the 76 total (38%), are non-significant and are reported with identical formatting to the positive ones.
-
----
+- **Preregistration.** Each hypothesis document was committed before its corresponding experiment ran.
+- **Seeded analysis.** The confirmatory graph experiments use repeated seeded runs and paired comparisons where appropriate.
+- **Multiplicity control.** Benjamini-Hochberg correction is applied within declared comparison families, with a separate investigation-wide analysis across the deduplicated comparison set.
+- **Negative results retained.** Refutations, null results, and unresolved experiments remain in the public record.
 
 ## Start here
 
-- [Research report]({% link RESEARCH_REPORT.md %}) — historical Version 0.0.2 structured report through H008c.
-- [Hypotheses (H001–H011b)]({% link hypotheses/index.md %}) — every preregistration and its resolved outcome.
-- [Statistical summary]({% link STATISTICAL_SUMMARY.md %}) — multiple-testing burden, power, and FDR across the whole investigation.
-- [Claims → evidence]({% link CLAIMS_TO_EVIDENCE.md %}) — each claim mapped to the artefact that backs it.
-- [Limitations & scope]({% link limitations.md %}) — what does not work, and the regime bounds.
-- [Mathematical foundations]({% link mathematics/foundations.md %}) — the underlying TDA / Hodge theory.
+- [Current project status]({% link ../STATUS.md %})
+- [Claims to evidence]({% link CLAIMS_TO_EVIDENCE.md %})
+- [Statistical summary]({% link STATISTICAL_SUMMARY.md %})
+- [Hypotheses H001-H011b]({% link hypotheses/index.md %})
+- [Historical research report]({% link RESEARCH_REPORT.md %}), Version 0.0.2 through H008c
+- [Limitations and scope]({% link limitations.md %})
+- [Mathematical foundations]({% link mathematics/foundations.md %})
 
-Code, reproduction commands, and the full leaderboard live in the [GitHub repository](https://github.com/smaniches/TopoGeoML).
-
----
+Code, installation instructions, examples, and the research harness are in the [GitHub repository](https://github.com/smaniches/TopoGeoML).
 
 ## Citation
 
