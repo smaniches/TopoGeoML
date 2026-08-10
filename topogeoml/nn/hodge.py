@@ -1,22 +1,26 @@
 """
-Minimal Hodge message passing layer for PyTorch.
+Minimal Hodge message-passing layer for PyTorch.
 
-Implements the simplest Hodge-Laplacian-based propagation on k-simplices:
+Implements Hodge-Laplacian propagation on k-simplices:
 
-        x' = σ( L̃_k @ x @ W + b )
+        x' = sigma(L_tilde_k @ x @ W + b)
 
-where L̃_k is a (sym-)normalized Hodge Laplacian of dimension k built from a
-SimplicialComplex, x is an (n_k, in_features) tensor of features on the
-k-simplices, and W is a learnable (in_features, out_features) weight matrix.
+where L_tilde_k is a symmetrically normalized Hodge Laplacian of dimension k
+built from a SimplicialComplex, x is an (n_k, in_features) tensor of features
+on the k-simplices, and W is a learnable (in_features, out_features) matrix.
 
-For k = 0 with a graph-like complex (vertices + edges only), this reduces to
-Kipf-Welling GCN propagation on the graph. For k = 1 (features on edges) it
-propagates through the up-Laplacian (triangles) and down-Laplacian (shared
-vertices), the basic building block of simplicial neural networks (Ebli et al.
-2020; Bunch et al. 2020).
+For k = 0 on a graph-like complex, L_tilde_0 is the normalized graph Laplacian
+I - D^{-1/2} A D^{-1/2}. It is not the standard Kipf-Welling GCN propagation
+operator, which is adjacency-based and uses self-loop renormalization. For
+k = 1, Hodge propagation combines the down-Laplacian contribution from shared
+vertices with the up-Laplacian contribution from shared 2-simplices. This is a
+minimal building block for simplicial neural-network research, not a complete
+batched simplicial architecture.
 
-Item 8 of the v0.0.1 scope. This is a minimal layer — full SCN architecture,
-batching across complexes, and equivariance machinery land in v0.1.
+References
+----------
+Ebli et al. (2020), Simplicial Neural Networks.
+Bunch et al. (2020), Simplicial 2-Complex Convolutional Neural Networks.
 
 Notes
 -----
@@ -24,8 +28,7 @@ This module requires PyTorch. Install via:
 
     pip install "topogeoml[torch]"
 
-Without torch, importing this module raises ImportError on the torch line.
-The rest of topogeoml does NOT require torch.
+The core TopoGeoML package does not require PyTorch.
 """
 
 from __future__ import annotations
@@ -52,7 +55,7 @@ def normalize_hodge_laplacian(
     epsilon: float = 1e-6,
 ) -> sp.csr_matrix:
     """
-    Symmetric normalization L̃ = D^{-1/2} L D^{-1/2} where D = diag(deg).
+    Symmetric normalization L_tilde = D^{-1/2} L D^{-1/2} where D = diag(deg).
 
     For combinatorial Laplacians "degree" is the diagonal of L. The standard
     symmetric normalization sets D^{-1/2}_ii = 0 when the degree is 0, leaving
@@ -78,9 +81,9 @@ def normalize_hodge_laplacian(
     # D^{-1/2}_ii = 1/sqrt(diag_ii) for every strictly positive degree, 0 only for
     # isolated simplices (degree exactly 0). Symmetric normalization is scale
     # invariant, so a small positive degree (e.g. a lightly weighted simplex) must
-    # still be normalized, not zeroed — the discriminator is degree > 0, not an
-    # absolute floor. Computing the reciprocal only on the positive entries avoids
-    # a spurious divide-by-zero warning on the zero-degree rows.
+    # still be normalized, not zeroed. The discriminator is degree > 0, not an
+    # absolute floor. Computing the reciprocal only on positive entries avoids a
+    # spurious divide-by-zero warning on zero-degree rows.
     d_inv_sqrt = np.zeros_like(diag)
     positive = diag > 0.0
     d_inv_sqrt[positive] = 1.0 / np.sqrt(diag[positive])
@@ -96,19 +99,16 @@ def sparse_scipy_to_torch(
     """Convert a scipy sparse matrix to a torch sparse COO tensor."""
     coo = matrix.tocoo()
     indices = torch.from_numpy(np.vstack([coo.row, coo.col]).astype(np.int64))
-    # Standard float32/float64 data passes straight through (no float32
-    # intermediate — that would truncate precision for float64 callers,
-    # elite-code §1.3); any other input dtype that torch.from_numpy cannot wrap
-    # (e.g. np.longdouble, np.uint16) is normalised to float64 first, then the
-    # final .to(dtype) applies the caller's requested precision.
+    # Standard float32/float64 data passes straight through without a float32
+    # intermediate that would truncate precision for float64 callers. Other
+    # dtypes that torch.from_numpy cannot wrap are normalized to float64 first,
+    # then the final .to(dtype) applies the caller's requested precision.
     data = coo.data if coo.data.dtype in (np.float32, np.float64) else coo.data.astype(np.float64)
     values = torch.from_numpy(np.ascontiguousarray(data)).to(dtype)
     shape = torch.Size(coo.shape)
-    # The COO comes from a valid scipy sparse matrix, so its indices are
-    # already in-bounds and consistent. Declare that intent explicitly via
-    # torch's documented context manager: it matches torch's default (checks
-    # implicitly disabled) while silencing the UserWarning torch otherwise
-    # emits for every conversion. Scoped so no global state leaks out.
+    # The COO comes from a valid scipy sparse matrix, so its indices are already
+    # in bounds and consistent. Declare that intent explicitly with torch's
+    # documented context manager while keeping the setting scoped to this call.
     with torch.sparse.check_sparse_tensor_invariants(False):
         tensor = torch.sparse_coo_tensor(indices, values, shape).coalesce()
     if device is not None:
@@ -140,7 +140,7 @@ class HodgeMessagePassing(nn.Module):  # type: ignore[misc]
     --------
     >>> from topogeoml.core.complexes import SimplicialComplex, hodge_laplacian
     >>> from topogeoml.nn.hodge import HodgeMessagePassing, normalize_hodge_laplacian
-    >>> # Triangle (2-simplex) — three edges, β_1 = 0.
+    >>> # Triangle (2-simplex), three edges, beta_1 = 0.
     >>> sc = SimplicialComplex(facets=[(0, 1, 2)])
     >>> L0 = hodge_laplacian(sc, 0)
     >>> L0_norm = normalize_hodge_laplacian(L0)
@@ -226,14 +226,14 @@ class HodgeMessagePassing(nn.Module):  # type: ignore[misc]
         if x.shape[0] != self._laplacian.shape[0]:
             raise ValueError(
                 f"x has {x.shape[0]} rows but Laplacian has {self._laplacian.shape[0]} "
-                f"k-simplices — shape mismatch"
+                f"k-simplices; shape mismatch"
             )
         if x.shape[1] != self.in_features:
             raise ValueError(
                 f"x has {x.shape[1]} features but layer expects {self.in_features}"
             )
 
-        # Propagate: x' = activation( L @ x @ W + b )
+        # Propagate: x' = activation(L @ x @ W + b)
         # torch.sparse.mm is the operator for sparse @ dense.
         propagated = torch.sparse.mm(self._laplacian, x)
         transformed = propagated @ self.weight
