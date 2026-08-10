@@ -31,8 +31,8 @@ TopoGeoML is a preregistered research investigation into whether Hodge decomposi
 
 | Metric | Value |
 |---|---|
-| Tests | 504 |
-| Coverage | 100% line **and** 100% branch coverage on the `topogeoml` package with full dependencies (`.[all]`), enforced by the full-deps `coverage-gate` CI job (`--cov-branch --cov-fail-under=100`); the `benchmarks/` research harness is ~93% (cross-backend tests need the `bench` extra) and is intentionally outside the gated scope (gate is `--cov=topogeoml`). |
+| Tests | 507 |
+| Coverage | 100% line **and** 100% branch coverage on the `topogeoml` package with full dependencies (`.[all]`), enforced by the full-deps `coverage-gate` CI job (`--cov-branch --cov-fail-under=100`); the `benchmarks/` research harness is intentionally outside the gated scope (gate is `--cov=topogeoml`). |
 | Type checking | mypy strict enforced in CI |
 | Lint | ruff, all checks passing |
 | DOI | [10.5281/zenodo.20365816](https://doi.org/10.5281/zenodo.20365816) |
@@ -45,9 +45,9 @@ TopoGeoML is a preregistered research investigation into whether Hodge decomposi
 | Item | Status | Next step |
 |---|---|---|
 | H011-b (L_1 on COLLAB) | Smoke test completed; full run pending | Run locally on higher-compute hardware |
-| RESEARCH_REPORT.md | Covers H001-H007; does not reflect H008-H011 findings | Update after COLLAB result |
-| Cross-domain validation | Only chemistry/protein datasets tested | Test on social-network, citation-graph benchmarks |
-| Multi-layer architectures | All results at 1-layer, hidden_dim=32 | Test with 2-5 layers, batch normalisation |
+| Historical research report | [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md) is the Version 0.0.2 snapshot through H008c; H009-H011b are documented in the current hypothesis/evidence files | Preserve the historical snapshot; use this status file, [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_SUMMARY.md), and [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md) for current project state |
+| Cross-domain validation | Chemistry/protein experiments are statistically evaluated; COLLAB provides a social-network smoke result only | Complete H011-b on COLLAB before making any cross-domain L_1 claim |
+| Multi-layer architectures | All results at 1-layer, hidden_dim=32 | Test with 2-5 layers and batch normalisation only as a new preregistered research extension |
 
 ## How to verify
 
