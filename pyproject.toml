@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "topogeoml"
 dynamic = ["version"]
-description = "Preregistered topology-aware machine learning research toolkit: differentiable persistent homology, Hodge Laplacian message passing, and statistically defensible benchmarking on graph classification (MUTAG, PROTEINS, NCI1)."
+description = "Topology-aware machine learning toolkit for persistent-homology features, differentiable topology losses, simplicial and Hodge operators, signal analysis, and reproducible evaluation."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
