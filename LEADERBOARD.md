@@ -74,7 +74,7 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 | Domain | Graph classification, H003 |
 | Setup | NCI1, 4110 graphs, 30 seeds, 10 epochs, hidden_dim=32 |
 | Result | Hodge-residual 0.609 [0.581, 0.625] vs MLP 0.523 [0.513, 0.566]; median Delta = +0.086; p_BH = 4.83 x 10^-3; r = +0.533 |
-| Investigation-wide correction | The previously reported 59-comparison retrospective sensitivity analysis included invalidated H009 comparisons and is withdrawn pending recomputation after a corrected H009 rerun. |
+| Investigation-wide correction | The previously reported 59-comparison retrospective sensitivity analysis included invalidated H009 comparisons and remains withdrawn until regenerated from the validated comparison set, which the corrected H009-R rerun (Claim 12b) now completes. |
 | Scope | Later H008c/H010 operator controls show that this positive difference is not unique to the Hodge `L_0` operator. |
 | Artifact | `notebooks/results/nci1_hodge_ablation_30seeds.{json,md}` |
 | Preregistered | `docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md` |
@@ -213,12 +213,12 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 | Domain | H009-R, corrective replication of H009 |
 | Setup | NCI1, 4110 graphs, 30 seeds, 10 epochs, hidden_dim=32, matched-capacity protocol; `sheaf-residual` 2.0.0 (repaired `delta.T @ delta` construction, invariant-tested at merge `b89d196`), 2,403 parameters versus 2,338 for the controls (+2.78%, inside the 5% tolerance) |
 | Per-arm medians | sheaf 0.604 [0.580, 0.624]; Hodge 0.605 [0.572, 0.612]; gin-residual 0.630 [0.605, 0.648]; MLP 0.523 [0.513, 0.566] |
-| H39 (sheaf vs MLP) | median Delta = +0.0809; p_BH = 4.74 x 10^-3; r = +0.333; sheaf above MLP on 20/30 seeds. **Positive difference under the preregistered 0.05 rule.** |
+| H39 (sheaf vs MLP) | median Delta = +0.0809; p_BH = 4.73 x 10^-3; r = +0.333; sheaf above MLP on 20/30 seeds. **Positive difference under the preregistered 0.05 rule.** |
 | H40 (sheaf vs Hodge) | median Delta = -0.0006; p_BH = 0.428; r = +0.133. **No significant difference detected. Not an equivalence claim.** |
-| H41 (sheaf vs gin-residual) | median Delta = -0.0262; p_BH = 0.0342; r = -0.467; sheaf below gin-residual on 22/30 seeds. The preregistered falsification condition requires p_BH < 0.01, so **H41 is not falsified and remains inconclusive**: conventionally significant at 0.05, below the preregistered bar, and not an equivalence result. |
+| H41 (sheaf vs gin-residual) | median Delta = -0.0262; p_BH = 0.0342; r = -0.467; sheaf below gin-residual on 22/30 seeds. The preregistered falsification condition requires p_BH < 0.01, so **H41 is not falsified and remains inconclusive**: conventionally significant at 0.05 but not crossing the preregistered 0.01 falsification threshold, and not an equivalence result. |
 | Replication note | The invalidated historical run's qualitative pattern is reproduced by the valid operator (sheaf median 0.604 in both; sheaf-gin deficit in the 0.01-0.05 band both times). The historical numbers remain excluded from evidence; only H009-R carries inferential status. |
-| Interpretation | Under this fixed short-budget protocol, the learned scalar sheaf construction behaves like the fixed Hodge operator: clearly above the matched MLP, indistinguishable from Hodge, and below the matched normalized-adjacency arm in direction (without crossing the strict falsification threshold). The learned restrictions do not add measurable value over the fixed operator in this regime. |
-| Execution | GitHub Actions `Run Experiment` #8 (run ID 31419047248) at commit `79329df`; artifact SHA-256 `3d595aa27a1c95ab258051ac1a152d4e4fc4a4d8b04012e3dcf605a6f93dc920` committed unmodified |
+| Interpretation | Under this fixed short-budget protocol: the repaired construction is above the matched MLP (H39); no significant sheaf-Hodge difference is detected at this power (not an equivalence finding); and it is directionally below the matched normalized-adjacency arm without crossing the strict falsification threshold (H41 inconclusive). No learned-sheaf advantage over either fixed operator was detected in this regime. |
+| Execution | GitHub Actions `Run Experiment` #8 (run ID 31419047248) at commit `79329df`; SHA-256 of the uploaded workflow artifact archive: `3d595aa27a1c95ab258051ac1a152d4e4fc4a4d8b04012e3dcf605a6f93dc920` (GitHub's recorded digest); the archive's contents are committed unmodified, with per-file digests recorded in the H009-R hypothesis document section 9.1 |
 | Artifact | `notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}` |
 | Preregistered | `docs/hypotheses/HYPOTHESIS-009R-sheaf-corrective-replication.md` |
 | Reproduce | `python -m benchmarks.hodge --datasets nci1 --models sheaf-residual hodge-mp-residual gin-residual mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |

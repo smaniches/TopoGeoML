@@ -11,7 +11,7 @@ This document records the inferential contract for the current TopoGeoML graph-c
 
 TopoGeoML contains 14 preregistered hypothesis documents from H001 through H011b. The program is sequential and adaptive: later hypotheses were designed in response to earlier results, but each new hypothesis was committed before its own experiment was run.
 
-H009 is invalidated by implementation audit. The archived H009 result is retained for provenance but is not valid evidence about a cellular-sheaf Laplacian. The sheaf operator was subsequently repaired and invariant-tested (`sheaf-residual` 2.0.0, merge `b89d196`), the corrective protocol was preregistered as H009-R before execution, and the confirmatory 30-seed NCI1 run completed on 2026-08-10 (`notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}`). Under the preregistered rules, H39 is supported (sheaf above the matched MLP, p_BH = 4.74 x 10^-3), H40 is not supported (sheaf versus Hodge p_BH = 0.428), and H41's falsification condition is not met (sheaf below gin-residual at p_BH = 0.0342, between the conventional 0.05 level and the preregistered 0.01 threshold, therefore inconclusive and not an equivalence result).
+H009 is invalidated by implementation audit. The archived H009 result is retained for provenance but is not valid evidence about a cellular-sheaf Laplacian. The sheaf operator was subsequently repaired and invariant-tested (`sheaf-residual` 2.0.0, merge `b89d196`), the corrective protocol was preregistered as H009-R before execution, and the confirmatory 30-seed NCI1 run completed on 2026-08-10 (`notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}`). Under the preregistered rules, H39 is supported (sheaf above the matched MLP, p_BH = 4.73 x 10^-3), H40 is not supported (sheaf versus Hodge p_BH = 0.428), and H41's falsification condition is not met (sheaf below gin-residual at p_BH = 0.0342, between the conventional 0.05 level and the preregistered 0.01 threshold, therefore inconclusive and not an equivalence result).
 
 Because the previous investigation-wide 59-comparison and 76-entry sensitivity tables included invalidated H009 comparisons, those tables remain withdrawn as current evidence. The valid H009-R artifact now completes the comparison set from which a new retrospective analysis could be regenerated, but no such regeneration has been performed; until one is produced under the documentation requirements of section 3, no project-level multiplicity table is claimed.
 
@@ -75,9 +75,9 @@ H011b preregisters a 30-seed COLLAB design. A separate 18-seed compute attempt e
 
 Results at different depths, training budgets, hidden dimensions, optimizers, preprocessing choices, or datasets can differ. No claim of generality beyond the tested configuration is made.
 
-## 7. H009 repair requirement — satisfied by H009-R
+## 7. H009 repair requirement — resolved by H009-R
 
-A corrected H009 result may enter the validated record only after all of the following are satisfied. Each is now met:
+A corrected H009 result may enter the validated record only after all of the following are satisfied. Items 1 through 6 are met, and item 7's evidence-index update is done; the investigation-wide sensitivity analysis named in item 7 has not been regenerated and remains withdrawn (section 3):
 
 1. one restriction pair is constructed per undirected edge — enforced by the `sheaf-residual` 2.0.0 implementation and its regression tests (merge `b89d196`);
 2. the unnormalized learned operator is symmetric and positive semidefinite by construction — invariant-tested at the same merge;

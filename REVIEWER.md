@@ -94,7 +94,7 @@ Important current boundaries include:
 
 - most graph studies use one layer, hidden_dim=32, and short training budgets;
 - non-significance is not treated as equivalence;
-- the 59-comparison global BH analysis is a retrospective sensitivity analysis over an adaptively generated research program, not a prospectively guaranteed program-level FDR procedure;
+- the former 59-comparison global BH analysis was a retrospective sensitivity analysis over an adaptively generated research program, not a prospectively guaranteed program-level FDR procedure; it is currently withdrawn because it included invalidated H009 comparisons and has not been regenerated from the validated comparison set;
 - H011b COLLAB remains incomplete at the preregistered 30-seed design;
 - `CubicalTopologyLoss` is implemented and gradient-tested, but downstream segmentation benefit is not yet established by a powered study.
 

@@ -105,13 +105,13 @@ Implementation and test coverage do not by themselves establish downstream task 
 
 | Field | Evidence |
 |---|---|
-| Artifact | `notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}`, committed unmodified from GitHub Actions `Run Experiment` #8 (run ID 31419047248), artifact SHA-256 `3d595aa27a1c95ab258051ac1a152d4e4fc4a4d8b04012e3dcf605a6f93dc920` |
+| Artifact | `notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}`, committed unmodified from GitHub Actions `Run Experiment` #8 (run ID 31419047248). SHA-256 of the uploaded artifact archive as recorded by GitHub: `3d595aa27a1c95ab258051ac1a152d4e4fc4a4d8b04012e3dcf605a6f93dc920`; per-file digests of the committed files are in the H009-R hypothesis document section 9.1 |
 | Preregistration | `docs/hypotheses/HYPOTHESIS-009R-sheaf-corrective-replication.md`, committed and merged before execution; decision rules for H39-H41 fixed in advance |
 | Model | `sheaf-residual` 2.0.0: one coboundary row per undirected edge, `L_F = delta.T @ delta` symmetric PSD by construction, invariant-tested; 2,403 parameters versus 2,338 for the controls (+2.78%, inside the 5% tolerance) |
-| H39 (sheaf vs MLP) | Supported. Median 0.604 versus 0.523; median Delta = +0.0809; p_BH = 4.74 x 10^-3 < 0.05; sheaf above MLP on 20/30 seeds |
+| H39 (sheaf vs MLP) | Supported. Median 0.604 versus 0.523; median Delta = +0.0809; p_BH = 4.73 x 10^-3 < 0.05; sheaf above MLP on 20/30 seeds |
 | H40 (sheaf vs Hodge) | Not supported. Median 0.604 versus 0.605; p_BH = 0.428. No significant difference detected; not an equivalence claim |
 | H41 (sheaf vs gin-residual) | Falsification condition not met. Median 0.604 versus 0.630; median Delta = -0.0262; p_BH = 0.0342, which does not cross the preregistered 0.01 threshold. Conventionally significant at 0.05, so the comparison is inconclusive under the stricter preregistered rule; the observed direction (sheaf below gin on 22/30 seeds) is reported without an equivalence or non-inferiority interpretation |
-| Supported conclusion | Under the fixed matched-capacity, one-layer, 10-epoch NCI1 protocol, the repaired learned scalar sheaf construction performs like the fixed Hodge operator: above the matched MLP, statistically indistinguishable from Hodge at this power, and directionally below the matched normalized-adjacency arm. |
+| Supported conclusion | Under the fixed matched-capacity, one-layer, 10-epoch NCI1 protocol: the repaired construction is above the matched MLP (H39); no significant sheaf-Hodge difference is detected at this power (not an equivalence finding); and it is directionally below the matched normalized-adjacency arm without crossing the strict falsification threshold. No learned-sheaf advantage over either fixed operator was detected. |
 | Not supported | Any learned-sheaf advantage over fixed operators; sheaf-Hodge equivalence; generalization beyond this dataset, capacity, depth, and training budget; validation of the invalidated historical H009 numbers. |
 | Reproduce | `python -m benchmarks.hodge --datasets nci1 --models sheaf-residual hodge-mp-residual gin-residual mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` (bit-identical reproduction additionally requires the recorded dependency versions; the artifact records `torch` 2.13.0+cpu, `torch_geometric` 2.8.0.post1) |
 
@@ -150,10 +150,10 @@ Implementation and test coverage do not by themselves establish downstream task 
 | Field | Evidence |
 |---|---|
 | Hypothesis documents | H001, H002, H003, H004, H005, H006, H007, H008, H008b, H008c, H009, H010, H011, H011b |
-| Count | 14 documents |
+| Count | 14 documents. `HYPOTHESIS-009R` is a corrective replication protocol for the existing H39-H41 sub-predictions, not a 15th hypothesis, and adds no sub-prediction IDs |
 | Sub-predictions | H1-H3 (3) + H4-H7 (4) + H8-H12 (5) + H13-H17 (5) + H18-H21 (4) + H22-H25 (4) + H26-H27 (2) + H28-H32 (5) + H33-H35 (3) + H36-H38 (3) + H39-H41 (3) + H42-H46 (5) + H47-H50 (4) + H51-H53 (3) = 53 |
 | Verification | Git history for each hypothesis file supplies the preregistration timestamp; experiment artifacts were added later |
-| Sequential-design limitation | Hypothesis selection was sequential and informed by earlier results. The former investigation-wide 59/76 sensitivity analysis is withdrawn until a validated comparison set is rebuilt after H009 repair. |
+| Sequential-design limitation | Hypothesis selection was sequential and informed by earlier results. The former investigation-wide 59/76 sensitivity analysis remains withdrawn until the retrospective table is regenerated from the validated comparison set, which H009-R (Claim 6b) now completes. |
 
 ---
 

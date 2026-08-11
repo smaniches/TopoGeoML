@@ -293,7 +293,7 @@ The clean operator comparison is `gin-residual` versus Hodge-residual because th
 
 The historical H009 run is **not a current scientific reproduction target**. A later implementation audit showed that the `sheaf-residual` arm used in that run did not construct the scalar cellular-sheaf Laplacian stated by the hypothesis, and its parameter count also fell outside the stated matched-capacity tolerance.
 
-Archived evidence remains at `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` for provenance only. Do not rerun the currently registered historical `sheaf-residual` implementation and treat the result as evidence for H39-H41.
+Archived evidence remains at `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` for provenance only. Do not rerun the historical `sheaf-residual` implementation (present only in git history before merge `b89d196`; the currently registered arm is the repaired 2.0.0 operator) and treat the result as evidence for H39-H41.
 
 The valid sequence was:
 
@@ -317,7 +317,7 @@ python -m benchmarks.hodge \
   --markdown notebooks/results/h009r_nci1_sheaf_v2_30seeds.md
 ```
 
-Statistical conclusions reproduce across environments through the paired within-run design; bit-identical per-seed accuracies additionally require the dependency versions recorded in the artifact (`torch` 2.13.0+cpu, `torch_geometric` 2.8.0.post1).
+The paired within-run design makes each comparison self-contained and independent of cross-run environment drift; verdict-level reproduction in other environments has not been tested. Bit-identical per-seed accuracies require the dependency versions recorded in the artifact (`torch` 2.13.0+cpu, `torch_geometric` 2.8.0.post1).
 
 ## 15. H010: cross-dataset Hodge versus normalized adjacency
 
