@@ -11,9 +11,9 @@ This document records the inferential contract for the current TopoGeoML graph-c
 
 TopoGeoML contains 14 preregistered hypothesis documents from H001 through H011b. The program is sequential and adaptive: later hypotheses were designed in response to earlier results, but each new hypothesis was committed before its own experiment was run.
 
-H009 is currently invalidated by implementation audit. The archived H009 result is retained for provenance but is not valid evidence about a cellular-sheaf Laplacian. H39, H40, and H41 are unresolved until the sheaf operator is repaired, mathematically validated, and rerun under a corrected protocol.
+H009 is invalidated by implementation audit. The archived H009 result is retained for provenance but is not valid evidence about a cellular-sheaf Laplacian. The sheaf operator was subsequently repaired and invariant-tested (`sheaf-residual` 2.0.0, merge `b89d196`), the corrective protocol was preregistered as H009-R before execution, and the confirmatory 30-seed NCI1 run completed on 2026-08-10 (`notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}`). Under the preregistered rules, H39 is supported (sheaf above the matched MLP, p_BH = 4.73 x 10^-3), H40 is not supported (sheaf versus Hodge p_BH = 0.428), and H41's falsification condition is not met (sheaf below gin-residual at p_BH = 0.0342, between the conventional 0.05 level and the preregistered 0.01 threshold, therefore inconclusive and not an equivalence result).
 
-Because the previous investigation-wide 59-comparison and 76-entry sensitivity tables included H009 comparisons, those tables are withdrawn as current evidence. They should not be recomputed or quoted as a current project-level multiplicity result until the corrected H009 experiment has produced a valid result artifact.
+Because the previous investigation-wide 59-comparison and 76-entry sensitivity tables included invalidated H009 comparisons, those tables remain withdrawn as current evidence. The valid H009-R artifact now completes the comparison set from which a new retrospective analysis could be regenerated, but no such regeneration has been performed; until one is produced under the documentation requirements of section 3, no project-level multiplicity table is claimed.
 
 This withdrawal does not change the valid within-experiment results for H001-H008c or H010-H011. Those experiments use different implementations and retain their own preregistered decision rules and result artifacts.
 
@@ -36,7 +36,7 @@ The research program was not specified as one fixed comparison family before any
 
 The repository previously reported a retrospective sensitivity analysis over 59 de-duplicated comparisons and 76 computed entries. That analysis included comparisons from the now-invalidated H009 experiment. It is therefore retained only in git history as part of the audit trail and is not a current project-level statistical claim.
 
-After a corrected H009 rerun, any new investigation-wide analysis must be regenerated from the validated comparison set. The procedure must document:
+The corrected H009 rerun (H009-R) is now complete, so the validated comparison set exists. Any new investigation-wide analysis must be regenerated from that set, and the H009-R six-comparison family, not the invalidated H009 family, is the sheaf entry. The procedure must document:
 
 1. exactly which comparisons are included;
 2. which repeated baseline comparisons are de-duplicated;
@@ -75,19 +75,19 @@ H011b preregisters a 30-seed COLLAB design. A separate 18-seed compute attempt e
 
 Results at different depths, training budgets, hidden dimensions, optimizers, preprocessing choices, or datasets can differ. No claim of generality beyond the tested configuration is made.
 
-## 7. H009 repair requirement
+## 7. H009 repair requirement — resolved by H009-R
 
-A corrected H009 result may enter the validated record only after all of the following are satisfied:
+A corrected H009 result may enter the validated record only after all of the following are satisfied. Items 1 through 6 are met, and item 7's evidence-index update is done; the investigation-wide sensitivity analysis named in item 7 has not been regenerated and remains withdrawn (section 3):
 
-1. one restriction pair is constructed per undirected edge;
-2. the unnormalized learned operator is symmetric and positive semidefinite by construction;
-3. identity restrictions recover the ordinary graph Laplacian to numerical tolerance;
-4. gradients reach the restriction learner and downstream message-passing parameters;
-5. exact trainable-parameter counts are reported and the capacity protocol is satisfied or explicitly corrected before the rerun;
-6. a fresh 30-seed NCI1 result artifact is produced from the corrected commit;
-7. the evidence index and any investigation-wide multiplicity sensitivity analysis are regenerated from the validated result set.
+1. one restriction pair is constructed per undirected edge — enforced by the `sheaf-residual` 2.0.0 implementation and its regression tests (merge `b89d196`);
+2. the unnormalized learned operator is symmetric and positive semidefinite by construction — invariant-tested at the same merge;
+3. identity restrictions recover the ordinary graph Laplacian to numerical tolerance — invariant-tested;
+4. gradients reach the restriction learner and downstream message-passing parameters — invariant-tested;
+5. exact trainable-parameter counts are reported and the capacity protocol is satisfied — 2,403 versus 2,338 parameters (+2.78%, inside the 5% tolerance), fixed in the H009-R preregistration before the run;
+6. a fresh 30-seed NCI1 result artifact is produced from the corrected commit — `notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}` from commit `79329df`;
+7. the evidence index is updated from the validated result set — done in `LEADERBOARD.md` Claim 12b; the optional investigation-wide multiplicity sensitivity analysis has not been regenerated and remains withdrawn (section 3).
 
-The historical H009 artifact remains public because preserving invalidated evidence is part of the audit trail.
+The historical H009 artifact remains public because preserving invalidated evidence is part of the audit trail. The H009-R verdicts are recorded in section 1 and in `docs/hypotheses/HYPOTHESIS-009R-sheaf-corrective-replication.md` section 9.
 
 ## References
 

@@ -14,10 +14,10 @@ This page is the concise website summary. The canonical engineering and scientif
 
 ## Empirical scope
 
-- The H003 NCI1 Hodge-residual versus MLP comparison has a positive difference of +8.6 pp at the tested configuration and survives the retrospective 59-comparison BH sensitivity analysis, but not the corresponding Bonferroni sensitivity threshold.
+- The H003 NCI1 Hodge-residual versus MLP comparison has a positive difference of +8.6 pp at the tested configuration. The former investigation-wide 59-comparison sensitivity table that once contextualized it (BH-surviving, Bonferroni-failing) is withdrawn and retained only in git history.
 - Later H008c and H010 controls do not support a unique `L_0` Hodge advantage. The matched normalized-adjacency arm is higher on MUTAG and NCI1 under the declared H010 family threshold, while PROTEINS detects no significant operator difference.
 - H008c shows that the tested external-residual adjacency formulation recovers NCI1 performance after the normalized internal-self formulation does not. Because those formulations place and parameterize the self path differently, the result should not be generalized into a universal claim that residual connections alone are the sole mechanism.
-- H009 does not show a learned scalar sheaf improvement over fixed Hodge. H41 remains inconclusive under its own preregistered 0.01 falsification threshold.
+- The historical H009 run is invalidated and carries no inferential status. Its corrective replication H009-R, run with the repaired invariant-tested operator, does not show a learned scalar sheaf improvement over fixed Hodge (p_BH = 0.428), and H41 remains inconclusive because the sheaf-versus-gin-residual deficit (p_BH = 0.0342) does not cross the preregistered 0.01 falsification threshold. Neither result is an equivalence claim.
 - H011 on NCI1 does not show a positive `L_1` advantage over the node-level controls. NCI1 is also structurally unsuitable for the intended triangle-rich mechanism because 96% of its graphs contain no triangles.
 - H011b on COLLAB remains unresolved. The one-seed smoke result is directional only; the preregistered 30-seed confirmatory run has not completed.
 
@@ -25,7 +25,7 @@ This page is the concise website summary. The canonical engineering and scientif
 
 - A non-significant comparison is not an equivalence result. The project uses “no significant difference detected” unless an explicit equivalence procedure is performed.
 - The hypothesis sequence is adaptive: later hypotheses were generated from earlier results, although each new experiment was preregistered before its own result was observed.
-- The investigation-wide 59-comparison BH calculation is therefore reported as a retrospective multiplicity sensitivity analysis over the realized comparison set, not as a prospectively guaranteed 5% program-level FDR procedure.
+- The investigation-wide 59-comparison BH calculation was reported as a retrospective multiplicity sensitivity analysis over the realized comparison set, not as a prospectively guaranteed 5% program-level FDR procedure. It is currently withdrawn pending regeneration from the validated comparison set.
 - Exact Wilcoxon power or minimum-detectable-effect guarantees are not stated without an explicit generative model or simulation. Future confirmatory studies should preregister a power or sensitivity analysis tied to the planned endpoint and threshold.
 
 ## Toolkit scope

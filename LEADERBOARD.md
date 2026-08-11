@@ -74,7 +74,7 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 | Domain | Graph classification, H003 |
 | Setup | NCI1, 4110 graphs, 30 seeds, 10 epochs, hidden_dim=32 |
 | Result | Hodge-residual 0.609 [0.581, 0.625] vs MLP 0.523 [0.513, 0.566]; median Delta = +0.086; p_BH = 4.83 x 10^-3; r = +0.533 |
-| Investigation-wide correction | The previously reported 59-comparison retrospective sensitivity analysis included invalidated H009 comparisons and is withdrawn pending recomputation after a corrected H009 rerun. |
+| Investigation-wide correction | The previously reported 59-comparison retrospective sensitivity analysis included invalidated H009 comparisons and remains withdrawn until regenerated from the validated comparison set, which the corrected H009-R rerun (Claim 12b) now completes. |
 | Scope | Later H008c/H010 operator controls show that this positive difference is not unique to the Hodge `L_0` operator. |
 | Artifact | `notebooks/results/nci1_hodge_ablation_30seeds.{json,md}` |
 | Preregistered | `docs/hypotheses/HYPOTHESIS-003-hodge-nci1.md` |
@@ -193,15 +193,35 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 
 | Field | Value |
 |---|---|
-| Status | **Invalidated by implementation audit; H39-H41 unresolved** |
+| Status | **Invalidated by implementation audit; H39-H41 resolved separately by the corrective replication H009-R (Claim 12b)** |
 | Domain | H009 |
 | Defect | The historical `sheaf-residual` implementation processed both orientations of each undirected edge independently. The resulting matrix was not guaranteed symmetric or positive semidefinite and was not, in general, the claimed `delta.T @ delta` sheaf Laplacian. |
 | Capacity error | `Linear(64, 2)` has 130 trainable parameters, not 65. On NCI1 the historical sheaf arm has 2,468 parameters versus 2,338 for the fixed-operator controls, about 5.56% larger and slightly outside the stated 5% tolerance. |
 | Historical artifact | The archived run reports sheaf median 0.604 and its pairwise statistics. Those numbers describe the historical implementation only and have no current inferential status for a cellular-sheaf claim. |
-| Current scientific status | H39, H40, and H41 are unresolved until the operator is corrected, its mathematical invariants are tested, capacity is accounted for exactly, and the 30-seed NCI1 experiment is rerun from the corrected commit. |
+| Current scientific status | The rerun requirements were satisfied: the operator was repaired and invariant-tested (merge `b89d196`), capacity was accounted exactly, the corrective protocol was preregistered as H009-R, and the 30-seed NCI1 experiment was rerun from the corrected commit. H39-H41 verdicts now come from Claim 12b; the historical artifact remains provenance only. |
 | Artifact | `notebooks/results/h009_nci1_sheaf_30seeds.{json,md}` retained for provenance only |
 | Preregistered | `docs/hypotheses/HYPOTHESIS-009-sheaf-laplacian.md` |
 | Reproduce | Do not treat the historical command as a current scientific reproduction. See the H009 invalidation and rerun requirements in the hypothesis document. |
+
+---
+
+## Claim 12b: H009-R resolves H39-H41 with the repaired scalar sheaf operator
+
+| Field | Value |
+|---|---|
+| Status | **H39 positive difference; H40 no significant difference detected; H41 inconclusive (falsification condition not met)** |
+| Domain | H009-R, corrective replication of H009 |
+| Setup | NCI1, 4110 graphs, 30 seeds, 10 epochs, hidden_dim=32, matched-capacity protocol; `sheaf-residual` 2.0.0 (repaired `delta.T @ delta` construction, invariant-tested at merge `b89d196`), 2,403 parameters versus 2,338 for the controls (+2.78%, inside the 5% tolerance) |
+| Per-arm medians | sheaf 0.604 [0.580, 0.624]; Hodge 0.605 [0.572, 0.612]; gin-residual 0.630 [0.605, 0.648]; MLP 0.523 [0.513, 0.566] |
+| H39 (sheaf vs MLP) | median Delta = +0.0809; p_BH = 4.73 x 10^-3; r = +0.333; sheaf above MLP on 20/30 seeds. **Positive difference under the preregistered 0.05 rule.** |
+| H40 (sheaf vs Hodge) | median Delta = -0.0006; p_BH = 0.428; r = +0.133. **No significant difference detected. Not an equivalence claim.** |
+| H41 (sheaf vs gin-residual) | median Delta = -0.0262; p_BH = 0.0342; r = -0.467; sheaf below gin-residual on 22/30 seeds. The preregistered falsification condition requires p_BH < 0.01, so **H41 is not falsified and remains inconclusive**: conventionally significant at 0.05 but not crossing the preregistered 0.01 falsification threshold, and not an equivalence result. |
+| Replication note | The invalidated historical run's qualitative pattern is reproduced by the valid operator (sheaf median 0.604 in both; sheaf-gin deficit in the 0.01-0.05 band both times). The historical numbers remain excluded from evidence; only H009-R carries inferential status. |
+| Interpretation | Under this fixed short-budget protocol: the repaired construction is above the matched MLP (H39); no significant sheaf-Hodge difference is detected at this power (not an equivalence finding); and it is directionally below the matched normalized-adjacency arm without crossing the strict falsification threshold (H41 inconclusive). No learned-sheaf advantage over either fixed operator was detected in this regime. |
+| Execution | GitHub Actions `Run Experiment` #8 (run ID 31419047248) at commit `79329df`; SHA-256 of the uploaded workflow artifact archive: `3d595aa27a1c95ab258051ac1a152d4e4fc4a4d8b04012e3dcf605a6f93dc920` (GitHub's recorded digest); the archive's contents are committed unmodified, with per-file digests recorded in the H009-R hypothesis document section 9.1 |
+| Artifact | `notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}` |
+| Preregistered | `docs/hypotheses/HYPOTHESIS-009R-sheaf-corrective-replication.md` |
+| Reproduce | `python -m benchmarks.hodge --datasets nci1 --models sheaf-residual hodge-mp-residual gin-residual mlp-baseline --seeds 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 --n-epochs 10` |
 
 ---
 
@@ -274,7 +294,7 @@ Seeded model comparisons use paired Wilcoxon tests with Benjamini-Hochberg corre
 | Type checking | mypy strict on `topogeoml/` |
 | Every-PR validation | Python 3.11/3.12 Linux/macOS CI, full-dependency package coverage/dependency audit, and the MUTAG/PROTEINS/NCI1 Hodge smoke matrix |
 | Path-conditional validation | The diff-PH benchmark runs on PRs that change `topogeoml/nn/diff_ph.py`, `benchmarks/**`, or `.github/workflows/benchmark.yml`; it is not an unconditional check on unrelated PRs |
-| Registered benchmark arms | 11, including the invalidated historical `sheaf-residual` arm pending repair; registry presence is not evidence validity |
+| Registered benchmark arms | 11, including the repaired `sheaf-residual` 2.0.0 arm validated by H009-R; registry presence is not evidence validity |
 | DOI | [10.5281/zenodo.20365816](https://doi.org/10.5281/zenodo.20365816) |
 
 ## Adding new evidence

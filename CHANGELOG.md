@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **H009-R corrective sheaf replication resolved.** The preregistered 30-seed NCI1 rerun of the repaired `sheaf-residual` 2.0.0 operator completed on GitHub Actions (`Run Experiment` #8) and its artifact is committed unmodified at `notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}` (SHA-256 verified against the uploaded artifact digest). Under the preregistered decision rules: H39 supported (sheaf median 0.604 above MLP 0.523, p_BH = 4.73e-3), H40 not supported (sheaf versus Hodge p_BH = 0.428, no equivalence claim), H41 falsification condition not met (sheaf below gin-residual at p_BH = 0.0342, above the preregistered 0.01 threshold; inconclusive). The evidence index (`LEADERBOARD.md` Claim 12b), `STATUS.md`, `docs/CLAIMS_TO_EVIDENCE.md`, `docs/STATISTICAL_SUMMARY.md`, `docs/limitations.md`, `docs/hypotheses/`, `README.md`, and `REPRODUCING.md` are updated accordingly. The withdrawn investigation-wide 59/76 sensitivity table stays withdrawn until regenerated from the validated comparison set.
+
 ### Security
 
 - Hardened manual experiment dispatch by removing workflow-input shell interpolation, disabling long-option abbreviation in the Hodge CLI, keeping workflow-managed protocol/output arguments authoritative, and adding regression tests for abbreviated-option bypasses found during review.

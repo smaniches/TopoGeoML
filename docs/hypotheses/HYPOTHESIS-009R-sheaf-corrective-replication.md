@@ -6,7 +6,9 @@ nav_order: 11.5
 
 # H009-R: Corrective replication of the NCI1 scalar-sheaf experiment
 
-**Status: PREREGISTERED. NOT RUN.**
+**Status: RESOLVED 2026-08-10.** The confirmatory run completed as `Run Experiment` workflow run #8 (run ID 31419047248) on `main` at commit `79329df1b49b15867daf6a7959acb4911d994d6a`, producing `notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}`. Under the preregistered decision rules in section 4: **H39 is supported** (sheaf above MLP, p_BH = 4.73 x 10^-3), **H40 is not supported** (sheaf versus Hodge p_BH = 0.428), and **H41's falsification condition is not met** (sheaf below gin-residual at p_BH = 0.0342, which does not cross the preregistered 0.01 threshold; this is not a statistical-equivalence claim). See section 9 for the full resolved outcome.
+
+Sections 1 through 8 below are the preregistration text, unchanged. Section 9 was appended after the artifact existed.
 
 This document fixes the design of the corrective H009 replication before any result from the repaired `sheaf-residual` 2.0.0 implementation is executed or observed.
 
@@ -135,3 +137,60 @@ Only after the complete H009-R artifact exists may the repository:
 4. decide whether a new retrospective investigation-wide multiplicity sensitivity analysis is useful and, if so, regenerate it from the validated comparison set with the exact inclusion and de-duplication rules documented.
 
 The historical H009 artifact and invalidation notice remain in the audit trail regardless of the H009-R outcome.
+
+## 9. Resolved outcome (appended 2026-08-10, after the artifact existed)
+
+### 9.1 Execution and protocol compliance
+
+The confirmatory run executed on GitHub Actions (`Run Experiment` #8, run ID 31419047248) from `main` at commit `79329df1b49b15867daf6a7959acb4911d994d6a`, which contains the repaired implementation merged at `b89d196`. The uploaded artifact archive (`h009r_nci1_sheaf_v2_30seeds-results`) has SHA-256 `3d595aa27a1c95ab258051ac1a152d4e4fc4a4d8b04012e3dcf605a6f93dc920` as recorded by GitHub for the archive itself; its two contained files are committed unmodified at `notebooks/results/h009r_nci1_sheaf_v2_30seeds.{json,md}` with per-file SHA-256 digests `e09d0831ad758dd71f0c2a2e90f65e7837d21a185af65b8186ace0b612061844` (json) and `2a3688e9601f41f5e415e333b017aefb1598b3ea246144dd7496abdf6da4eddd` (md), verifiable from the repository alone.
+
+Protocol fields recorded in the artifact match section 3 exactly: dataset `nci1` (loader version 1.0.0, 4,110 graphs, per-seed stratified 80/20 split with n_train = 3,288 and n_test = 822), models `sheaf-residual` 2.0.0 / `hodge-mp-residual` / `gin-residual` / `mlp-baseline`, seeds 0 through 29 all present in every arm, 10 epochs, learning rate 0.01, paired Wilcoxon with Benjamini-Hochberg correction over the six-comparison family. An earlier dispatch attempt (run #7) failed for infrastructure reasons before producing any result artifact; under the section 6 rules the same fixed protocol was rerun without change, and run #8 produced the first valid completed artifact, which is therefore the confirmatory H009-R result.
+
+Environment note: this run used `torch` 2.13.0+cpu and `torch_geometric` 2.8.0.post1 (the invalidated historical run used `torch` 2.12.0+cu130 and `torch_geometric` 2.7.0). Each (model, seed) cell is seeded independently and all four arms within a seed share one split and one environment, so every paired comparison below is within-run and unaffected by cross-run environment drift.
+
+### 9.2 Per-arm results
+
+| Arm | Median accuracy | 95% bootstrap CI | n_seeds |
+|---|---:|---|---:|
+| `sheaf-residual` 2.0.0 | 0.604 | [0.580, 0.624] | 30 |
+| `hodge-mp-residual` | 0.605 | [0.572, 0.612] | 30 |
+| `gin-residual` | 0.630 | [0.605, 0.648] | 30 |
+| `mlp-baseline` | 0.523 | [0.513, 0.566] | 30 |
+
+Method note: section 3 described the runner's interval as BCa, but the benchmark runner's default is the percentile bootstrap and that is what the artifact reports. For this artifact the percentile and BCa intervals are identical to the reported precision for all four arms, so no reported value depends on the method label.
+
+### 9.3 Preregistered decisions
+
+The six-comparison family with BH correction, as fixed in section 3. `median delta` is the difference of arm medians as reported by the benchmark runner; `r` is the runner's matched-pairs effect statistic `(n_pos - n_neg) / n_nonzero`; wins/losses count per-seed paired differences.
+
+| Comparison | median delta | p_raw | p_BH | r | seeds A>B / A<B / tie |
+|---|---:|---:|---:|---:|---|
+| sheaf vs hodge | -0.0006 | 0.428 | 0.428 | +0.133 | 17 / 13 / 0 |
+| sheaf vs gin | -0.0262 | 0.0285 | 0.0342 | -0.467 | 8 / 22 / 0 |
+| sheaf vs mlp | +0.0809 | 0.00237 | 0.00473 | +0.333 | 20 / 10 / 0 |
+| hodge vs gin | -0.0255 | 0.000181 | 0.000543 | -0.733 | 4 / 26 / 0 |
+| hodge vs mlp | +0.0815 | 0.0174 | 0.0261 | +0.379 | 20 / 9 / 1 |
+| gin vs mlp | +0.1071 | 0.0000886 | 0.000531 | +0.600 | 24 / 6 / 0 |
+
+Applying the section 4 rules:
+
+- **H39 — supported.** `sheaf-residual` is above `mlp-baseline` (median 0.604 versus 0.523) with p_BH = 4.73 x 10^-3 < 0.05. The positive-difference condition is met.
+- **H40 — not supported.** `sheaf-residual` versus `hodge-mp-residual` has p_BH = 0.428. The difference of arm medians is 0.0006 (0.604 versus 0.605), smaller than one test graph's worth of accuracy on the 822-graph test set (1/822 = 0.0012). The mean of the per-seed paired differences is a distinct, larger quantity (+0.0090, section 9.4) and must not be conflated with the arm-median difference. No significant difference is detected; per section 7 this is not an equivalence claim.
+- **H41 — falsification condition not met.** `sheaf-residual` is below `gin-residual` (median delta -0.0262) with p_BH = 0.0342. The preregistered falsification condition requires p_BH < 0.01, so H41 is not falsified. Because 0.0342 sits between 0.01 and 0.05, the comparison is conventionally significant at 0.05 while remaining inconclusive under the stricter preregistered rule. It is reported as inconclusive with an observed deficit direction (sheaf below gin on 22 of 30 seeds), not as equivalence and not as a refutation.
+
+### 9.4 Post-hoc descriptive analysis (not preregistered; no decision weight)
+
+These statistics are recomputed from the committed per-seed artifact for interpretation only. They are secondary descriptive diagnostics; they do not and cannot serve as substitute decision rules for H39-H41.
+
+- Paired per-seed differences: sheaf minus mlp has mean +0.0457 and median +0.0450 (paired Cohen's d_z = +0.65); sheaf minus hodge has mean +0.0090 and median +0.0036 (d_z = +0.20); sheaf minus gin has mean -0.0199 and median -0.0176 (d_z = -0.36).
+- Seed-level variability is large under the fixed 10-epoch budget: per-arm standard deviations are 0.047 to 0.056. `sheaf-residual` finishes at or below 0.52 accuracy (near the 0.5005 class prior) on 3 of 30 seeds, `hodge-mp-residual` on 4, `gin-residual` on 1, and `mlp-baseline` on 14. The MLP distribution is strongly bimodal (either near chance or 0.56+), which is why its median (0.523) sits well below its mean (0.551).
+- Per-seed accuracies correlate moderately between the message-passing arms (Pearson r = 0.56 sheaf-hodge, 0.64 hodge-gin) and essentially not at all with the MLP. This is seed/split-level heterogeneity consistent with split difficulty and/or optimization variability; because each seed controls both the data split and training stochasticity, the design cannot attribute it to either source uniquely.
+- Per-arm mean final training losses after 10 epochs are 0.77 to 0.78 for the three message-passing arms and 0.67 for the MLP. These terminal losses are consistent with a strongly budget-limited or under-optimized regime, reinforcing the preregistered short-budget interpretation boundary in section 7; they do not by themselves establish distance from convergence.
+
+### 9.5 Relationship to the invalidated H009 artifact
+
+The invalidated historical numbers are not evidence and are not combined with H009-R. It is nevertheless part of the audit trail that the repaired operator reproduces the historical pattern rather than overturning it: sheaf median 0.604 (both runs), no significant sheaf-Hodge difference, and a sheaf-gin deficit in the 0.01-to-0.05 band (historical p_BH = 0.0137; H009-R p_BH = 0.0342). This numerical similarity is descriptive audit-trail context only; it confers no inferential status on the historical artifact, whose invalidation stands.
+
+### 9.6 Scope
+
+Section 7's interpretation boundaries apply unchanged. H009-R establishes the behavior of this scalar, feature-conditioned sheaf construction on NCI1 under the fixed matched-capacity, one-layer, 10-epoch protocol, and nothing beyond it.
