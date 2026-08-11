@@ -773,6 +773,32 @@ class SheafResidualBaseline:
         return _SheafResidualGraphClassifier(input_dim, num_classes)
 
 
+# Memoized L_1 propagation operators, keyed by the identity of the stored
+# L_0 tensor.
+#
+# The normalized L_1 and the edge index are deterministic functions of the
+# graph alone (no learned parameter and no RNG participates in their
+# construction), so recomputing them on every forward pass repeats identical
+# work: one graph is revisited once per epoch per seed, i.e. ~250 times over
+# the 30-seed confirmatory design. On triangle-rich COLLAB the per-forward
+# clique-complex rebuild alone costs ~25 s for the densest graphs, which is
+# what made the preregistered budget exceed the GitHub Actions six-hour limit
+# at 18 seeds.
+#
+# The cache stores the exact tensors the original computation produced
+# (normalized operator + edge list; the raw L_1 is dropped after
+# normalization to halve resident memory), so a cached forward is numerically
+# identical to an uncached one (asserted by tests). Keys are
+# ``id(laplacian)``; a ``weakref.finalize`` on the Laplacian evicts the entry
+# when the sample is garbage collected, which also makes stale-id reuse
+# impossible.
+_L1_OPERATOR_CACHE: dict[int, tuple[torch.Tensor | None, list[tuple[int, int]]]] = {}
+
+
+def _l1_cache_evict(key: int) -> None:
+    _L1_OPERATOR_CACHE.pop(key, None)
+
+
 class _L1HodgeResidualGraphClassifier(nn.Module):
     """Edge-level message passing on the 1-Hodge Laplacian L_1.
 
@@ -803,7 +829,12 @@ class _L1HodgeResidualGraphClassifier(nn.Module):
         self, n_nodes: int, laplacian: torch.sparse.Tensor,
     ) -> tuple[torch.Tensor, list[tuple[int, int]]]:
         """Compute L_1 from L_0 by reconstructing the graph and building
-        the clique complex with max_dim=2."""
+        the clique complex with max_dim=2.
+
+        Pure builder: no caching happens here. The memoized propagation
+        operator (normalized L_1 + edge list) lives in
+        ``_propagation_operator``.
+        """
         import networkx as nx
 
         from topogeoml.core.complexes import hodge_laplacian
@@ -837,22 +868,54 @@ class _L1HodgeResidualGraphClassifier(nn.Module):
         edge_pairs = [(int(e[0]), int(e[1])) for e in edge_list]
         return L1_torch, edge_pairs
 
+    def _propagation_operator(
+        self, n_nodes: int, laplacian: torch.sparse.Tensor,
+    ) -> tuple[torch.Tensor | None, list[tuple[int, int]]]:
+        """Memoized (normalized L_1, edge list) for one stored graph.
+
+        Both components are parameter-free deterministic functions of the
+        graph: ``_compute_l1`` uses no learned state and no RNG, and
+        ``_symmetric_normalize_sparse`` reads only the operator itself, with
+        no gradient flowing through it (the Laplacian is a buffer). The
+        cached tensors are the exact objects the uncached composition
+        produces, so memoization cannot change any logit (asserted by
+        ``tests/test_h011b_contract.py``). For an edgeless graph the
+        operator slot is ``None``.
+        """
+        import weakref
+
+        cache_key = id(laplacian)
+        cached = _L1_OPERATOR_CACHE.get(cache_key)
+        if cached is not None:
+            return cached
+
+        L1, edge_pairs = self._compute_l1(n_nodes, laplacian)
+        result: tuple[torch.Tensor | None, list[tuple[int, int]]]
+        if len(edge_pairs) == 0:
+            result = (None, [])
+        else:
+            result = (_symmetric_normalize_sparse(L1), edge_pairs)
+
+        _L1_OPERATOR_CACHE[cache_key] = result
+        weakref.finalize(laplacian, _l1_cache_evict, cache_key)
+        return result
+
     def forward_one(
         self, x: torch.Tensor, laplacian: torch.sparse.Tensor,
     ) -> torch.Tensor:
         proj = self._proj_in(x)
         n_nodes = x.shape[0]
 
-        L1, edge_pairs = self._compute_l1(n_nodes, laplacian)
+        L1_norm, edge_pairs = self._propagation_operator(n_nodes, laplacian)
 
         if len(edge_pairs) == 0:
             return self.head(proj.sum(dim=0))
+        assert L1_norm is not None
 
         edge_src = [e[0] for e in edge_pairs]
         edge_dst = [e[1] for e in edge_pairs]
         edge_features = proj[edge_src] + proj[edge_dst]
 
-        L1_norm = _symmetric_normalize_sparse(L1)
         propagated = torch.sparse.mm(L1_norm, edge_features)
         edge_out = self._activation(
             propagated @ self._mp_weight + self._mp_bias
@@ -862,10 +925,17 @@ class _L1HodgeResidualGraphClassifier(nn.Module):
 
 
 class L1HodgeResidualClassifier:
-    """L_1 Hodge message passing on edges — tests higher-order topology."""
+    """L_1 Hodge message passing on edges — tests higher-order topology.
+
+    Version 1.0.1 memoizes the per-graph normalized L_1 propagation operator
+    (a pure performance change; construction and normalization are
+    deterministic and parameter-free, so cached and fresh operators are
+    numerically identical — asserted by tests). Model mathematics,
+    parameters, and training behaviour are unchanged from 1.0.0.
+    """
 
     name: ClassVar[str] = "l1-hodge-residual"
-    version: ClassVar[str] = "1.0.0"
+    version: ClassVar[str] = "1.0.1"
 
     @staticmethod
     def available() -> bool:
