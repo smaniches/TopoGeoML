@@ -175,17 +175,17 @@ The six-comparison family with BH correction, as fixed in section 3. `median del
 Applying the section 4 rules:
 
 - **H39 — supported.** `sheaf-residual` is above `mlp-baseline` (median 0.604 versus 0.523) with p_BH = 4.73 x 10^-3 < 0.05. The positive-difference condition is met.
-- **H40 — not supported.** `sheaf-residual` versus `hodge-mp-residual` has p_BH = 0.428. The arm medians differ by less than one test graph (0.604 versus 0.605). No significant difference is detected; per section 7 this is not an equivalence claim.
+- **H40 — not supported.** `sheaf-residual` versus `hodge-mp-residual` has p_BH = 0.428. The difference of arm medians is 0.0006 (0.604 versus 0.605), smaller than one test graph's worth of accuracy on the 822-graph test set (1/822 = 0.0012). The mean of the per-seed paired differences is a distinct, larger quantity (+0.0090, section 9.4) and must not be conflated with the arm-median difference. No significant difference is detected; per section 7 this is not an equivalence claim.
 - **H41 — falsification condition not met.** `sheaf-residual` is below `gin-residual` (median delta -0.0262) with p_BH = 0.0342. The preregistered falsification condition requires p_BH < 0.01, so H41 is not falsified. Because 0.0342 sits between 0.01 and 0.05, the comparison is conventionally significant at 0.05 while remaining inconclusive under the stricter preregistered rule. It is reported as inconclusive with an observed deficit direction (sheaf below gin on 22 of 30 seeds), not as equivalence and not as a refutation.
 
 ### 9.4 Post-hoc descriptive analysis (not preregistered; no decision weight)
 
-These statistics are recomputed from the committed per-seed artifact for interpretation only.
+These statistics are recomputed from the committed per-seed artifact for interpretation only. They are secondary descriptive diagnostics; they do not and cannot serve as substitute decision rules for H39-H41.
 
 - Paired per-seed differences: sheaf minus mlp has mean +0.0457 and median +0.0450 (paired Cohen's d_z = +0.65); sheaf minus hodge has mean +0.0090 and median +0.0036 (d_z = +0.20); sheaf minus gin has mean -0.0199 and median -0.0176 (d_z = -0.36).
 - Seed-level variability is large under the fixed 10-epoch budget: per-arm standard deviations are 0.047 to 0.056. `sheaf-residual` finishes at or below 0.52 accuracy (near the 0.5005 class prior) on 3 of 30 seeds, `hodge-mp-residual` on 4, `gin-residual` on 1, and `mlp-baseline` on 14. The MLP distribution is strongly bimodal (either near chance or 0.56+), which is why its median (0.523) sits well below its mean (0.551).
-- Per-seed accuracies correlate moderately between the message-passing arms (Pearson r = 0.56 sheaf-hodge, 0.64 hodge-gin) and essentially not at all with the MLP, consistent with shared split difficulty among the graph arms.
-- Per-arm mean final training losses after 10 epochs are 0.77 to 0.78 for the three message-passing arms and 0.67 for the MLP, so no arm is near convergence; the protocol measures a fixed short-budget regime, as section 7 states.
+- Per-seed accuracies correlate moderately between the message-passing arms (Pearson r = 0.56 sheaf-hodge, 0.64 hodge-gin) and essentially not at all with the MLP. This is seed/split-level heterogeneity consistent with split difficulty and/or optimization variability; because each seed controls both the data split and training stochasticity, the design cannot attribute it to either source uniquely.
+- Per-arm mean final training losses after 10 epochs are 0.77 to 0.78 for the three message-passing arms and 0.67 for the MLP. These terminal losses are consistent with a strongly budget-limited or under-optimized regime, reinforcing the preregistered short-budget interpretation boundary in section 7; they do not by themselves establish distance from convergence.
 
 ### 9.5 Relationship to the invalidated H009 artifact
 
