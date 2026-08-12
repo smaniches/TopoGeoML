@@ -39,36 +39,36 @@ classifiers = [
 
 # Core dependencies — minimum needed for TopologyFeaturePipeline to work.
 dependencies = [
-    "numpy>=1.24",
-    "scipy>=1.10",
-    "scikit-learn>=1.5",
-    "ripser>=0.6.4",
-    "networkx>=3.0",
-    "pyyaml>=6.0",
+    "numpy>=2.4.6",
+    "scipy>=1.17.1",
+    "scikit-learn>=1.9.0",
+    "ripser>=0.6.15",
+    "networkx>=3.6.1",
+    "pyyaml>=6.0.3",
 ]
 
 [project.optional-dependencies]
 # PyTorch / PyG: differentiable layers, GNN integration. Heavy install.
 torch = [
-    "torch>=2.0",
-    "torch-geometric>=2.4",
+    "torch>=2.13.0",
+    "torch-geometric>=2.8.0.post1",
 ]
 # Higher-order topological domains via TopoNetX.
 higher-order = [
-    "toponetx>=0.1.0",
+    "toponetx>=0.2.0",
 ]
 # Heavier TDA backend (GUDHI is C++ underneath).
 tda = [
-    "gudhi>=3.9",
+    "gudhi>=3.13.0",
 ]
 # Dev tooling.
 dev = [
-    "pytest>=7.4",
-    "pytest-cov>=4.1",
-    "pytest-benchmark>=4.0",
-    "ruff>=0.4",
-    "mypy>=1.8",
-    "hypothesis>=6.100",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-benchmark>=5.2.3",
+    "ruff>=0.16.2",
+    "mypy>=2.3.0",
+    "hypothesis>=6.165.2",
     # numpy 2.5 stubs use Python 3.12 `type` syntax; this repo still type-checks
     # against python_version=3.11, so mypy rejects them. Pin numpy for the dev/
     # type-check path only (runtime numpy above stays unconstrained). Remove this
@@ -83,11 +83,11 @@ all = [
 # on real datasets (MNIST topology in Phase 2). torchvision provides the
 # canonical MNIST download with cached checksums.
 bench = [
-    "torch>=2.0",
+    "torch>=2.13.0",
     "torch-topological>=0.1.9",
-    "torchvision>=0.15",
-    "gudhi>=3.9",
-    "torch-geometric>=2.4",
+    "torchvision>=0.28.0",
+    "gudhi>=3.13.0",
+    "torch-geometric>=2.8.0.post1",
 ]
 
 [project.urls]
