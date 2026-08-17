@@ -24,6 +24,7 @@ updates:
         patterns:
           - "torch"
           - "torch-geometric"
+          - "torch-topological"
           - "torchvision"
           - "toponetx"
           - "gudhi"
