@@ -1,22 +1,59 @@
 version: 2
 updates:
-  # Python dependencies declared in pyproject.toml (core + optional extras).
-  # Range floors are intentional for a library; Dependabot proposes floor
-  # bumps as reviewable PRs rather than forcing pins.
+  # Scientific library dependencies. Keep declared lower bounds intentional:
+  # routine minor/patch maintenance is grouped by compatibility domain, while
+  # major upgrades remain standalone and require explicit review.
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 5
     groups:
-      python-dependencies:
+      core-runtime:
         patterns:
-          - "*"
+          - "numpy"
+          - "scipy"
+          - "scikit-learn"
+          - "ripser"
+          - "networkx"
+          - "pyyaml"
+        update-types:
+          - "minor"
+          - "patch"
+      optional-scientific:
+        patterns:
+          - "torch"
+          - "torch-geometric"
+          - "torch-topological"
+          - "torchvision"
+          - "toponetx"
+          - "gudhi"
+        update-types:
+          - "minor"
+          - "patch"
+      development-tooling:
+        patterns:
+          - "pytest"
+          - "pytest-cov"
+          - "pytest-benchmark"
+          - "ruff"
+          - "mypy"
+          - "hypothesis"
+        update-types:
+          - "minor"
+          - "patch"
 
-  # GitHub Actions. The workflows are SHA-pinned (see CI hardening in #58);
-  # Dependabot updates both the pinned SHA and its version comment.
+  # GitHub Actions are SHA-pinned. Update monthly; major action revisions remain
+  # standalone so their runtime and permission changes are reviewed explicitly.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 5
+    groups:
+      github-actions-maintenance:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
