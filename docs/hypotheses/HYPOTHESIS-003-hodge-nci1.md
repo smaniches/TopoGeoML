@@ -93,7 +93,7 @@ Full report: `notebooks/results/nci1_hodge_ablation_30seeds.md`.
 | Arm | Median accuracy (95% BCa CI) | Wilcoxon p_BH vs MLP | Verdict |
 |---|---|---|---|
 | combinatorial L | 0.506 [0.501, 0.511] | **2.6 × 10⁻⁴** | loses 1.7 pp |
-| symm L̃ (H1) | 0.516 [0.511, 0.523] | 0.253 | matches MLP |
+| symm L̃ (H1) | 0.516 [0.511, 0.523] | 0.253 | no detected difference |
 | **symm L̃ + residual (H2)** | **0.609 [0.581, 0.625]** | **4.83 × 10⁻³** | **BEATS MLP by 8.6 pp** |
 | symm L̃ + 2L + residual (H3) | 0.603 [0.594, 0.623] | 1.18 × 10⁻² | beats MLP by 8.0 pp (just above 0.01 floor) |
 | mlp-baseline | 0.523 [0.513, 0.566] | — | control |
@@ -105,14 +105,14 @@ Full report: `notebooks/results/nci1_hodge_ablation_30seeds.md`.
 ### Sub-hypotheses, resolved
 
 - **H8 (combinatorial Hodge ≈ MLP, replicating PROTEINS): REFUTED, but mildly.** Combinatorial L *loses* to MLP at p_BH = 2.6 × 10⁻⁴ with median Δ = -0.017 (1.7 pp). The gap is real but an order of magnitude smaller than on MUTAG (9 pp, p_BH = 5.66 × 10⁻⁴). The MUTAG normalisation harm *partially* replicates on NCI1.
-- **H9 (H1 ≥ MLP): CONFIRMED across THREE datasets.** Median Δ = -0.007, p_BH = 0.253. The symm-normalised arm matches MLP on MUTAG (p_BH = 0.714), PROTEINS (p_BH = 0.548), and NCI1 (p_BH = 0.253). Plain normalisation alone is robustly *equivalent* to MLP across the small-medium-large dataset spectrum.
+- **H9 (H1 ≥ MLP under the preregistered decision rule): criterion met across THREE datasets.** On NCI1, median Δ = -0.007 and p_BH = 0.253; the paired tests likewise did not detect a difference on MUTAG (p_BH = 0.714) or PROTEINS (p_BH = 0.548). This repeated non-rejection does not establish statistical equivalence across datasets because no equivalence margin or equivalence test was pre-specified.
 - **H10 (H1 strictly beats MLP at p_BH < 0.01): REFUTED for the normalised arm specifically (p_BH = 0.253), but CONFIRMED at a stronger level for the residual variant.** The H2 arm (`hodge-mp-residual`) — which *lost* to MLP on MUTAG (p_BH = 0.019) — *wins* on NCI1 at p_BH = 4.83 × 10⁻³. This is a directional reversal: residuals **hurt** on small graphs and **help** on larger graphs, at this architectural scale.
-- **H11 (depth at scale: H3 > H1): NOT CONFIRMED (residual matters more than depth).** H3 (deep-residual) and H2 (1-layer residual) both win against MLP at p_BH < 0.05, but the two are statistically indistinguishable from each other (median Δ = +0.007, p_BH = 0.614). The architectural element that matters at NCI1 scale is the **residual connection**, not the layer count.
+- **H11 (depth at scale: H3 > H1): NOT CONFIRMED (residual matters more than depth).** H3 (deep-residual) and H2 (1-layer residual) both win against MLP at p_BH < 0.05, but the paired comparison detects no difference between them (median Δ = +0.007, p_BH = 0.614); this is not an equivalence result. The architectural element that matters at NCI1 scale is the **residual connection**, not the layer count.
 - **H12 (gap closer to PROTEINS than MUTAG): DIRECTIONALLY CONFIRMED.** Combinatorial-vs-normalised gap on NCI1 is 1.0 pp (between PROTEINS' 4.3 pp and MUTAG's 9 pp). The "small-graph phenomenon" interpretation fits — though imperfectly, since combinatorial-vs-normalised on NCI1 is now smaller than PROTEINS'.
 
 ### Surprising finding: residuals scale with dataset size
 
-The residual variant H2 **lost** to MLP on MUTAG (p_BH = 0.019) and **matched** MLP on PROTEINS (p_BH = 0.339), then **wins** on NCI1 (p_BH = 4.83 × 10⁻³). The "residual hurts on small data" finding from hypothesis 001 does not generalise — at NCI1's 4110-graph + 37-dim-feature scale, the residual unambiguously helps. Two plausible mechanisms remain in play:
+The residual variant H2 **lost** to MLP on MUTAG (p_BH = 0.019) and had no detected difference from MLP on PROTEINS (p_BH = 0.339), then **wins** on NCI1 (p_BH = 4.83 × 10⁻³). The "residual hurts on small data" finding from hypothesis 001 does not generalise — at NCI1's 4110-graph + 37-dim-feature scale, the residual unambiguously helps. Two plausible mechanisms remain in play:
 
 1. **Feature-density argument.** MUTAG's 7-dim atom features and PROTEINS' 3-dim secondary-structure features are sparse one-hots; an identity skip preserves their sparsity through propagation, undoing the smoothing the Hodge step provides. NCI1's 37-dim atom features are dense enough that the residual *augments* the propagated signal rather than displacing it.
 2. **Sample-size argument.** NCI1's larger training set lets the optimiser actually learn to *use* the residual; on MUTAG / PROTEINS the residual identity is mostly noise the model has to learn around within the budgeted 10-20 epochs.
@@ -123,7 +123,7 @@ Both mechanisms predict the same direction; distinguishing them empirically is h
 
 The defensible v0.0.2 sentence:
 
-> *On the NCI1 chemical-compound classification benchmark (4110 graphs, 30 independent seeds × 10 epochs of Adam(lr=1e-2) × hidden_dim=32 × stratified 80/20 split), a one-layer Hodge message-passing classifier using a symmetrically-normalised Laplacian and an identity residual connection strictly outperforms a no-topology MLP baseline of matched capacity, with paired Wilcoxon p_BH = 4.83 × 10⁻³ (BH-corrected across the family of 10 pairwise comparisons), rank-biserial r = +0.533, and BCa 95% CI on the Hodge classifier's accuracy = [0.581, 0.625] vs MLP's [0.513, 0.566]. The same residual variant matches MLP on PROTEINS (1113 graphs, p_BH = 0.339) and underperforms MLP on MUTAG (188 graphs, p_BH = 0.019), suggesting the residual's contribution scales positively with dataset size at this architectural class.*
+> *On the NCI1 chemical-compound classification benchmark (4110 graphs, 30 independent seeds × 10 epochs of Adam(lr=1e-2) × hidden_dim=32 × stratified 80/20 split), a one-layer Hodge message-passing classifier using a symmetrically-normalised Laplacian and an identity residual connection strictly outperforms a no-topology MLP baseline of matched capacity, with paired Wilcoxon p_BH = 4.83 × 10⁻³ (BH-corrected across the family of 10 pairwise comparisons), rank-biserial r = +0.533, and BCa 95% CI on the Hodge classifier's accuracy = [0.581, 0.625] vs MLP's [0.513, 0.566]. The same residual variant has no detected difference from MLP on PROTEINS (1113 graphs, p_BH = 0.339) and underperforms MLP on MUTAG (188 graphs, p_BH = 0.019), suggesting the residual's contribution scales positively with dataset size at this architectural class.*
 
 This is a **strict positive-difference claim** — the framework's first. v0.0.2 release gate is met.
 
@@ -131,10 +131,10 @@ This is a **strict positive-difference claim** — the framework's first. v0.0.2
 
 | Architecture | MUTAG (188) | PROTEINS (1113) | NCI1 (4110) |
 |---|---|---|---|
-| combinatorial L | LOSES (p=5.66e-4, -9pp) | matches | LOSES (p=2.6e-4, -1.7pp) |
-| symm L̃ | matches | matches | matches |
-| symm L̃ + residual | LOSES (p=0.019, -4pp) | matches | **WINS (p=4.83e-3, +8.6pp)** |
-| symm L̃ + 2L + residual | matches | matches | **WINS (p=0.012, +8pp)** |
+| combinatorial L | LOSES (p=5.66e-4, -9pp) | no detected difference | LOSES (p=2.6e-4, -1.7pp) |
+| symm L̃ | no detected difference | no detected difference | no detected difference |
+| symm L̃ + residual | LOSES (p=0.019, -4pp) | no detected difference | **WINS (p=4.83e-3, +8.6pp)** |
+| symm L̃ + 2L + residual | no detected difference | no detected difference | **WINS (p=0.012, +8pp)** |
 
 The architecture that wins on the largest dataset *loses* on the smallest. v0.0.2 ships the NCI1 positive claim with explicit dataset-dependence caveats.
 
