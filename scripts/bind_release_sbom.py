@@ -3,9 +3,10 @@
 
 The CycloneDX environment generator describes the installed runtime graph and
 uses pyproject.toml for the root component. This script closes the remaining
-artifact-identity gap by reading Name/Version from the wheel itself and adding
-its SHA-256 to metadata.component. Verification fails closed if the SBOM root
-and wheel identity diverge or the recorded digest is absent or wrong.
+artifact-identity gap by reading Name/Version from the wheel itself, binding the
+root version to that exact wheel, and adding its SHA-256 to metadata.component.
+Verification fails closed if the SBOM root and wheel identity diverge or the
+recorded digest is absent or wrong.
 """
 
 from __future__ import annotations
@@ -88,18 +89,30 @@ def _root_component(data: dict[str, Any]) -> dict[str, Any]:
     return component
 
 
-def _assert_identity(component: dict[str, Any], wheel_name: str, wheel_version: str) -> None:
+def _assert_root_name(component: dict[str, Any], wheel_name: str) -> None:
     root_name = component.get("name")
-    root_version = component.get("version")
     if not isinstance(root_name, str) or _normalized_name(root_name) != _normalized_name(
         wheel_name
     ):
         raise BindingError(
             f"SBOM root name {root_name!r} does not match wheel name {wheel_name!r}"
         )
+
+
+def _assert_identity(component: dict[str, Any], wheel_name: str, wheel_version: str) -> None:
+    _assert_root_name(component, wheel_name)
+    root_version = component.get("version")
     if str(root_version) != wheel_version:
         raise BindingError(
             f"SBOM root version {root_version!r} does not match wheel version {wheel_version!r}"
+        )
+
+
+def _assert_expected_version(wheel_version: str, expected_version: str | None) -> None:
+    if expected_version is not None and wheel_version != expected_version:
+        raise BindingError(
+            f"wheel version {wheel_version!r} does not match expected release version "
+            f"{expected_version!r}"
         )
 
 
@@ -121,12 +134,20 @@ def _sha256_entries(component: dict[str, Any]) -> list[str]:
     return values
 
 
-def bind(sbom: Path, wheel: Path) -> str:
+def bind(sbom: Path, wheel: Path, *, expected_version: str | None = None) -> str:
     data = _load_sbom(sbom)
     component = _root_component(data)
     wheel_name, wheel_version = _wheel_identity(wheel)
     digest = _sha256(wheel)
-    _assert_identity(component, wheel_name, wheel_version)
+
+    _assert_root_name(component, wheel_name)
+    _assert_expected_version(wheel_version, expected_version)
+
+    # PEP 621 permits dynamic versions. CycloneDX reads the static pyproject
+    # metadata and therefore cannot reliably recover Hatch's file-based version.
+    # The exact built wheel is the release authority for Version, so bind it here
+    # after confirming the static package name and optional tag-derived version.
+    component["version"] = wheel_version
 
     existing = _sha256_entries(component)
     if len(existing) > 1:
@@ -153,15 +174,16 @@ def bind(sbom: Path, wheel: Path) -> str:
         temporary.unlink(missing_ok=True)
         raise BindingError(f"cannot write bound SBOM {sbom}: {exc}") from exc
 
-    verify(sbom, wheel)
+    verify(sbom, wheel, expected_version=expected_version)
     return digest
 
 
-def verify(sbom: Path, wheel: Path) -> str:
+def verify(sbom: Path, wheel: Path, *, expected_version: str | None = None) -> str:
     data = _load_sbom(sbom)
     component = _root_component(data)
     wheel_name, wheel_version = _wheel_identity(wheel)
     digest = _sha256(wheel)
+    _assert_expected_version(wheel_version, expected_version)
     _assert_identity(component, wheel_name, wheel_version)
 
     recorded = _sha256_entries(component)
@@ -177,6 +199,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sbom", type=Path, required=True)
     parser.add_argument("--wheel", type=Path, required=True)
     parser.add_argument(
+        "--expected-version",
+        help="optional release version that the exact wheel must match",
+    )
+    parser.add_argument(
         "--verify-only",
         action="store_true",
         help="verify an existing binding without modifying the SBOM",
@@ -184,7 +210,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        digest = verify(args.sbom, args.wheel) if args.verify_only else bind(args.sbom, args.wheel)
+        if args.verify_only:
+            digest = verify(args.sbom, args.wheel, expected_version=args.expected_version)
+        else:
+            digest = bind(args.sbom, args.wheel, expected_version=args.expected_version)
     except BindingError as exc:
         print(f"SBOM binding error: {exc}", file=sys.stderr)
         return 1

@@ -84,6 +84,7 @@ jobs:
             exit 1
           fi
           wheel="${wheels[0]}"
+          expected_version="${GITHUB_REF_NAME#v}"
 
           python -m pip install --upgrade pip cyclonedx-bom
           python -m venv --without-pip .sbom-runtime
@@ -95,7 +96,10 @@ jobs:
             --output-reproducible \
             --output-format JSON \
             --output-file sbom.cdx.json
-          python scripts/bind_release_sbom.py --sbom sbom.cdx.json --wheel "$wheel"
+          python scripts/bind_release_sbom.py \
+            --sbom sbom.cdx.json \
+            --wheel "$wheel" \
+            --expected-version "$expected_version"
       - name: Independently verify SBOM root against exact wheel
         shell: bash
         run: |
@@ -106,10 +110,12 @@ jobs:
             echo "::error::expected exactly one release wheel, found ${#wheels[@]}"
             exit 1
           fi
+          expected_version="${GITHUB_REF_NAME#v}"
           python scripts/bind_release_sbom.py \
             --verify-only \
             --sbom sbom.cdx.json \
-            --wheel "${wheels[0]}"
+            --wheel "${wheels[0]}" \
+            --expected-version "$expected_version"
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:

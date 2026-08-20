@@ -23,21 +23,26 @@ def _wheel(tmp_path: Path, *, name: str = "topogeoml", version: str = "0.1.0") -
     return wheel
 
 
-def _sbom(tmp_path: Path, *, name: str = "topogeoml", version: str = "0.1.0") -> Path:
+def _sbom(
+    tmp_path: Path,
+    *,
+    name: str = "topogeoml",
+    version: str | None = "0.1.0",
+) -> Path:
     path = tmp_path / "sbom.cdx.json"
+    component: dict[str, object] = {
+        "type": "library",
+        "name": name,
+    }
+    if version is not None:
+        component["version"] = version
     path.write_text(
         json.dumps(
             {
                 "bomFormat": "CycloneDX",
                 "specVersion": "1.6",
                 "version": 1,
-                "metadata": {
-                    "component": {
-                        "type": "library",
-                        "name": name,
-                        "version": version,
-                    }
-                },
+                "metadata": {"component": component},
             }
         ),
         encoding="utf-8",
@@ -49,12 +54,32 @@ def test_bind_records_exact_wheel_sha256(tmp_path: Path) -> None:
     wheel = _wheel(tmp_path)
     sbom = _sbom(tmp_path)
 
-    digest = MODULE.bind(sbom, wheel)
+    digest = MODULE.bind(sbom, wheel, expected_version="0.1.0")
     data = json.loads(sbom.read_text(encoding="utf-8"))
 
     assert digest == hashlib.sha256(wheel.read_bytes()).hexdigest()
     assert data["metadata"]["component"]["hashes"] == [{"alg": "SHA-256", "content": digest}]
-    assert MODULE.verify(sbom, wheel) == digest
+    assert MODULE.verify(sbom, wheel, expected_version="0.1.0") == digest
+
+
+def test_bind_populates_missing_dynamic_root_version_from_wheel(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path, version=None)
+
+    MODULE.bind(sbom, wheel, expected_version="0.1.0")
+
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    assert data["metadata"]["component"]["version"] == "0.1.0"
+
+
+def test_bind_replaces_generator_placeholder_version_with_wheel_version(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path, version="UNKNOWN")
+
+    MODULE.bind(sbom, wheel, expected_version="0.1.0")
+
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    assert data["metadata"]["component"]["version"] == "0.1.0"
 
 
 def test_verify_rejects_artifact_substitution(tmp_path: Path) -> None:
@@ -77,6 +102,26 @@ def test_bind_rejects_root_identity_mismatch(tmp_path: Path) -> None:
         MODULE.bind(sbom, wheel)
 
 
+def test_bind_rejects_wrong_release_version(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+
+    with pytest.raises(MODULE.BindingError, match="does not match expected release version"):
+        MODULE.bind(sbom, wheel, expected_version="9.9.9")
+
+
+def test_verify_rejects_root_version_mismatch(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+    MODULE.bind(sbom, wheel)
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    data["metadata"]["component"]["version"] = "9.9.9"
+    sbom.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(MODULE.BindingError, match="does not match wheel version"):
+        MODULE.verify(sbom, wheel)
+
+
 def test_bind_rejects_conflicting_existing_digest(tmp_path: Path) -> None:
     wheel = _wheel(tmp_path)
     sbom = _sbom(tmp_path)
@@ -88,14 +133,6 @@ def test_bind_rejects_conflicting_existing_digest(tmp_path: Path) -> None:
     with pytest.raises(MODULE.BindingError, match="conflicting SHA-256"):
         MODULE.bind(sbom, wheel)
     assert sbom.read_text(encoding="utf-8") == before
-
-
-def test_bind_rejects_root_version_mismatch(tmp_path: Path) -> None:
-    wheel = _wheel(tmp_path)
-    sbom = _sbom(tmp_path, version="9.9.9")
-
-    with pytest.raises(MODULE.BindingError, match="does not match wheel version"):
-        MODULE.bind(sbom, wheel)
 
 
 def test_bind_accepts_exactly_one_identical_digest(tmp_path: Path) -> None:
