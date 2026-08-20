@@ -22,16 +22,20 @@ chose not to do. Modeled on the companion `homology-cliff/PROBLEMS.md`.
    Recorded in [`CHANGELOG.md`](CHANGELOG.md) (0.0.2 → Fixed).
 
 2. **"Topology beats MLP" was over-claimed on MUTAG, then refuted on PROTEINS
-   (PR #15, PR #16).** A single-dataset MUTAG result is not evidence of a general
+   (PR #15, PR #16); later null-result wording also overstated non-rejection as
+   equality.** A single-dataset MUTAG result is not evidence of a general
    advantage. The preregistered two-dataset replication (hypothesis 002, PROTEINS)
-   showed the strong "topology beats MLP" claim does **not** replicate (p_BH = 0.548,
-   equality), and the MUTAG combinatorial-Laplacian *harm* shrank by roughly 10×.
-   The claim was demoted to its defensible form: symmetric-normalised one-layer Hodge
-   MP *matches* an MLP, and only the residual+normalised variant *strictly beats* MLP,
-   and only on the larger NCI1 dataset (hypothesis 003, p_BH = 4.83 × 10⁻³). The
-   residual variant's verdict actually **inverts** between datasets — it underperforms
-   MLP on MUTAG (p_BH = 0.019) and beats it on NCI1 — which is itself reported rather
-   than hidden. Recorded in [`CHANGELOG.md`](CHANGELOG.md) (0.0.2 → Added — empirical results).
+   showed the strong "topology beats MLP" claim does **not** replicate (H1 vs MLP
+   p_BH = 0.548), and the MUTAG combinatorial-Laplacian *harm* shrank by roughly
+   10×. The defensible form is narrower: for the symmetrically-normalised one-layer
+   arm, the paired tests detected no difference from MLP on MUTAG, PROTEINS, or
+   NCI1 at the tested power. Those non-rejections are not statistical-equivalence
+   results because no equivalence margin or equivalence test was pre-specified.
+   Separately, the residual+normalised variant *strictly beats* MLP on NCI1
+   (hypothesis 003, p_BH = 4.83 × 10⁻³) while underperforming MLP on MUTAG
+   (p_BH = 0.019); that dataset-dependent inversion is reported rather than hidden.
+   Current-facing result documents were calibrated accordingly while preserving
+   preregistered decision-tree language as historical protocol.
 
 3. **Topology-divergence claim demoted from a result to exploratory.** The
    `ShapeOfLearningCallback.divergence_score` comparison was reconciled to
@@ -63,6 +67,15 @@ chose not to do. Modeled on the companion `homology-cliff/PROBLEMS.md`.
    `pyproject.toml` is *intentionally omitted*: it would make the partial-coverage
    `test` job fail, so the gate lives only where 100% is genuinely achievable.
 
+3. **Torch 2.13 sparse-construction warning was promoted to an error by the test
+   policy.** `pytest` intentionally treats warnings as errors. Torch 2.13 began
+   warning when an empty sparse COO tensor is constructed without an explicit
+   sparse-invariant-check policy, which broke `TestModelsRegistry::test_mlp_baseline_forward`
+   even though the dummy Laplacian is structurally valid and unused by the MLP.
+   The test now constructs that dummy tensor under
+   `torch.sparse.check_sparse_tensor_invariants(False)`, matching the repository's
+   explicit sparse-construction policy and preserving warnings-as-errors globally.
+
 ## Things deferred (no implementation timeline)
 
 These are recorded so the absence of a feature is never mistaken for an oversight.
@@ -81,9 +94,12 @@ From [`CHANGELOG.md`](CHANGELOG.md) (0.0.2 → Deferred indefinitely):
 TopoGeoML is a pre-1.0 research toolkit. Its headline empirical claim (residual +
 symmetric-normalised Hodge message passing strictly beats a matched-capacity MLP on
 NCI1, p_BH = 4.83 × 10⁻³) is preregistered, FDR-corrected, and reproducible from
-[`REPRODUCING.md`](REPRODUCING.md). The framework also owns its null and negative results (the MUTAG
-advantage did not replicate on PROTEINS; the residual variant's verdict inverts
-across datasets), one corrected critical training bug, and a list of features it has
-chosen not to build. Type-checking and a 100% branch-coverage gate are enforced in
-CI. It is not a finished product, and it does not claim to be. It aims to be honest
+[`REPRODUCING.md`](REPRODUCING.md). For the plain symmetrically-normalised one-layer
+arm, MUTAG, PROTEINS, and NCI1 produce non-significant paired comparisons against
+MLP under the registered tests; this is evidence of no detected difference at the
+tested power, not proof of equivalence. The framework also owns its negative results
+(the MUTAG advantage did not replicate on PROTEINS; the residual variant's verdict
+inverts across datasets), one corrected critical training bug, and a list of features
+it has chosen not to build. Type-checking and a 100% branch-coverage gate are enforced
+in CI. It is not a finished product, and it does not claim to be. It aims to be honest
 about exactly what has and has not been demonstrated.

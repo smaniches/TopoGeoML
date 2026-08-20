@@ -90,15 +90,15 @@ Full report: `notebooks/results/mutag_hodge_ablation_30seeds.md`. Headline accur
 | Arm | Median accuracy (95% BCa CI) | Wilcoxon p_BH vs MLP | Verdict |
 |---|---|---|---|
 | combinatorial L (control) | 0.697 [0.658, 0.750] | **5.66 × 10⁻⁴** | loses by 9 pp |
-| **H1**: symm L̃ | **0.789 [0.763, 0.816]** | **0.714** | **matches MLP** |
+| **H1**: symm L̃ | **0.789 [0.763, 0.816]** | **0.714** | **no detected difference** |
 | **H2**: H1 + residual | 0.750 [0.724, 0.789] | 0.019 | loses (surprise) |
-| **H3**: H2 + 2 stacked layers | 0.776 [0.737, 0.789] | 0.102 | matches (weak) |
+| **H3**: H2 + 2 stacked layers | 0.776 [0.737, 0.789] | 0.102 | no detected difference |
 | `mlp-baseline` | 0.789 [0.763, 0.816] | — | — |
 
 **Findings (BH-corrected at α=0.05 over the family of 10 pairwise comparisons):**
 
 - **H1 — *confirmed* with very high confidence.** Symmetric Laplacian normalisation alone closes the entire 9 pp gap: `hodge-mp-classifier` (combinatorial L) vs `hodge-mp-normalised` has median Δ = −0.092, **p_BH = 6.25 × 10⁻⁴**, rank-biserial r = −0.643. The combinatorial Laplacian's degree-scaled propagation was the single dominant cause of the original negative result.
-- **H1 → MLP equivalence — *confirmed*.** `hodge-mp-normalised` vs `mlp-baseline` has median Δ = +0.000, p_BH = 0.714. The normalised Hodge architecture is **statistically indistinguishable from the MLP baseline** on MUTAG at 30 seeds. The strong claim of hypothesis 001 holds.
+- **H1 → MLP difference — *not detected under the registered test*.** `hodge-mp-normalised` vs `mlp-baseline` has median Δ = +0.000, p_BH = 0.714. At this 30-seed design the paired test does not detect a difference. This is a non-rejection result, not evidence of equivalence; no equivalence margin or equivalence test was pre-specified.
 - **H2 — *refuted*.** Adding a residual on top of normalisation *does not* help further. `hodge-mp-residual` actually underperforms `mlp-baseline` at p_BH = 0.019. We had expected residual to help on top of normalisation; it does not, and on this dataset it slightly hurts. Two plausible explanations: (a) MUTAG features are sparse 7-dim one-hot atom labels — adding the proj-in directly preserves their sparsity through the Hodge step, undoing the smoothing the propagation provided; (b) at this scale the extra projection identity is just additional noise the model has to learn around. Either way, the data refutes the prediction.
 - **H3 — *refuted*.** Two stacked layers + residual produces 0.776 [0.737, 0.789], which does not significantly beat the one-layer normalised arm (median Δ = −0.013, p_BH = 0.21) and only weakly underperforms MLP (p_BH = 0.10, not significant). Depth at this size does not help.
 
@@ -106,8 +106,8 @@ Full report: `notebooks/results/mutag_hodge_ablation_30seeds.md`. Headline accur
 
 **What this licenses the framework to claim.** The defensible v0.0.2 sentence:
 
-> *On MUTAG with 30 independent seeds × 20 epochs of Adam(lr=1e-2), a one-layer Hodge message-passing classifier using a symmetrically-normalised Laplacian (`D^{-1/2} L D^{-1/2}`) achieves accuracy statistically indistinguishable from a no-topology MLP of matched capacity (paired Wilcoxon p_BH = 0.714, median Δ = +0.000, BCa 95% CI on Hodge accuracy: [0.763, 0.816]). The unnormalised combinatorial variant underperforms by 9 percentage points (p_BH = 5.66 × 10⁻⁴). Normalisation alone is sufficient to close the gap; residual connections and stacked layers do not further improve performance at this scale, and the residual variant slightly underperforms MLP (p_BH = 0.019).*
+> *On MUTAG with 30 independent seeds × 20 epochs of Adam(lr=1e-2), a one-layer Hodge message-passing classifier using a symmetrically-normalised Laplacian (`D^{-1/2} L D^{-1/2}`) has the same observed median accuracy as a no-topology MLP of matched capacity (median Δ = +0.000), with no difference detected by the paired Wilcoxon comparison after BH correction (p_BH = 0.714; BCa 95% CI on Hodge accuracy: [0.763, 0.816]). This does not establish statistical equivalence. The unnormalised combinatorial variant underperforms by 9 percentage points (p_BH = 5.66 × 10⁻⁴). Normalisation alone is sufficient to close the gap; residual connections and stacked layers do not further improve performance at this scale, and the residual variant slightly underperforms MLP (p_BH = 0.019).*
 
-This is a **positive equality claim** (matches the literature's nuance: topology doesn't *beat* MLP on MUTAG but a properly-normalised topology architecture is competitive). It is not "topology helps on MUTAG"; that requires beating MLP, which the literature consensus suggests is unlikely at this dataset scale.
+This is a **competitive-performance / no-detected-difference claim**, not an equivalence claim (topology does not *beat* MLP on MUTAG; the registered test also does not detect a difference for the normalised arm). It is not "topology helps on MUTAG"; that requires beating MLP, which the literature consensus suggests is unlikely at this dataset scale.
 
 **Next hypothesis (002, deferred).** Move to a larger TUDataset (PROTEINS, NCI1, or ENZYMES) where the dataset is big enough to discriminate between architectures, and test whether the H1 winning architecture (1-layer symm-L̃ Hodge) beats MLP there.

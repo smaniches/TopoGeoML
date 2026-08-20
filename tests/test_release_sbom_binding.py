@@ -1,0 +1,193 @@
+from __future__ import annotations
+
+import hashlib
+import importlib.util
+import json
+import zipfile
+from pathlib import Path
+
+import pytest
+
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "bind_release_sbom.py"
+SPEC = importlib.util.spec_from_file_location("bind_release_sbom", SCRIPT)
+assert SPEC is not None and SPEC.loader is not None
+MODULE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MODULE)
+
+
+def _wheel(tmp_path: Path, *, name: str = "topogeoml", version: str = "0.1.0") -> Path:
+    wheel = tmp_path / "package.whl"
+    metadata = f"Metadata-Version: 2.3\nName: {name}\nVersion: {version}\n\n"
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr("topogeoml-0.1.0.dist-info/METADATA", metadata)
+    return wheel
+
+
+def _sbom(
+    tmp_path: Path,
+    *,
+    name: str = "topogeoml",
+    version: str | None = "0.1.0",
+) -> Path:
+    path = tmp_path / "sbom.cdx.json"
+    component: dict[str, object] = {
+        "type": "library",
+        "name": name,
+    }
+    if version is not None:
+        component["version"] = version
+    path.write_text(
+        json.dumps(
+            {
+                "bomFormat": "CycloneDX",
+                "specVersion": "1.6",
+                "version": 1,
+                "metadata": {"component": component},
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_bind_records_exact_wheel_sha256(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+
+    digest = MODULE.bind(sbom, wheel, expected_version="0.1.0")
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+
+    assert digest == hashlib.sha256(wheel.read_bytes()).hexdigest()
+    assert data["metadata"]["component"]["hashes"] == [{"alg": "SHA-256", "content": digest}]
+    assert MODULE.verify(sbom, wheel, expected_version="0.1.0") == digest
+
+
+def test_bind_populates_missing_dynamic_root_version_from_wheel(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path, version=None)
+
+    MODULE.bind(sbom, wheel, expected_version="0.1.0")
+
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    assert data["metadata"]["component"]["version"] == "0.1.0"
+
+
+def test_bind_replaces_generator_placeholder_version_with_wheel_version(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path, version="UNKNOWN")
+
+    MODULE.bind(sbom, wheel, expected_version="0.1.0")
+
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    assert data["metadata"]["component"]["version"] == "0.1.0"
+
+
+def test_verify_rejects_artifact_substitution(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+    MODULE.bind(sbom, wheel)
+
+    with zipfile.ZipFile(wheel, "a") as archive:
+        archive.writestr("tampered.txt", "different published bytes")
+
+    with pytest.raises(MODULE.BindingError, match="does not equal wheel SHA-256"):
+        MODULE.verify(sbom, wheel)
+
+
+def test_bind_rejects_root_identity_mismatch(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path, name="different-package")
+
+    with pytest.raises(MODULE.BindingError, match="does not match wheel name"):
+        MODULE.bind(sbom, wheel)
+
+
+def test_bind_rejects_wrong_release_version(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+
+    with pytest.raises(MODULE.BindingError, match="does not match expected release version"):
+        MODULE.bind(sbom, wheel, expected_version="9.9.9")
+
+
+def test_verify_rejects_root_version_mismatch(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+    MODULE.bind(sbom, wheel)
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    data["metadata"]["component"]["version"] = "9.9.9"
+    sbom.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(MODULE.BindingError, match="does not match wheel version"):
+        MODULE.verify(sbom, wheel)
+
+
+def test_bind_rejects_conflicting_existing_digest(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    data["metadata"]["component"]["hashes"] = [{"alg": "SHA-256", "content": "0" * 64}]
+    sbom.write_text(json.dumps(data), encoding="utf-8")
+    before = sbom.read_text(encoding="utf-8")
+
+    with pytest.raises(MODULE.BindingError, match="conflicting SHA-256"):
+        MODULE.bind(sbom, wheel)
+    assert sbom.read_text(encoding="utf-8") == before
+
+
+def test_bind_accepts_exactly_one_identical_digest(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+
+    digest = MODULE.bind(sbom, wheel)
+    assert MODULE.bind(sbom, wheel) == digest
+
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    assert data["metadata"]["component"]["hashes"] == [{"alg": "SHA-256", "content": digest}]
+
+
+def test_bind_rejects_multiple_sha256_entries_even_when_identical(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+    digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    data["metadata"]["component"]["hashes"] = [
+        {"alg": "SHA-256", "content": digest},
+        {"alg": "SHA-256", "content": digest},
+    ]
+    sbom.write_text(json.dumps(data), encoding="utf-8")
+    before = sbom.read_text(encoding="utf-8")
+
+    with pytest.raises(MODULE.BindingError, match="multiple SHA-256"):
+        MODULE.bind(sbom, wheel)
+    assert sbom.read_text(encoding="utf-8") == before
+
+
+def test_verify_rejects_multiple_sha256_entries(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+    digest = MODULE.bind(sbom, wheel)
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    data["metadata"]["component"]["hashes"].append({"alg": "SHA-256", "content": digest})
+    sbom.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(MODULE.BindingError, match="does not equal wheel SHA-256"):
+        MODULE.verify(sbom, wheel)
+
+
+def test_bind_preserves_unrelated_hash_algorithms(tmp_path: Path) -> None:
+    wheel = _wheel(tmp_path)
+    sbom = _sbom(tmp_path)
+    unrelated = {"alg": "SHA-1", "content": "a" * 40}
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    data["metadata"]["component"]["hashes"] = [dict(unrelated)]
+    sbom.write_text(json.dumps(data), encoding="utf-8")
+
+    digest = MODULE.bind(sbom, wheel)
+
+    data = json.loads(sbom.read_text(encoding="utf-8"))
+    assert data["metadata"]["component"]["hashes"] == [
+        unrelated,
+        {"alg": "SHA-256", "content": digest},
+    ]
+    assert MODULE.verify(sbom, wheel) == digest
