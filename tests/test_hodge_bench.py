@@ -61,11 +61,12 @@ class TestModelsRegistry:
         model = MLPBaseline.build(input_dim=4, num_classes=2, seed=0).to(torch.float64)
         x = torch.randn(5, 4, dtype=torch.float64)
         # MLPBaseline doesn't use the laplacian; pass a dummy.
-        dummy_L = torch.sparse_coo_tensor(
-            indices=torch.zeros(2, 0, dtype=torch.long),
-            values=torch.zeros(0, dtype=torch.float64),
-            size=(5, 5),
-        )
+        with torch.sparse.check_sparse_tensor_invariants(False):
+            dummy_L = torch.sparse_coo_tensor(
+                indices=torch.zeros(2, 0, dtype=torch.long),
+                values=torch.zeros(0, dtype=torch.float64),
+                size=(5, 5),
+            )
         logits = model.forward_one(x, dummy_L)
         assert logits.shape == (2,)
 
