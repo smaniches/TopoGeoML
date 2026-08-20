@@ -49,7 +49,7 @@ def test_sbom_attestation_executes_no_project_or_dependency_code() -> None:
         "id-token": "write",
         "attestations": "write",
     }
-    assert _run_commands(attest) == ""
+    assert _run_commands(attest).strip() == ""
 
     steps = attest["steps"]
     action_step = next(step for step in steps if str(step.get("uses", "")).startswith("actions/attest@"))
