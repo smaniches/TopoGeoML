@@ -22,19 +22,19 @@ Five matched-capacity (1378-1442 params) arms tested as a single literature-grou
 | Arm | Median accuracy (95% BCa CI) | Wilcoxon p_BH vs MLP | Verdict |
 |---|---|---|---|
 | `hodge-mp-classifier` (combinatorial L) | 0.697 [0.658, 0.750] | **5.66 × 10⁻⁴** | loses by 9 pp |
-| **`hodge-mp-normalised`** (symm L̃ = D⁻¹/² L D⁻¹/²) | **0.789 [0.763, 0.816]** | **0.714** | **matches MLP** |
+| **`hodge-mp-normalised`** (symm L̃ = D⁻¹/² L D⁻¹/²) | **0.789 [0.763, 0.816]** | **0.714** | **no detected difference** |
 | `hodge-mp-residual` (above + identity skip) | 0.750 [0.724, 0.789] | 0.019 | loses by 4 pp (surprise) |
-| `hodge-mp-deep-residual` (above + 2 stacked layers) | 0.776 [0.737, 0.789] | 0.102 | matches (weak) |
+| `hodge-mp-deep-residual` (above + 2 stacked layers) | 0.776 [0.737, 0.789] | 0.102 | no detected difference |
 | `mlp-baseline` | 0.789 [0.763, 0.816] | — | control |
 
-**Defensible claim.** On MUTAG at 30 seeds × 20 epochs × hidden_dim=32, a one-layer Hodge MP classifier using a symmetrically-normalised Laplacian is statistically indistinguishable from a no-topology MLP of matched capacity (paired Wilcoxon p_BH = 0.714, median Δ = +0.000, BCa CI on Hodge accuracy: [0.763, 0.816]).
+**Defensible claim.** On MUTAG at 30 seeds × 20 epochs × hidden_dim=32, the one-layer symmetrically-normalised Hodge MP arm and the matched-capacity no-topology MLP have the same observed median accuracy (0.789; median paired Δ = +0.000), and the paired Wilcoxon comparison does not detect a difference after BH correction (p_BH = 0.714; BCa CI on Hodge accuracy [0.763, 0.816]). This is a non-rejection result at the tested power, not evidence of statistical equivalence; no equivalence margin or equivalence test was pre-specified for this comparison.
 
 **Findings.**
-- **H1 (normalisation alone fixes it)** — *confirmed*. Symmetric Laplacian normalisation closes the entire 9 pp gap.
+- **H1 (normalisation alone fixes the observed deficit)** — *supported under the pre-registered decision rule*. Symmetric Laplacian normalisation removes the observed 9 pp median gap and the corrected paired test detects no remaining difference from MLP; this does not establish equivalence.
 - **H2 (residual helps on top)** — *refuted*. The residual variant actually underperforms MLP at p_BH = 0.019.
-- **H3 (depth helps on top)** — *refuted*. The 2-layer variant is no better than the 1-layer normalised arm.
+- **H3 (depth helps on top)** — *refuted*. The 2-layer variant is no better than the 1-layer normalised arm under the registered comparison.
 
-**Honest interpretation.** Symmetric normalisation is the architectural choice that makes a minimal Hodge MP competitive with no-topology baselines on MUTAG. Residual connections and stacked layers — contrary to the literature-inspired prediction — do not further improve performance at this dataset's scale, consistent with Errica et al. 2020's finding that MUTAG cannot discriminate between simple architectures.
+**Honest interpretation.** Symmetric normalisation is the architectural choice that removes the observed MUTAG deficit of the minimal Hodge MP arm relative to the matched no-topology baseline under this 30-seed design. Residual connections and stacked layers — contrary to the literature-inspired prediction — do not further improve performance at this dataset's scale, consistent with Errica et al. 2020's finding that MUTAG cannot discriminate between simple architectures. Claims of equivalence require a separately specified equivalence margin and test.
 
 Full per-seed report: `notebooks/results/mutag_hodge_ablation_30seeds.md`. The prior 2-arm-only result (combinatorial Hodge vs MLP) is preserved at `notebooks/results/mutag_hodge_vs_mlp_30seeds.md` for the audit trail.
 
