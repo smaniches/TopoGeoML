@@ -1,6 +1,6 @@
 {
   "title": "TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification",
-  "description": "Preregistered research program investigating Hodge decomposition for graph neural network classification. Fourteen hypotheses (H001-H011b) with 53 falsifiable sub-predictions systematically investigate candidate mechanisms (sample size, feature density, graph topology) for the observed NCI1 positive claim (+8.6 pp, p_BH = 4.83e-3). Includes differentiable persistent homology, Hodge Laplacian message passing, a CI-gated test suite with 100% line and branch coverage on the library package, BCa bootstrap CIs, paired Wilcoxon signed-rank tests with BH-FDR correction, and honest reporting of null results alongside confirmed positive differences.",
+  "description": "Topology-aware machine-learning software and a preregistered graph-classification research program spanning 14 hypotheses (H001-H011b) and 53 falsifiable sub-predictions. Under the tested matched-capacity configurations, no unique L_0 Hodge advantage is supported once the external-residual architecture is matched. A narrow NCI1 positive difference over the matched MLP remains; the H009-R corrective replication did not detect a learned-sheaf improvement over fixed Hodge at the tested power, and H011b remains unresolved. The repository includes persistent-homology features, differentiable topology losses, simplicial and Hodge operators, a CI-gated test suite with 100% line and branch coverage on the library package, BCa bootstrap intervals, paired Wilcoxon tests with Benjamini-Hochberg correction, and explicit retention of null, invalidated, and inconclusive results.",
   "creators": [
     {
       "name": "Maniches, Santiago",
@@ -20,7 +20,7 @@
   "license": {"id": "MIT"},
   "upload_type": "software",
   "access_right": "open",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "related_identifiers": [
     {
       "identifier": "10.5281/zenodo.20365816",
@@ -28,7 +28,7 @@
       "scheme": "doi"
     },
     {
-      "identifier": "10.5281/zenodo.20787342",
+      "identifier": "10.5281/zenodo.21228027",
       "relation": "isNewVersionOf",
       "scheme": "doi"
     },

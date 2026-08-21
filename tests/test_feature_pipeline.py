@@ -95,7 +95,7 @@ def test_pipeline_provenance_captured(noisy_circle: NDArray[np.float64]) -> None
     assert prov.max_homology_dim == 1
     assert prov.vectorizer == "persistence_image"
     assert prov.output_dim == 2 * 15 * 15
-    assert prov.pipeline_version == "0.0.6"
+    assert prov.pipeline_version == "0.0.7"
     assert "fallback_max" in prov.extras
 
 
