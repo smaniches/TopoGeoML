@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this software or its empirical findings, please cite it as below."
 type: software
 title: "TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification"
-version: 0.0.6
-date-released: "2026-07-06"
+version: 0.0.7
+date-released: "2026-08-20"
 license: MIT
 doi: "10.5281/zenodo.20365816"
 repository-code: "https://github.com/smaniches/TopoGeoML"
@@ -21,11 +21,15 @@ keywords:
   - preregistered research
   - mechanism elimination
 abstract: >-
-  A preregistered research program (14 hypotheses across H001–H011b, 53
-  falsifiable sub-predictions) investigating whether Hodge decomposition improves graph
-  neural network classification. Systematic mechanism elimination
-  (sample size, feature density, graph topology) narrows the positive NCI1
-  claim (+8.6 pp, p_BH = 4.83e-3) to an architecture-data complementarity
-  interaction. Includes a CI-gated test suite with 100% line and branch coverage
-  on the library package and statistically defensible reporting (BCa bootstrap,
-  paired Wilcoxon, BH-FDR).
+  A topology-aware machine-learning software toolkit and preregistered research
+  program spanning 14 hypotheses across H001–H011b and 53 falsifiable
+  sub-predictions. Under the tested matched-capacity graph-classification
+  configurations, no unique L_0 Hodge advantage is supported once the
+  external-residual architecture is matched. A narrow NCI1 positive difference
+  over the matched MLP remains, while the H009-R corrective replication did not
+  detect a learned-sheaf improvement over fixed Hodge at the tested power;
+  H011b remains unresolved. The project includes persistent-homology features,
+  differentiable topology losses, simplicial and Hodge operators, a CI-gated
+  test suite with 100% line and branch coverage on the library package, and
+  statistically disciplined reporting with BCa bootstrap intervals, paired
+  Wilcoxon tests, and Benjamini-Hochberg correction.

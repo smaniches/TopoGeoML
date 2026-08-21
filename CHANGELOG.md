@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.0.7] — 2026-08-20
+
+Correctness, evidence, security, and release-integrity release. This release ships the repaired H009-R evidence, the `L_1` operator-reuse correction, and the bounded hardening already validated on `main`. H011b remains preregistered and unresolved; no confirmatory COLLAB claim is introduced.
+
 ### Added
 
 - **H011b execution contract preregistered (no results).** `docs/hypotheses/HYPOTHESIS-011b-l1-collab.md` gains a pre-execution amendment (section 6) fixing the execution venue requirements, artifact set, and H009-R-style result-handling rules for the pending 30-seed COLLAB run, before any confirmatory result exists. No scientific design parameter, decision rule, or threshold changes. A new `benchmarks/hodge/triangle_census.py` CLI implements the triangle census the preregistration requires in the final artifact (reconstructing each graph from the stored per-graph `L_0` exactly as the `l1-hodge-residual` model does), and `tests/test_h011b_contract.py` adds the previously missing coverage for the H011b surface: `L_1` correctness on known graphs (filled triangle `L_1 = 3I`, proving the `B_2 B_2^T` up-term; triangle-free path, down-term only), exact four-arm capacity match at COLLAB's `input_dim=1` (1,219 parameters per arm), census values and reconstruction consistency, and the degree-feature loader path.
+- **Release-metadata coherence contract.** A dedicated test now requires the package version, CFF metadata, Zenodo metadata, changelog date, public documentation, package-surface description, and pipeline provenance version to agree before a release candidate can pass CI.
 
 ### Fixed
 
@@ -24,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hardened manual experiment dispatch by removing workflow-input shell interpolation, disabling long-option abbreviation in the Hodge CLI, keeping workflow-managed protocol/output arguments authoritative, and adding regression tests for abbreviated-option bypasses found during review.
 - Read-only CI, benchmark, experiment, and release checkout steps no longer persist GitHub credentials when subsequent authenticated Git operations are unnecessary.
 - The full-dependency CI gate now runs `pip-audit --local`. The audit surfaced an unused `giotto-tda` dependency that pinned vulnerable scikit-learn 1.3.2; `giotto-tda` was removed, the scikit-learn minimum was raised to 1.5, and setuptools is upgraded before auditing.
+- The release path now builds the distributions once, resolves the exact wheel's runtime dependency closure in an unprivileged job, binds the CycloneDX root to the wheel identity and SHA-256, independently verifies that binding, attests only the exact wheel with a custom CycloneDX predicate, and keeps publication and signing downstream of the complete integrity chain.
 
 ### Changed
 

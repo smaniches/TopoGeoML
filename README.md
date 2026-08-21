@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/smaniches/TopoGeoML/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-0.0.6--beta-green)](#status)
+[![Version](https://img.shields.io/badge/version-0.0.7--beta-green)](#status)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20365816.svg)](https://doi.org/10.5281/zenodo.20365816)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -44,7 +44,7 @@ See [`STATUS.md`](STATUS.md), [`docs/STATISTICAL_SUMMARY.md`](docs/STATISTICAL_S
 
 ## Status
 
-TopoGeoML 0.0.6 is beta scientific software. Public APIs can change before 1.0.
+TopoGeoML 0.0.7 is beta scientific software. Public APIs can change before 1.0.
 
 Required CI enforces 100% line and 100% branch coverage on the importable `topogeoml` package under full dependencies. Mypy strict mode and ruff are enforced in CI. The `benchmarks/` tree is separate research infrastructure and is not included in the package-coverage claim. The exact verified test and coverage snapshot is recorded in [`docs/CLAIMS_TO_EVIDENCE.md`](docs/CLAIMS_TO_EVIDENCE.md).
 
@@ -218,7 +218,7 @@ See [`LIMITATIONS.md`](LIMITATIONS.md) for the detailed engineering and scientif
   author  = {Maniches, Santiago},
   title   = {TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification},
   year    = {2026},
-  version = {0.0.6},
+  version = {0.0.7},
   doi     = {10.5281/zenodo.20365816},
   url     = {https://doi.org/10.5281/zenodo.20365816}
 }

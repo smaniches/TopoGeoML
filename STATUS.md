@@ -4,7 +4,7 @@
 
 TopoGeoML is a topology-aware scientific software library with an attached preregistered empirical research record. The installed package provides persistent-homology features, differentiable topology primitives, simplicial and Hodge operators, signal-topology features, embedding diagnostics, and reproducible experiment metadata. The graph-classification investigation is one application of the library, not the definition of the package.
 
-TopoGeoML 0.0.6 is beta research software, not a production training framework. Public APIs can change before 1.0.
+TopoGeoML 0.0.7 is beta research software, not a production training framework. Public APIs can change before 1.0.
 
 ## Investigation summary
 
