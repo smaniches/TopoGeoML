@@ -50,7 +50,7 @@ dependencies = [
 [project.optional-dependencies]
 # PyTorch / PyG: differentiable layers, GNN integration. Heavy install.
 torch = [
-    "torch>=2.0",
+    "torch>=2.13.0",
     "torch-geometric>=2.4",
 ]
 # Higher-order topological domains via TopoNetX.
@@ -83,7 +83,7 @@ all = [
 # on real datasets (MNIST topology in Phase 2). torchvision provides the
 # canonical MNIST download with cached checksums.
 bench = [
-    "torch>=2.0",
+    "torch>=2.13.0",
     "torch-topological>=0.1.9",
     "torchvision>=0.15",
     "gudhi>=3.9",
