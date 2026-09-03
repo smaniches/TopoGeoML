@@ -176,11 +176,14 @@ addopts = [
     "--tb=short",
 ]
 # Unexpected warnings are defects in the test signal. The only exception is a
-# known PyTorch 2.13 deprecation emitted from torch's own JIT implementation;
-# it is outside TopoGeoML and is matched narrowly by message, category, and module.
+# known PyTorch deprecation emitted from torch's own JIT implementation; it is
+# outside TopoGeoML and is matched narrowly by message, category, and module.
+# torch 2.13 raised it as DeprecationWarning and torch 2.14 raises it as
+# FutureWarning; the two are sibling categories, so both are listed.
 filterwarnings = [
     "error",
     "ignore:`torch[.]jit[.]script` is deprecated[.].*:DeprecationWarning:torch[.]jit[.]_script",
+    "ignore:`torch[.]jit[.]script` is deprecated[.].*:FutureWarning:torch[.]jit[.]_script",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",

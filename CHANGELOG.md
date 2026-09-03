@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
-## [0.0.7] — 2026-08-20
+## [0.0.7] — 2026-09-03
 
 Correctness, evidence, security, and release-integrity release. This release ships the repaired H009-R evidence, the `L_1` operator-reuse correction, and the bounded hardening already validated on `main`. H011b remains preregistered and unresolved; no confirmatory COLLAB claim is introduced.
 

@@ -3,7 +3,7 @@ message: "If you use this software or its empirical findings, please cite it as 
 type: software
 title: "TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification"
 version: 0.0.7
-date-released: "2026-08-20"
+date-released: "2026-09-03"
 license: MIT
 doi: "10.5281/zenodo.20365816"
 repository-code: "https://github.com/smaniches/TopoGeoML"
