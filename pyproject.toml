@@ -43,7 +43,7 @@ dependencies = [
     "scipy>=1.10",
     "scikit-learn>=1.5",
     "ripser>=0.6.4",
-    "networkx>=3.0",
+    "networkx>=3.6.1",
     "pyyaml>=6.0",
 ]
 
