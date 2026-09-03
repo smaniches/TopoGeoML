@@ -59,7 +59,7 @@ higher-order = [
 ]
 # Heavier TDA backend (GUDHI is C++ underneath).
 tda = [
-    "gudhi>=3.9",
+    "gudhi>=3.13.0",
 ]
 # Dev tooling.
 dev = [
@@ -86,7 +86,7 @@ bench = [
     "torch>=2.0",
     "torch-topological>=0.1.9",
     "torchvision>=0.15",
-    "gudhi>=3.9",
+    "gudhi>=3.13.0",
     "torch-geometric>=2.4",
 ]
 
