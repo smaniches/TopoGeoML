@@ -1,50 +1,17 @@
 version: 2
 updates:
-  # Scientific library dependencies. Keep declared lower bounds intentional:
-  # routine minor/patch maintenance is grouped by compatibility domain, while
-  # major upgrades remain standalone and require explicit review.
+  # pyproject.toml declares compatibility floors, not pinned runtime versions.
+  # Routine version updates would only ratchet those minima upward even though
+  # fresh installs already resolve newer compatible releases. Keep automated
+  # security updates enabled, but do not open routine Python version-update PRs.
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
-    groups:
-      core-runtime:
-        patterns:
-          - "numpy"
-          - "scipy"
-          - "scikit-learn"
-          - "ripser"
-          - "networkx"
-          - "pyyaml"
-        update-types:
-          - "minor"
-          - "patch"
-      optional-scientific:
-        patterns:
-          - "torch"
-          - "torch-geometric"
-          - "torch-topological"
-          - "torchvision"
-          - "toponetx"
-          - "gudhi"
-        update-types:
-          - "minor"
-          - "patch"
-      development-tooling:
-        patterns:
-          - "pytest"
-          - "pytest-cov"
-          - "pytest-benchmark"
-          - "ruff"
-          - "mypy"
-          - "hypothesis"
-        update-types:
-          - "minor"
-          - "patch"
+    open-pull-requests-limit: 0
 
-  # GitHub Actions are SHA-pinned. Update monthly; major action revisions remain
-  # standalone so their runtime and permission changes are reviewed explicitly.
+  # GitHub Actions are SHA-pinned, so routine updates replace an exact executable
+  # revision and are useful maintenance rather than compatibility-floor churn.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
