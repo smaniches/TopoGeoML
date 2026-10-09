@@ -77,6 +77,10 @@ from topogeoml.nn.diff_ph import rips_diagram_torch
 
 # For non-generic point clouds with tied edge lengths:
 diagrams = rips_diagram_torch(points, max_dim=1, h1_tie_policy="gudhi")
+
+# The same policy is available in the training-facing wrapper:
+from topogeoml.nn.diff_ph import TopologyRegularizer
+regularizer = TopologyRegularizer(max_dim=1, h1_tie_policy="gudhi")
 ```
 
 This uses GUDHI-selected critical persistence generators, **not** a mathematically unique derivative at ties. Generic-position inputs with isolated critical edge lengths continue to use the original lightweight PyTorch + ripser path. See [the scientific limitations](LIMITATIONS.md#3-differentiable-persistence-limits).
