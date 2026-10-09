@@ -41,7 +41,7 @@ across axes *are* the finding.
 
 | Backend | Library | Version (at framework v1.0.0) | Reference |
 |---|---|---|---|
-| `topogeoml-diff-ph` | `topogeoml.nn.diff_ph` (this repo) | 0.0.1 | Elder Lemma for H_0, cocycle representative for H_1, autograd via tensor indexing |
+| `topogeoml-diff-ph` | `topogeoml.nn.diff_ph` (this repo) | 0.0.1 | Generic H₁ gradient routing from ripser critical edges; for tied/near-tied distances **this benchmark explicitly opts into** GUDHI flag-persistence generator selection (not independent of GUDHI under ties; not a unique gradient) |
 | `torch-topological` | `torch-topological` on PyPI | 0.1.9 | Bastian Rieck et al.; wraps gudhi |
 
 Each backend is one file in `benchmarks/backends/` implementing the
@@ -59,6 +59,28 @@ Synthetic, deterministic, with known ground-truth Betti numbers:
 
 Real-data datasets (MUTAG, MNIST topology, DRIVE retinal vessels) and the
 end-to-end downstream-task axis land in Phase 3.
+
+### Gradient identifiability and Issue #114
+
+The forward-diagram correctness axis validates persistence values, **not**
+derivatives. Issue #114 independently reproduced an incorrect gradient from
+the former nearest-death-edge heuristic: a remote edge with a length equal
+to a square loop's death scale received a nonzero derivative even though
+perturbing that remote edge does not change the H₁ lifetime.
+
+The production `rips_diagram_torch` API therefore refuses ambiguous H₁
+gradients by default. The `topogeoml-diff-ph` benchmark adapter explicitly
+uses `h1_tie_policy="gudhi"` in its H₁ calls so that tied MNIST grid
+coordinates use GUDHI critical-generator pairs. This is an **exploratory,
+generator-selected branch convention**, not a guarantee that a classical
+gradient exists at tied inputs. It also changes the backend's dependency
+and timing profile in degenerate regimes and must not be silently compared
+to historical benchmark results as if the implementation were unchanged.
+
+Generic-position gradient tests compare against independent ripser finite
+differences. Further tests for one-sided derivatives and the Clarke
+generalized gradient at structural ties remain future research, not
+proven properties of the current selection.
 
 ## Statistical reporting rules (strict)
 
