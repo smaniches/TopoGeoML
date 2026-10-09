@@ -76,10 +76,10 @@ class CorrectnessReport:
 
 
 def _sorted_finite(bars: np.ndarray) -> NDArray[np.float64]:
-    """Return bars with infinite-death rows removed and rows sorted lexicographically.
+    """Return finite bars in lexicographic order for legacy diagnostics.
 
-    Sorting is required because ripser and backend may emit bars in
-    different orders even when the set of bars is identical.
+    This ordering is not used for the correctness verdict. Nearly tied birth
+    values can reorder different deaths even for equivalent diagrams.
     """
     if bars.size == 0:
         return np.asarray(bars.reshape(0, 2), dtype=np.float64)
@@ -93,9 +93,8 @@ def _sorted_finite(bars: np.ndarray) -> NDArray[np.float64]:
 def _max_abs_diff(a: np.ndarray, b: np.ndarray) -> float:
     """Max |a_i - b_i| after sorted-elementwise alignment.
 
-    Returns ``+inf`` when the two arrays have different lengths, signaling
-    a mismatch in *number* of finite bars — which the diagram-match-pass
-    check then flags as a failure.
+    Returns ``+inf`` when finite bar counts differ. This diagnostic alone
+    is not a correctness verdict because diagonal matching may be valid.
     """
     if a.shape != b.shape:
         return float("inf")
@@ -114,11 +113,10 @@ def measure_correctness(
 ) -> CorrectnessReport:
     """Compare backend output to the ripser reference, per seed.
 
-    ripser is the *de facto* gold standard for Vietoris-Rips persistence
-    (Bauer 2021) and is one of TopoGeoML's own core dependencies. Both
-    backends in Phase 1 wrap ripser-compatible computations under the
-    hood; this axis exists to catch silent regressions when that contract
-    is violated.
+    ripser is the reference for the Vietoris-Rips persistence diagrams
+    (Bauer 2021). We compare finite diagrams with bottleneck distance,
+    using diagonal matching and a configurable absolute tolerance. This
+    tests barcode agreement, not the validity of backpropagated gradients.
     """
     from ripser import ripser
 
