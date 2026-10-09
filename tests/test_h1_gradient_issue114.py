@@ -143,3 +143,58 @@ def test_generic_h1_gradient_agrees_with_finite_differences() -> None:
                 _longest_h1_lifetime_np(plus) - _longest_h1_lifetime_np(minus)
             ) / (2 * epsilon)
             assert gradient[i, j] == pytest.approx(fd, abs=2e-4)
+
+
+@pytest.mark.torch
+@pytest.mark.parametrize("seed", [0, 1, 2, 3, 4])
+def test_seeded_generic_h1_gradients_match_independent_ripser_derivatives(
+    seed: int,
+) -> None:
+    """Falsifiable gradient test across generic perturbed circles.
+
+    Unlike the unit square, the edge lengths are separated well above the
+    float32 filtration precision. The persistence pair and longest lifetime
+    must remain unchanged by the finite-difference perturbation.
+    """
+    rng = np.random.default_rng(seed)
+    n = 9
+    angles = 2 * np.pi * np.arange(n) / n + rng.normal(0, 0.03, n)
+    radii = 1.0 + rng.normal(0, 0.1, n)
+    coordinates = np.column_stack(
+        [radii * np.cos(angles), radii * np.sin(angles)]
+    )
+    cloud = torch.tensor(
+        coordinates, dtype=torch.float64, requires_grad=True
+    )
+    finite_h1 = rips_diagram_torch(cloud, max_dim=1)[1]
+    finite_h1 = finite_h1[torch.isfinite(finite_h1).all(dim=1)]
+    assert len(finite_h1) == 1
+    lifespan = finite_h1[0, 1] - finite_h1[0, 0]
+    analytic = torch.autograd.grad(lifespan, cloud)[0].detach().numpy()
+    eps = 1e-3
+    for index in range(n):
+        for coord in range(2):
+            positive, negative = coordinates.copy(), coordinates.copy()
+            positive[index, coord] += eps
+            negative[index, coord] -= eps
+            estimate = (
+                _longest_h1_lifetime_np(positive)
+                - _longest_h1_lifetime_np(negative)
+            ) / (2 * eps)
+            # Ripser's barcode values are float32, which limits the
+            # finite-difference accuracy even when X is float64.
+            assert analytic[index, coord] == pytest.approx(
+                estimate, abs=3e-4
+            ), f"seed={seed}, vertex={index}, coordinate={coord}"
+
+
+@pytest.mark.torch
+def test_forward_only_context_preserves_tied_barcode() -> None:
+    cloud = _separated_loop(float(np.sqrt(2.0)))
+    with torch.no_grad():
+        h1 = rips_diagram_torch(cloud, max_dim=1)[1]
+    finite = h1[torch.isfinite(h1).all(dim=1)]
+    assert len(finite) == 1
+    assert (finite[0, 1] - finite[0, 0]).item() == pytest.approx(
+        np.sqrt(2.0) - 1.0, abs=1e-8
+    )
