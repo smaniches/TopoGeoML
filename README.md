@@ -1,6 +1,10 @@
 # TopoGeoML
 
+[![Version](https://img.shields.io/badge/version-0.0.7--beta-grey)](CHANGELOG.md)
+
 ## 1. What this is and what problem it solves
+
+TopoGeoML 0.0.7 is beta scientific software. The current `main` branch includes corrections not yet published as a new release.
 
 TopoGeoML is a Python library for using topology in machine-learning workflows. Its core path converts point clouds into fixed-width features through **Vietoris–Rips persistent homology** and a scikit-learn-compatible transformer. Optional modules provide PyTorch topology losses, simplicial and Hodge operators, time-series features, and embedding diagnostics. The repository also holds a separate, versioned graph-classification research record. Start with the feature pipeline; use the specialized modules only when your problem requires them.
 
@@ -10,7 +14,7 @@ A persistence diagram contains a variable number of birth–death pairs, while c
 
 ## 3. What is genuinely new and what is inherited
 
-The repository's own implementation includes its pipeline, provenance records, persistence-image and Betti-curve vectorizers, training adapters, benchmark correctness gates, and a publicly retained series of negative, corrected, and unresolved experiments. These are identifiable software contributions, **not** a claim that the underlying mathematics or approach was invented here. Persistent homology comes from existing theory; ripser computes Vietoris–Rips diagrams; GUDHI supplies selected persistence generators and cubical pairings; scikit-learn and PyTorch supply estimator and automatic-differentiation interfaces. See [architecture](docs/ARCHITECTURE.md), [design decisions](docs/DESIGN_DECISIONS.md), and the [evidence index](docs/CLAIMS_TO_EVIDENCE.md).
+The repository's own implementation includes its pipeline, provenance records, persistence-image and Betti-curve vectorizers, training adapters, benchmark correctness gates, and a publicly retained series of negative, corrected, and unresolved experiments. These are identifiable software contributions, **not** a claim that the underlying mathematics or approach was invented here. Persistent homology comes from existing theory; ripser computes Vietoris–Rips diagrams; GUDHI supplies selected persistence generators and cubical pairings; scikit-learn and PyTorch supply estimator and automatic-differentiation interfaces. See [architecture](docs/ARCHITECTURE.md), [design decisions](docs/DESIGN_DECISIONS.md), and the [evidence index](docs/CLAIMS_TO_EVIDENCE.md). The repository's BibTeX citation states `version = {0.0.7}` for the published package.
 
 ## 4. Quickstart
 
