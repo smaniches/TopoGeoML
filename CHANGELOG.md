@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- `TopologyFeaturePipeline` now calibrates its training-only vectorization scale using the configured filtration metric rather than guessing from array shape. Square Euclidean point clouds with zero diagonals no longer get mistaken for precomputed distance matrices, and non-Euclidean metrics use their actual pairwise distances. Added regression tests for Euclidean, precomputed, cityblock, and malformed precomputed inputs. The default Euclidean non-square behavior and the published graph-classification research artifacts are unchanged.
 
 ## [0.0.7] — 2026-09-03
 
