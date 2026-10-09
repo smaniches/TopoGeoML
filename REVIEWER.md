@@ -87,7 +87,7 @@ See [`STATUS.md`](STATUS.md) and [`LEADERBOARD.md`](LEADERBOARD.md) for the audi
 ## 7. Inspect limitations
 
 - [`LIMITATIONS.md`](LIMITATIONS.md): canonical current engineering and scientific limitations
-- [`docs/limitations.md`](docs/limitations.md): concise documentation-site summary
+- [`docs/research_scope.md`](docs/research_scope.md): concise documentation-site research summary
 - [`docs/RESEARCH_REPORT.md`](docs/RESEARCH_REPORT.md): historical Version 0.0.2 report through H008c, explicitly labeled as historical
 
 Important current boundaries include:
