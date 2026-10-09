@@ -49,7 +49,7 @@ Smoke runs and exploratory diagnostics are also kept separate from confirmatory 
 
 - **Preregistration.** Each hypothesis document was committed before its corresponding experiment ran.
 - **Seeded analysis.** The confirmatory graph experiments use repeated seeded runs and paired comparisons where appropriate.
-- **Multiplicity control.** Benjamini-Hochberg correction is applied within declared comparison families, with a separate investigation-wide analysis across the deduplicated comparison set.
+- **Multiplicity control.** Benjamini-Hochberg correction is applied within each declared comparison family. The earlier investigation-wide sensitivity table included invalidated H009 comparisons and is withdrawn; no replacement table has been computed from the validated set.
 - **Negative results retained.** Refutations, null results, and unresolved experiments remain in the public record.
 
 ## Start here
