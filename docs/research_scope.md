@@ -1,16 +1,17 @@
 ---
-title: Limitations & scope
+title: Research scope
 nav_order: 7
-description: "Scientific, statistical, and engineering limits of the current release."
+permalink: /limitations.html
+description: "Research scope and evidence limitations; technical failures are in the maintainer guide."
 ---
 
-# Limitations & scope
+# Research scope
 {: .no_toc }
 
-This page is the concise website summary. The canonical engineering and scientific limitations document is [`LIMITATIONS.md`](https://github.com/smaniches/TopoGeoML/blob/main/LIMITATIONS.md) at the repository root.
+This page is the concise research-scope summary. For current software failure modes see [the technical limitations](LIMITATIONS.md), and for the broader versioned evidence record see [`LIMITATIONS.md` at the repository root](https://github.com/smaniches/TopoGeoML/blob/main/LIMITATIONS.md).
 
 {: .warning }
-> **Every graph-classification result is configuration-bound.** The main experiments are short-budget matched-capacity mechanism studies, primarily one layer, hidden_dim = 32, 10 to 20 epochs, Adam at `1e-2`, and no batch normalisation. They are not competitive benchmark submissions and do not establish state-of-the-art model quality.
+> **Every graph-classification result is configuration-bound.** The main experiments are short-budget matched-capacity mechanism studies, primarily one layer, hidden_dim = 32, 10 to 20 epochs, Adam at `1e-2`, and no batch normalisation. They are not competitive benchmark submissions and do not establish general model superiority.
 
 ## Empirical scope
 
@@ -47,4 +48,4 @@ This page is the concise website summary. The canonical engineering and scientif
 - `CubicalTopologyLoss` improves every segmentation task.
 - Results generalize beyond their stated datasets, architectures, training budgets, and statistical designs.
 
-For detailed numerical, API, numerical-stability, and platform limitations, use the canonical [`LIMITATIONS.md`](https://github.com/smaniches/TopoGeoML/blob/main/LIMITATIONS.md).
+For numerical, API, and platform failure modes, use [technical limitations](LIMITATIONS.md). The repository-root [`LIMITATIONS.md`](https://github.com/smaniches/TopoGeoML/blob/main/LIMITATIONS.md) retains the broader research record.

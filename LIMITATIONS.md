@@ -1,6 +1,6 @@
 # Limitations of TopoGeoML v0.0.7
 
-TopoGeoML is a pre-stable scientific software library and an accompanying empirical research record. This document states the limits of the current implementation and of the claims supported by the repository. It is not a roadmap.
+TopoGeoML is a pre-stable scientific software library and an accompanying empirical research record. This document states the limits of the current implementation and of the claims supported by the repository. The last published package is `0.0.7`, but the source branch includes post-release fixes; the published package and source checkout are not identical. `0.0.7` is pre-stable. It is not a roadmap.
 
 If observed behavior contradicts the public API documentation, treat that as a defect and open an issue.
 
@@ -50,7 +50,7 @@ For `H_0`, finite deaths are tied to minimum-spanning-tree edges and the thresho
 
 For `H_1`, the implementation uses ripser cocycle information for birth routing and critical edge distances for finite deaths. The pre-issue-114 death-edge heuristic could choose an unrelated edge with the same filtration value and produce a spurious gradient while the barcode remained correct. A six-point regression (one square loop and a remote edge of length `sqrt(2)`) confirmed nonzero autograd derivative with respect to the remote edge where an independent finite-difference perturbation is zero.
 
-**Current behavior in the unreleased correction:** when an autograd-connected input has H₁ filtration levels whose critical edges are non-unique at ripser's float32 precision, `rips_diagram_torch(..., h1_tie_policy="reject")` raises by default instead of inventing a gradient. `h1_tie_policy="gudhi"` explicitly selects the matching birth/death generator edges using GUDHI's flag-persistence pairing (`pip install "topogeoml[tda]"`). This selects one combinatorial branch; it does **not** prove differentiability, Clarke-subgradient membership, or guaranteed descent at tied or nearly tied configurations. If GUDHI and ripser persistence intervals cannot be matched within the documented numerical tolerance, the method fails closed.
+**Current behavior on the source main branch after PR #115:** when an autograd-connected input has H₁ filtration levels whose critical edges are non-unique at ripser's float32 precision, `rips_diagram_torch(..., h1_tie_policy="reject")` raises by default instead of inventing a gradient. `h1_tie_policy="gudhi"` explicitly selects the matching birth/death generator edges using GUDHI's flag-persistence pairing (`pip install "topogeoml[tda]"`). This selects one combinatorial branch; it does **not** prove differentiability, Clarke-subgradient membership, or guaranteed descent at tied or nearly tied configurations. If GUDHI and ripser persistence intervals cannot be matched within the documented numerical tolerance, the method fails closed.
 
 For regular points with isolated filtration edges, gradients are validated in selected examples against finite differences. Persistent-pair identities may still change across perturbations. Treat this layer as a differentiable research primitive with a *defined generic-position validity domain*, not as globally smooth or universally correct. Forward-only persistence diagrams are unaffected by the tie-gradient restriction.
 

@@ -33,7 +33,7 @@ Across the tested matched-capacity graph-classification configurations, no uniqu
 
 H008c also shows that the tested external-residual adjacency formulation recovers performance after the normalized internal-self formulation does not. The causal statement is deliberately scoped: the two formulations place and parameterize the self path differently, so the result identifies a successful tested architecture rather than proving that residual connections alone are the sole mechanism in arbitrary models.
 
-A narrow positive result remains. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points (`p_BH = 4.83 x 10^-3`). The comparison survives investigation-wide Benjamini-Hochberg correction but not Bonferroni, and the later operator ablations show that the improvement is not unique to Hodge propagation.
+A narrow positive result remains. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points (`p_BH = 4.83 x 10^-3`). The p-value belongs to the H003 within-experiment comparison family. The earlier investigation-wide adjustment was withdrawn after invalidation of H009 and cannot support a current claim. Later operator controls show that the improvement is not unique to Hodge propagation.
 
 The genuinely higher-order question remains open. H011's NCI1 `L_1` arm does not significantly outperform MLP and is evaluated on a dataset where 96% of graphs contain no triangles. H011b on triangle-rich COLLAB has only a directional smoke result so far.
 
@@ -49,17 +49,21 @@ Smoke runs and exploratory diagnostics are also kept separate from confirmatory 
 
 - **Preregistration.** Each hypothesis document was committed before its corresponding experiment ran.
 - **Seeded analysis.** The confirmatory graph experiments use repeated seeded runs and paired comparisons where appropriate.
-- **Multiplicity control.** Benjamini-Hochberg correction is applied within declared comparison families, with a separate investigation-wide analysis across the deduplicated comparison set.
+- **Multiplicity control.** Benjamini-Hochberg correction is applied within each declared comparison family. The earlier investigation-wide sensitivity table included invalidated H009 comparisons and is withdrawn; no replacement table has been computed from the validated set.
 - **Negative results retained.** Refutations, null results, and unresolved experiments remain in the public record.
 
 ## Start here
 
+- [Architecture]({% link ARCHITECTURE.md %})
+- [Design decisions]({% link DESIGN_DECISIONS.md %})
+- [Current implementation limits]({% link LIMITATIONS.md %})
+- [Full API and usage]({% link USAGE.md %})
 - [Current project status](../STATUS.md)
 - [Claims to evidence]({% link CLAIMS_TO_EVIDENCE.md %})
 - [Statistical summary]({% link STATISTICAL_SUMMARY.md %})
 - [Hypotheses H001-H011b]({% link hypotheses/index.md %})
 - [Historical research report]({% link RESEARCH_REPORT.md %}), Version 0.0.2 through H008c
-- [Limitations and scope]({% link limitations.md %})
+- [Research scope (website summary)]({% link research_scope.md %})
 - [Mathematical foundations]({% link mathematics/foundations.md %})
 
 Code, installation instructions, examples, and the research harness are in the [GitHub repository](https://github.com/smaniches/TopoGeoML).
