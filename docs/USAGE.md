@@ -77,7 +77,7 @@ These are smoke-example scores, **not benchmark claims**. `cross_val_score` fits
 | `TopologyFeaturePipeline` option | Current contract |
 |---|---|
 | `max_homology_dim` | Highest homology dimension passed to ripser; default H₀ and H₁ |
-| `max_edge_length` | Positive finite Rips cutoff; `None` leaves the backend unbounded |
+| `max_edge_length` | Optional positive Rips cutoff; `None` leaves the backend default. The constructor checks positivity but not finiteness; reject NaN and infinite configuration values upstream if they are unintended |
 | `vectorizer` | `"persistence_image"` or `"betti_curve"` |
 | `resolution` | Image grid width per dimension, or Betti-curve sample count |
 | `sigma` | Positive Gaussian width for persistence images; not used by Betti curves |
@@ -111,7 +111,7 @@ loss.backward()
 assert cloud.grad is not None
 ```
 
-`rips_diagram_torch` takes a two-dimensional PyTorch point cloud and returns a list of tensors, one per homology dimension, each with two birth/death columns; infinite deaths remain infinite. It builds a distance matrix, delegates bar identities to ripser on detached CPU data, then indexes those distances to make selected values differentiable. It does not differentiate through ripser.
+`rips_diagram_torch` takes a two-dimensional PyTorch point cloud and returns H₀ and, when requested, H₁ tensors with two birth/death columns; infinite deaths remain infinite. **The current reconstruction implements only H₀ and H₁**: passing `max_dim > 1` makes ripser compute additional dimensions but does not reconstruct or return those higher-dimensional bars. Do not use `max_dim > 1` as a differentiable higher-homology API. It builds a distance matrix, delegates bar identities to ripser on detached CPU data, then indexes those distances to make selected values differentiable. It does not differentiate through ripser.
 
 For an autograd-connected H₁ input with ambiguous birth or death edges, the default `h1_tie_policy="reject"` raises rather than inventing a critical edge. If you explicitly accept a GUDHI-selected combinatorial branch, use:
 
