@@ -6,7 +6,7 @@ description: "Current error modes, numerical assumptions, and scientific boundar
 
 # Limitations and Failure Modes
 
-This document describes the current `topogeoml` code and the separate research record. It is an operational boundary, **not** a promise of future capabilities. For the mathematical implementation see [Architecture](ARCHITECTURE.md); for executable workflows see [Usage](USAGE.md).
+This document describes the current `topogeoml` code and the separate research record. It is an operational boundary, **not** a promise of future capabilities. Technical terms used below include GUDHI (Geometry Understanding in Higher Dimensions), central processing unit (CPU), graphics processing unit (GPU), and application programming interface (API). For the mathematical implementation see [Architecture](ARCHITECTURE.md); for executable workflows see [Usage](USAGE.md).
 
 ## What can fail immediately?
 
