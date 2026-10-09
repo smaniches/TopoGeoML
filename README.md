@@ -70,6 +70,17 @@ Differentiable cubical persistence and `CubicalTopologyLoss` require both PyTorc
 pip install "topogeoml[torch,tda]"
 ```
 
+**Important for differentiable Vietoris-Rips H₁:** with autograd enabled, ambiguous equal/near-equal filtration edges do not identify a unique classical gradient. `rips_diagram_torch` now rejects ambiguous H₁ gradients by default rather than routing a derivative through an unrelated equal-length edge. An explicit optional convention is available when GUDHI is installed:
+
+```python
+from topogeoml.nn.diff_ph import rips_diagram_torch
+
+# For non-generic point clouds with tied edge lengths:
+diagrams = rips_diagram_torch(points, max_dim=1, h1_tie_policy="gudhi")
+```
+
+This uses GUDHI-selected critical persistence generators, **not** a mathematically unique derivative at ties. Generic-position inputs with isolated critical edge lengths continue to use the original lightweight PyTorch + ripser path. See [the scientific limitations](LIMITATIONS.md#3-differentiable-persistence-limits).
+
 For development from source:
 
 ```bash
