@@ -1,8 +1,11 @@
 """
 Backend wrapper: TopoGeoML's `nn/diff_ph.py` (Elder Lemma + cocycle indexing).
 
-The wrapped library is part of this repository; ``available()`` is True iff
-PyTorch is installed in the current environment.
+The wrapped library is part of this repository. The benchmark explicitly
+opts into the GUDHI-selected generator convention when distance ties make
+H1 gradients non-unique; see the benchmark's scientific limitations.
+The [bench] extra installs GUDHI. This variant is consequently not
+independent of GUDHI on tied-input gradient measurements.
 """
 
 from __future__ import annotations
@@ -49,13 +52,16 @@ class TopoGeoMLDiffPH:
             raise TypeError(
                 f"{TopoGeoMLDiffPH.name}: input X must be float64, got {X.dtype}"
             )
-        return rips_diagram_torch(X, max_dim=max_dim)
+        # Explicit experimental convention for tied MNIST/grid distances.
+        # The production API otherwise rejects ambiguous autograd gradients.
+        return rips_diagram_torch(X, max_dim=max_dim, h1_tie_policy="gudhi")
 
     @staticmethod
     def loss_longest_h1(X: torch.Tensor) -> torch.Tensor:
         from topogeoml.nn.diff_ph import rips_diagram_torch
 
-        diagrams = rips_diagram_torch(X, max_dim=1)
+        # Explicit, non-unique generator selection for tied filtration levels.
+        diagrams = rips_diagram_torch(X, max_dim=1, h1_tie_policy="gudhi")
         h1 = diagrams[1] if len(diagrams) > 1 else X.new_empty((0, 2))
         finite_mask = torch.isfinite(h1).all(dim=1) if h1.numel() else torch.zeros(0, dtype=torch.bool)
         finite = h1[finite_mask] if h1.numel() else h1
