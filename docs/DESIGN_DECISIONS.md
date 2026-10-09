@@ -1,3 +1,9 @@
+---
+title: "Design decisions"
+nav_order: 3
+description: "Observed engineering choices, rejected alternatives, and their costs."
+---
+
 # Design Decisions
 
 This document distinguishes **observed implementation choices** from **historical decisions**. The code and in-repository comments establish what was implemented and, in some cases, why. An alternative listed below is an engineering comparison, **not evidence that an earlier maintainer formally evaluated and rejected it**. When deliberation or benchmarks are absent, the historical reason is **not recorded** and performance is **not benchmarked**.
