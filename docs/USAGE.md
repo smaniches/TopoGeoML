@@ -1,10 +1,10 @@
 ---
-title: "Usage and API"
+title: "Usage and application programming interfaces"
 nav_order: 8
-description: "Installation, API contracts, evaluation commands, and troubleshooting."
+description: "Installation, software interface contracts, evaluation commands, and troubleshooting."
 ---
 
-# Usage and API Contracts
+# Usage and Application Programming Interfaces (APIs)
 
 This guide describes the checked-out `main` implementation. The published v0.0.7 package predates several fixes, including `h1_tie_policy`. If you require the code documented here, install from the current repository checkout, not an older published wheel. The short first-run commands are in the [README](../README.md).
 
@@ -30,7 +30,7 @@ py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -c "import topogeoml; print(topogeoml.__version__)"
 ```
 
-The base install is for CPU persistent-homology features and non-neural operators. Install **only** the extras you actually need, because PyTorch Geometric and GUDHI enlarge the environment:
+The base install is for central processing unit (CPU) persistent-homology features and non-neural operators. Install **only** the extras you actually need, because PyTorch Geometric and GUDHI (Geometry Understanding in Higher Dimensions) enlarge the environment:
 
 | From a source checkout | Adds |
 |---|---|
@@ -38,7 +38,7 @@ The base install is for CPU persistent-homology features and non-neural operator
 | `python -m pip install -e ".[torch,tda]"` | Neural modules and GUDHI for cubical persistence or the explicit H₁ generator convention |
 | `python -m pip install -e ".[dev]"` | Test, lint, type-check, and development tools |
 | `python -m pip install -e ".[all]"` | All declared optional groups, used by the full-dependency coverage gate |
-| `python -m pip install -e ".[bench]"` | Comparator backends and MNIST/graph benchmarking dependencies |
+| `python -m pip install -e ".[bench]"` | Comparator backends and Modified National Institute of Standards and Technology (MNIST) / graph benchmarking dependencies |
 
 An extra does not download every research dataset. `[bench]` adds the software dependencies, while benchmark dataset loaders may fetch or read their own data. For authoritative tests see [Reviewer Guide](../REVIEWER.md).
 
@@ -154,7 +154,7 @@ This requires `[torch]`. The layer expects a fixed complex and features for the 
 
 **Training callback.** `ShapeOfLearningCallback(model, probe_inputs, layer_name, ...)` hooks a named layer and emits `ShapeSnapshot` records from `on_step(step, loss)` at configured intervals. Call `detach()` after training to remove its hook. Its alert threshold is a rolling statistic, not a validated predictor of future generalization failure.
 
-## YAML experiment: how do I avoid overwriting archived evidence?
+## YAML (YAML Ain't Markup Language) experiment: how do I avoid overwriting archived evidence?
 
 The tracked `examples/configs/synthetic_shapes.yaml` uses `output.overwrite: true` and targets a file already in the repository. **Do not run it unchanged when you need to preserve the archived result.** Write a separate config and output:
 
@@ -173,7 +173,7 @@ PY
 python examples/run_experiment.py reproductions/synthetic_shapes_demo.yaml
 ```
 
-The driver only implements `dataset.name="synthetic_shapes"` and `pipeline.kind="topology_feature"`. It uses `StratifiedKFold`, a fold-local topology transformer, `StandardScaler`, and `LogisticRegression`. The resulting JSON contains configuration, scores, timing, environment information, and a timestamp. `OutputConfig.overwrite` is enforced by `write_results`, which writes a temporary file and replaces the target path.
+The driver only implements `dataset.name="synthetic_shapes"` and `pipeline.kind="topology_feature"`. It uses `StratifiedKFold`, a fold-local topology transformer, `StandardScaler`, and `LogisticRegression`. The resulting JavaScript Object Notation (JSON) contains configuration, scores, timing, environment information, and a timestamp. `OutputConfig.overwrite` is enforced by `write_results`, which writes a temporary file and replaces the target path.
 
 ## Benchmarks and reproduction: which command proves what?
 
@@ -209,7 +209,7 @@ The graph harness uses paired seed-level comparisons. Its registered model list 
 
 ## Maintenance and troubleshooting
 
-From a clean checkout, `python -m pip install -e ".[dev]"` provides the basic tests. The full package gate used in CI installs `.[all]` and runs:
+From a clean checkout, `python -m pip install -e ".[dev]"` provides the basic tests. The full package gate used in continuous integration (CI) installs `.[all]` and runs:
 
 ```bash
 python -m pip install -e ".[all]"
