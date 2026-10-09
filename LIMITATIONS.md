@@ -1,6 +1,6 @@
-# Limitations of TopoGeoML source (published package: v0.0.7)
+# Limitations of TopoGeoML v0.0.7
 
-TopoGeoML is a pre-stable scientific software library and an accompanying empirical research record. This document states the limits of the current implementation and of the claims supported by the repository. It is not a roadmap.
+TopoGeoML is a pre-stable scientific software library and an accompanying empirical research record. This document states the limits of the current implementation and of the claims supported by the repository. The last published package is `0.0.7`, but the source branch includes post-release fixes; the published package and source checkout are not identical. `0.0.7` is pre-stable. It is not a roadmap.
 
 If observed behavior contradicts the public API documentation, treat that as a defect and open an issue.
 
