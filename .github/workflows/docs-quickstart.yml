@@ -1,0 +1,58 @@
+name: Documentation quickstart
+
+on:
+  pull_request:
+    paths:
+      - README.md
+      - docs/**
+      - .github/workflows/docs-quickstart.yml
+  push:
+    branches: [main]
+    paths:
+      - README.md
+      - docs/**
+      - .github/workflows/docs-quickstart.yml
+
+permissions:
+  contents: read
+
+jobs:
+  quickstart:
+    name: README first run (clean Python 3.11 environment)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Install source package in a new virtual environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3.11 -m venv .venv
+          . .venv/bin/activate
+          python -m pip install -e .
+      - name: Execute the Python example copied from README
+        shell: bash
+        run: |
+          set -euo pipefail
+          . .venv/bin/activate
+          python - <<'PY'
+          from pathlib import Path
+          text = Path("README.md").read_text(encoding="utf-8")
+          marker = "python - <<'PY'\n"
+          if text.count(marker) != 1:
+              raise AssertionError("README must contain exactly one Python here-document example")
+          body = text.split(marker, 1)[1].split("\nPY\n", 1)
+          if len(body) != 2:
+              raise AssertionError("README Python example must end with a PY terminator")
+          if not all(s in text for s in (
+              "python3.11 -m venv .venv",
+              ". .venv/bin/activate",
+              "python -m pip install -e .",
+          )):
+              raise AssertionError("README installation steps drifted from the tested workflow")
+          exec(compile(body[0], "README.md quickstart", "exec"), {"__name__": "__main__"})
+          PY
