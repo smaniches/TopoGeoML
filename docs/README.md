@@ -1,47 +1,22 @@
-# TopoGeoML Documentation
+# TopoGeoML documentation
 
-This directory holds long-form documentation that lives in-repo and ships with each release.
+The [repository README](../README.md) provides installation and the first run. This directory holds implementation, operational, and scientific documentation. The installed wheel contains the `topogeoml` package; these Markdown research documents are maintained in the source repository and on the documentation site, not as importable Python modules.
 
-## Structure
+## Maintainer reading order
 
-```
-docs/
-├── README.md                    ← you are here
-├── RESEARCH_REPORT.md           ← primary academic artifact
-├── hypotheses/                  ← preregistered hypothesis series
-│   ├── HYPOTHESIS-001-hodge-mutag.md
-│   ├── HYPOTHESIS-002-hodge-proteins.md
-│   ├── HYPOTHESIS-003-hodge-nci1.md
-│   ├── HYPOTHESIS-004-sample-size-mechanism.md
-│   ├── HYPOTHESIS-005-feature-density-mechanism.md
-│   ├── HYPOTHESIS-006-graph-topology-mechanism.md
-│   ├── HYPOTHESIS-007-graph-structural-signal-decomposition.md
-│   ├── HYPOTHESIS-008-gin-gat-comparison.md
-│   ├── HYPOTHESIS-008b-gin-normalised.md
-│   └── HYPOTHESIS-008c-gin-residual.md
-└── mathematics/
-    └── foundations.md
-```
+1. [Architecture](ARCHITECTURE.md): implemented modules, data flow, and boundaries.
+2. [Design decisions](DESIGN_DECISIONS.md): observable choices, costs, and alternatives, with undocumented historical rationale called out.
+3. [Limitations](LIMITATIONS.md): failure cases, numerical behavior, scaling, and limits on empirical conclusions.
+4. [Usage](USAGE.md): full API and command-line workflows, installation, configuration, and troubleshooting.
+5. [Reviewer guide](../REVIEWER.md): lint, typing, tests, and evidence verification.
 
-## Reading order
+## Research record
 
-1. [Top-level README.md](../README.md) for the project overview and empirical results summary.
-2. [RESEARCH_REPORT.md](RESEARCH_REPORT.md) for the full structured technical report.
-3. [hypotheses/](hypotheses/) for per-hypothesis preregistrations and resolved outcomes (HYPOTHESIS-001 through 008c).
-4. [LEADERBOARD.md](../LEADERBOARD.md) for the navigable empirical claim table.
-5. [REPRODUCING.md](../REPRODUCING.md) for step-by-step reproduction instructions.
+- [Current status](../STATUS.md) and [empirical leaderboard](../LEADERBOARD.md) separate supported, negative, inconclusive, and invalidated findings.
+- [Claims to Evidence](CLAIMS_TO_EVIDENCE.md) maps statements to code, tests, and artifacts; [Statistical Summary](STATISTICAL_SUMMARY.md) defines the inference boundaries.
+- [Hypothesis index](hypotheses/index.md) links preregistered designs through H011b, including the corrected H009-R study. Historical H009 evidence is invalidated rather than silently replaced.
+- [Reproducing](../REPRODUCING.md) explains current-code reruns versus historical replication and names the intended comparison families.
+- [Mathematical foundations](mathematics/foundations.md) provides definitions used in the signal-topology modules.
+- [Research report](RESEARCH_REPORT.md) is a historical snapshot through H008c, **not** the most recent claim register.
 
-## Hypothesis documents
-
-Each hypothesis document follows a fixed structure:
-
-- Falsifiable sub-predictions with explicit statistical thresholds
-- Pre-specified outcome decision tree
-- Experimental design (seeds, epochs, arms, statistical procedure)
-- Resolved outcome (appended after execution; original predictions preserved)
-
-Documents are committed BEFORE the experiment runs. The git history serves as the preregistration timestamp.
-
----
-
-Santiago Maniches (ORCID: [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)) — TOPOLOGICA LLC
+Benchmark and publication numbers belong to committed evidence files, not to this index. See each experiment's recorded seeds, software context, and decision rule before reusing a result.
