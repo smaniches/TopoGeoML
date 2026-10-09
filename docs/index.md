@@ -33,7 +33,7 @@ Across the tested matched-capacity graph-classification configurations, no uniqu
 
 H008c also shows that the tested external-residual adjacency formulation recovers performance after the normalized internal-self formulation does not. The causal statement is deliberately scoped: the two formulations place and parameterize the self path differently, so the result identifies a successful tested architecture rather than proving that residual connections alone are the sole mechanism in arbitrary models.
 
-A narrow positive result remains. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points (`p_BH = 4.83 x 10^-3`). The comparison survives investigation-wide Benjamini-Hochberg correction but not Bonferroni, and the later operator ablations show that the improvement is not unique to Hodge propagation.
+A narrow positive result remains. On NCI1, `hodge-mp-residual` outperforms the matched-capacity MLP baseline by a median 8.6 percentage points (`p_BH = 4.83 x 10^-3`). The p-value belongs to the H003 within-experiment comparison family. The earlier investigation-wide adjustment was withdrawn after invalidation of H009 and cannot support a current claim. Later operator controls show that the improvement is not unique to Hodge propagation.
 
 The genuinely higher-order question remains open. H011's NCI1 `L_1` arm does not significantly outperform MLP and is evaluated on a dataset where 96% of graphs contain no triangles. H011b on triangle-rich COLLAB has only a directional smoke result so far.
 
@@ -54,6 +54,10 @@ Smoke runs and exploratory diagnostics are also kept separate from confirmatory 
 
 ## Start here
 
+- [Architecture]({% link ARCHITECTURE.md %})
+- [Design decisions]({% link DESIGN_DECISIONS.md %})
+- [Current implementation limits]({% link LIMITATIONS.md %})
+- [Full API and usage]({% link USAGE.md %})
 - [Current project status](../STATUS.md)
 - [Claims to evidence]({% link CLAIMS_TO_EVIDENCE.md %})
 - [Statistical summary]({% link STATISTICAL_SUMMARY.md %})
