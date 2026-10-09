@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `pairwise_distances` in differentiable Vietoris-Rips now uses direct-coordinate PyTorch distances rather than the squared-norm identity, preventing catastrophic cancellation for small separations under large translations. Gradient and duplicate-point MST regressions were added. Numerical output may change for affected inputs; the original benchmark evidence is preserved.
 - `TopologyFeaturePipeline` now calibrates its training-only vectorization scale using the configured filtration metric rather than guessing from array shape. Square Euclidean point clouds with zero diagonals no longer get mistaken for precomputed distance matrices, and non-Euclidean metrics use their actual pairwise distances. Added regression tests for Euclidean, precomputed, cityblock, and malformed precomputed inputs. The default Euclidean non-square behavior and the published graph-classification research artifacts are unchanged.
 
 ## [0.0.7] — 2026-09-03

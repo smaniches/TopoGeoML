@@ -56,19 +56,24 @@ from ripser import ripser
 
 def pairwise_distances(X: torch.Tensor) -> torch.Tensor:
     """
-    Compute (n, n) Euclidean distance matrix from (n, d) point cloud.
+    Compute the (n, n) Euclidean distance matrix of an (n, d) point cloud.
 
-    Uses ||x_i - x_j||² = ||x_i||² + ||x_j||² - 2 <x_i, x_j> for efficiency,
-    then clips negatives (elite-code-standards §1.2) before sqrt.
+    Use direct coordinate differences, rather than subtracting nearly equal
+    squared norms and dot products. The latter loses small distances under
+    large translations through catastrophic cancellation. Explicitly disable
+    the matrix-multiplication path of torch.cdist for the same reason.
 
-    Returns float64 tensor on same device as X.
+    A 1e-150 positive floor preserves zero-distance edges in the downstream
+    scipy sparse minimum-spanning-tree representation (where exact zeros are
+    interpreted as absent edges). This matches the previous floor.
+
+    Returns a float64 tensor on the same device as X.
     """
     X = X.to(torch.float64)
-    dot = X @ X.t()                                  # (n, n)
-    sq = (X * X).sum(dim=1, keepdim=True)            # (n, 1)
-    D_sq = sq + sq.t() - 2.0 * dot                  # (n, n)
-    D_sq = torch.clamp(D_sq, min=0.0)               # §1.2: no negative before sqrt
-    return torch.sqrt(D_sq + 1e-300)                 # §1.4: division/sqrt safety
+    distances = torch.cdist(
+        X, X, p=2.0, compute_mode="donot_use_mm_for_euclid_dist"
+    )
+    return distances.clamp_min(1e-150)
 
 
 def _critical_edges_h0(

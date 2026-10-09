@@ -62,6 +62,45 @@ def test_pairwise_distances_non_negative() -> None:
     assert (D >= 0).all()
 
 
+def test_pairwise_distances_stable_under_large_translation() -> None:
+    """Translation must not collapse a genuine short edge to zero."""
+    points = torch.tensor(
+        [[0.0, 0.0], [1.0, 2.0], [3.0, 1.0]], dtype=torch.float64
+    )
+    shifted = points + 1e9
+    reference = pairwise_distances(points)
+    actual = pairwise_distances(shifted)
+    torch.testing.assert_close(actual, reference, atol=1e-12, rtol=1e-12)
+    assert actual[0, 1].item() == pytest.approx(np.sqrt(5.0))
+
+
+def test_pairwise_distances_translated_gradient_matches_reference() -> None:
+    """The distance gradient should also be invariant to a common translation."""
+    points = torch.tensor(
+        [[0.0, 0.0], [1.0, 2.0]], dtype=torch.float64, requires_grad=True
+    )
+    shifted = (points.detach() + 1e9).requires_grad_(True)
+    original_dist = pairwise_distances(points)[0, 1]
+    translated_dist = pairwise_distances(shifted)[0, 1]
+    original_gradient = torch.autograd.grad(original_dist, points)[0]
+    translated_gradient = torch.autograd.grad(translated_dist, shifted)[0]
+    torch.testing.assert_close(
+        translated_gradient, original_gradient, atol=1e-12, rtol=1e-12
+    )
+
+
+def test_pairwise_distances_identical_points_keep_sparse_mst_edges() -> None:
+    """A numerically safe positive floor retains duplicate-point MST edges."""
+    from topogeoml.nn.diff_ph import _critical_edges_h0
+
+    points = torch.tensor(
+        [[0.0, 0.0], [0.0, 0.0], [1.0, 0.0]], dtype=torch.float64
+    )
+    distances = pairwise_distances(points)
+    assert distances[0, 1].item() > 0.0
+    assert len(_critical_edges_h0(distances.numpy())) == len(points) - 1
+
+
 # --- rips_diagram_torch ---
 
 def test_diagram_shape_h0_only() -> None:
