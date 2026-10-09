@@ -1,17 +1,19 @@
 """
-Correctness axis — diagram-level agreement with ripser, dtype propagation,
-and per-seed autograd-vs-numerical agreement on a small input.
+Correctness axis — persistence-diagram agreement with ripser and dtype
+preservation, with both bottleneck-distance verdicts and legacy sorted
+elementwise differences retained as diagnostics.
 
-This axis is a *pass/fail* axis: a backend either reproduces ripser's
-finite bars to a fixed numerical tolerance or it does not. We do not
-report rankings on this axis; ranking implies meaningful gradations of
-correctness, which is not how correctness works.
+This axis is a *pass/fail* axis: finite persistence diagrams are compared
+as multisets under bottleneck distance (including diagonal matching) rather
+than by lexicographically aligned rows. A tiny change in a repeated birth
+time can otherwise reorder bars with different deaths and create a false
+failure. Near-diagonal bars can be matched to the diagonal, as required by
+the persistence-diagram metric.
 
-The numerical tolerance ``atol`` reflects ripser's own internal arithmetic
-precision (float64 with no special accumulation strategy). Cohen-Steiner
-stability says two diagrams of *identical* point clouds should agree
-exactly modulo floating-point reorderings; we therefore use ``1e-6``
-(safely above accumulated f64 round-off on n ≤ 1000) as the default.
+The default numerical tolerance is 1e-6. That is an evaluation convention,
+not a mathematical bound on ripser's numerical error; the original sorted
+elementwise maxima are preserved for historical comparisons. Passing the
+forward-diagram test does not establish correctness of the chosen gradients.
 
 References
 ----------
@@ -29,6 +31,7 @@ import numpy as np
 import torch
 from numpy.typing import NDArray
 
+from benchmarks.axes.stability import _bottleneck_distance_finite
 from benchmarks.backends import PHBackend
 from benchmarks.datasets import Dataset
 
@@ -40,8 +43,10 @@ class CorrectnessSeedResult:
     n_finite_bars_h0_ripser: int
     n_finite_bars_h1_backend: int
     n_finite_bars_h1_ripser: int
-    max_abs_diff_h0: float
+    max_abs_diff_h0: float  # legacy sorted-elementwise diagnostic; not the verdict
     max_abs_diff_h1: float
+    bottleneck_h0: float
+    bottleneck_h1: float
     dtype_preserved: bool
     diagram_match_pass: bool
 
@@ -55,7 +60,7 @@ class CorrectnessReport:
     n_points: int
     atol: float
     per_seed: list[CorrectnessSeedResult]
-    overall_pass: bool  # True iff every per-seed diagram_match_pass and dtype_preserved
+    overall_pass: bool  # True iff every per-seed bottleneck verdict and dtype pass
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -151,13 +156,17 @@ def measure_correctness(
 
         max_h0 = _max_abs_diff(backend_h0, ref_h0)
         max_h1 = _max_abs_diff(backend_h1, ref_h1)
+        # Compare diagram multisets, not row ordering. GUDHI's bottleneck
+        # matching allows diagonal matches for zero/near-zero finite bars.
+        bottleneck_h0 = _bottleneck_distance_finite(backend_h0, ref_h0)
+        bottleneck_h1 = _bottleneck_distance_finite(backend_h1, ref_h1)
 
         dtype_preserved = all(
             d.dtype == torch.float64 if isinstance(d, torch.Tensor) else True
             for d in dgms
         )
 
-        diagram_match = max_h0 <= atol and max_h1 <= atol
+        diagram_match = bottleneck_h0 <= atol and bottleneck_h1 <= atol
         if not (diagram_match and dtype_preserved):
             overall_pass = False
 
@@ -169,6 +178,8 @@ def measure_correctness(
             n_finite_bars_h1_ripser=ref_h1.shape[0],
             max_abs_diff_h0=max_h0,
             max_abs_diff_h1=max_h1,
+            bottleneck_h0=bottleneck_h0,
+            bottleneck_h1=bottleneck_h1,
             dtype_preserved=dtype_preserved,
             diagram_match_pass=diagram_match,
         ))
