@@ -5,7 +5,9 @@ All notable changes to TopoGeoML will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.8] — 2026-10-09
+
+This release publishes the post-0.0.7 library correctness fixes, scientific benchmark-gating corrections, and source-grounded maintainer documentation. It does not introduce a new graph-classification claim or change archived experiment results. The H₁ gradient safety change can raise on exact or near-tied filtration values; callers must choose an explicit tie policy where needed.
 
 ### Fixed
 
@@ -17,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Diff-PH benchmark correctness verdict** now compares finite persistence diagrams to ripser by the GUDHI bottleneck distance, with optimal bar matching and diagonal matches; legacy sorted-row differences remain in the evidence JSON as diagnostics but no longer determine correctness. This addresses order-sensitive false failures and near-zero duplicate bars, without modifying the scientific algorithm or historical benchmark artifacts. The benchmark result schema advances to 2.0.0 because the meaning of `overall_pass` changes.
 - The CPU benchmark workflow now fails if any `topogeoml-diff-ph` scientific correctness verdict fails or is missing, and preserves its JSON/report artifacts even on a failed run. This separates execution success from scientific correctness and does not suppress other backends' diagnostic failures.
+
+### Documentation and maintenance
+
+- Replaced the README with a clean-install quickstart verified on Python 3.11 and 3.12, and added code-grounded architecture, design-decision, usage, and limitations guides. Existing research evidence and withdrawn inference claims remain distinguished from supported results.
+- Refreshed pinned GitHub Actions dependencies and Dependabot version-compatibility safeguards in the maintenance commits preceding this release.
 
 ## [0.0.7] — 2026-09-03
 

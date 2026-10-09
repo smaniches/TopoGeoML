@@ -75,4 +75,4 @@ For the precise designs and artifacts, consult [STATUS](../STATUS.md), [Statisti
 
 ## What is tested, and what is not?
 
-The required GitHub Actions coverage gate measures line and branch execution on `topogeoml` with full optional dependencies; `benchmarks/` is excluded from that coverage denominator. The test matrix and research workflows report exercised scenarios, not a mathematical proof for unseen distributions, model families, or hardware. Published version v0.0.7 predates the latest `main` correctness fixes. Consult the current git revision when comparing API behavior to the published package.
+The required GitHub Actions coverage gate measures line and branch execution on `topogeoml` with full optional dependencies; `benchmarks/` is excluded from that coverage denominator. The test matrix and research workflows report exercised scenarios, not a mathematical proof for unseen distributions, model families, or hardware. Version v0.0.8 incorporates the post-v0.0.7 correctness fixes described here. Check the installed package version against the documented API before reproducing results.

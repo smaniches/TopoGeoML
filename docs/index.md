@@ -75,7 +75,7 @@ Code, installation instructions, examples, and the research harness are in the [
   author  = {Maniches, Santiago},
   title   = {TopoGeoML: A Preregistered Investigation into Topology-Aware Graph Classification},
   year    = {2026},
-  version = {0.0.7},
+  version = {0.0.8},
   doi     = {10.5281/zenodo.20365816},
   url     = {https://doi.org/10.5281/zenodo.20365816}
 }
