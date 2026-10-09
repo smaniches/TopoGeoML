@@ -13,7 +13,7 @@ import pytest
 torch = pytest.importorskip("torch")
 ripser = pytest.importorskip("ripser")
 
-from topogeoml.nn.diff_ph import rips_diagram_torch
+from topogeoml.nn.diff_ph import TopologyRegularizer, rips_diagram_torch
 
 
 def _separated_loop(external_length: float) -> torch.Tensor:
@@ -198,3 +198,38 @@ def test_forward_only_context_preserves_tied_barcode() -> None:
     assert (finite[0, 1] - finite[0, 0]).item() == pytest.approx(
         np.sqrt(2.0) - 1.0, abs=1e-8
     )
+
+
+@pytest.mark.torch
+def test_training_regularizer_rejects_ambiguous_h1_by_default() -> None:
+    """The safe default must reach the training-facing wrapper."""
+    points = _separated_loop(float(np.sqrt(2.0)))
+    regularizer = TopologyRegularizer(
+        max_dim=1, loss_type="total_persistence", max_points=10
+    )
+    with pytest.raises(ValueError, match="Non-identifiable H1 gradient"):
+        regularizer(points)
+
+
+@pytest.mark.torch
+def test_training_regularizer_gudhi_tie_policy_backpropagates() -> None:
+    """The explicit generator convention is usable by training clients."""
+    pytest.importorskip("gudhi")
+    points = _separated_loop(float(np.sqrt(2.0)))
+    regularizer = TopologyRegularizer(
+        max_dim=1,
+        loss_type="total_persistence",
+        p=1.0,
+        h1_tie_policy="gudhi",
+        max_points=10,
+    )
+    loss = regularizer(points)
+    assert torch.isfinite(loss)
+    gradient = torch.autograd.grad(loss, points)[0]
+    assert torch.isfinite(gradient).all()
+
+
+@pytest.mark.torch
+def test_training_regularizer_validates_tie_policy() -> None:
+    with pytest.raises(ValueError, match="h1_tie_policy"):
+        TopologyRegularizer(h1_tie_policy="silent")  # type: ignore[arg-type]
