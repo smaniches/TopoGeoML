@@ -15,11 +15,14 @@ H_0 (connected components):
     Gradient of death_i w.r.t. X flows through (X[u] - X[v]) / ||X[u] - X[v]||.
 
 H_1 (loops):
-    Birth: the youngest edge in the ripser cocycle representative whose distance
-    equals the birth filtration value. This is the standard subgradient choice
-    (Hofer et al. 2017, Clough et al. 2020).
-    Death: the edge in the upper-star whose distance equals the death value.
-    Both birth and death gradients are subgradients — correct for descent.
+    In generic position with isolated edge lengths, a filtration value
+    identifies its critical edge, permitting autograd through that distance.
+    At tied filtration levels, a merely equal-length edge elsewhere in the
+    point cloud is NOT a valid substitute for the persistence generator.
+    Default: reject ambiguous autograd routes rather than silently return
+    incorrect gradients. Explicit opt-in: GUDHI flag-persistence generator
+    selection (a chosen combinatorial branch, not a unique classical
+    derivative at a nondifferentiable tie).
 
 References
 ----------
@@ -32,7 +35,7 @@ Author: Santiago Maniches (ORCID: 0009-0005-6480-1987)
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import scipy.sparse as sp
@@ -96,28 +99,164 @@ def _critical_edges_h0(
     return list(zip(rows, cols, strict=True))
 
 
+def _gudhi_h1_generator_edges(
+    D_np: NDArray[np.float64],
+    dgm_h1: NDArray[np.float64],
+) -> list[tuple[tuple[int, int], tuple[int, int]] | None]:
+    """Map ripser finite H1 bars to GUDHI flag-persistence critical edges.
+
+    This produces a consistent *combinatorial* generator convention under
+    tied edge weights, rather than selecting an arbitrary equal-length edge
+    elsewhere in the point cloud. It does NOT prove a unique classical
+    derivative at nondifferentiable ties: GUDHI chooses one filtration
+    ordering, which should be understood as a selected branch.
+
+    GUDHI is intentionally optional; this path only runs if callers request
+    its generator convention for numerically ambiguous H1 gradients.
+    """
+    try:
+        import gudhi
+    except ImportError as exc:
+        raise ImportError(
+            "Ambiguous H1 edge gradients require GUDHI for "
+            "h1_tie_policy='gudhi'. Install topogeoml[tda], or perturb "
+            "tied point coordinates explicitly and use the default policy."
+        ) from exc
+
+    from scipy.optimize import linear_sum_assignment
+
+    # Only persistence pairs with finite H1 deaths are matched below.
+    # Extending the GUDHI 2-skeleton all the way to the diameter can be
+    # expensive (O(n^3) triangles) and cannot change bars that died earlier.
+    # Include float32 rounding slack so death simplices remain in the complex.
+    finite_deaths = dgm_h1[np.isfinite(dgm_h1).all(axis=1), 1]
+    if len(finite_deaths):
+        last_death = float(np.max(finite_deaths))
+        slack = 8.0 * float(np.finfo(np.float32).eps) * max(1.0, last_death)
+        max_length = min(float(np.max(D_np)), last_death + slack)
+    else:
+        max_length = float(np.max(D_np))
+    rips = gudhi.RipsComplex(
+        distance_matrix=D_np,
+        max_edge_length=max_length,
+    )
+    tree = rips.create_simplex_tree(max_dimension=2)
+    tree.compute_persistence(homology_coeff_field=2)
+    generators = tree.flag_persistence_generators()
+    h1_groups = generators[1]
+    rows = (
+        np.asarray(h1_groups[0], dtype=np.int64).reshape(-1, 4)
+        if h1_groups
+        else np.empty((0, 4), dtype=np.int64)
+    )
+    finite_positions = np.flatnonzero(np.isfinite(dgm_h1).all(axis=1))
+    if len(rows) < len(finite_positions):
+        raise ValueError(
+            "GUDHI supplied fewer H1 generator pairs than ripser finite bars; "
+            "critical-edge gradient identification is unresolved."
+        )
+
+    selected: list[tuple[tuple[int, int], tuple[int, int]] | None] = [
+        None for _ in dgm_h1
+    ]
+    if not len(finite_positions):
+        return selected
+
+    b = D_np[rows[:, 0], rows[:, 1]]
+    d = D_np[rows[:, 2], rows[:, 3]]
+    generator_intervals = np.column_stack((b, d))
+    ripser_intervals = dgm_h1[finite_positions]
+    errors = np.max(
+        np.abs(generator_intervals[:, None, :] - ripser_intervals[None, :, :]),
+        axis=2,
+    )
+    assigned_gudhi, assigned_ripser = linear_sum_assignment(errors)
+    for source_idx, local_idx in zip(assigned_gudhi, assigned_ripser, strict=True):
+        ref_idx = int(finite_positions[local_idx])
+        scale = max(1.0, float(np.max(np.abs(ripser_intervals[local_idx]))))
+        tol = 8.0 * float(np.finfo(np.float32).eps) * scale
+        if errors[source_idx, local_idx] > tol:
+            raise ValueError(
+                "GUDHI and ripser H1 persistence pairs disagree beyond float32 "
+                "tolerance; refusing to assign a critical-edge gradient."
+            )
+        row = rows[source_idx]
+        selected[ref_idx] = (
+            (int(row[0]), int(row[1])),
+            (int(row[2]), int(row[3])),
+        )
+    return selected
+
+
 def _critical_edges_h1(
     D_np: NDArray[np.float64],
     cocycles: list[NDArray[np.integer[Any]]],
     dgm_h1: NDArray[np.float64],
+    *,
+    gradients_requested: bool = False,
+    tie_policy: Literal["reject", "gudhi"] = "reject",
 ) -> tuple[list[tuple[int, int] | None], list[tuple[int, int] | None]]:
     """
-    Return (birth_edges, death_edges) for H_1 bars.
+    Return birth/death critical-edge indices for H1 bars.
 
-    Birth edge: the edge in the cocycle representative whose distance
-    is closest to the birth filtration value.
+    For generic edge lengths, the edge giving each birth/death filtration
+    value is unique and the existing ripser cocycle reconstruction suffices.
+    With numerical ties, equal-length unrelated edges are not legitimate
+    substitutes for critical simplices; choose a GUDHI persistence-generator
+    convention explicitly or refuse to construct misleading gradients.
 
-    Death edge: the edge in the full upper-star distance matrix whose
-    distance is closest to the death filtration value (and is not the
-    birth edge). This is a subgradient approximation.
+    In numerically generic configurations, ripser's cocycle and the
+    unique closest filtration edges identify the selected birth and death.
+    For ambiguous finite bars and differentiable inputs, either reject
+    the route or use an explicit GUDHI critical-generator convention.
 
-    Returns lists of (i, j) tuples or None for infinite deaths.
+    This only constructs a selected piecewise gradient on generic inputs;
+    at ties a unique classical derivative need not exist. Returns (i, j)
+    pairs or None for infinite deaths.
     """
     n = D_np.shape[0]
     birth_edges: list[tuple[int, int] | None] = []
     death_edges: list[tuple[int, int] | None] = []
+    i_idx, j_idx = np.triu_indices(n, k=1)
+    dists_upper = D_np[i_idx, j_idx]
+
+    ambiguous: set[int] = set()
+    if gradients_requested:
+        # ripser reports float32 filtration values. A distance that is
+        # indistinguishable at that precision does not identify a unique
+        # critical edge, even when distinct in float64 coordinates.
+        for idx, (birth, death) in enumerate(dgm_h1):
+            if not np.isfinite(death):
+                continue
+            birth_tol = 4.0 * float(np.finfo(np.float32).eps) * max(1.0, abs(birth))
+            death_tol = 4.0 * float(np.finfo(np.float32).eps) * max(1.0, abs(death))
+            if (
+                np.count_nonzero(np.abs(dists_upper - birth) <= birth_tol) > 1
+                or np.count_nonzero(np.abs(dists_upper - death) <= death_tol) > 1
+            ):
+                ambiguous.add(idx)
+
+    resolved = None
+    if ambiguous:
+        if tie_policy == "reject":
+            raise ValueError(
+                "Non-identifiable H1 gradient: multiple edges are tied at "
+                "ripser's filtration precision. With a differentiable "
+                "input use h1_tie_policy='gudhi' (requires topogeoml[tda]) "
+                "for an explicit generator convention, or perturb the "
+                "input coordinates. There is no unique derivative at ties."
+            )
+        resolved = _gudhi_h1_generator_edges(D_np, dgm_h1)
 
     for bar_idx, (birth_val, death_val) in enumerate(dgm_h1):
+        if bar_idx in ambiguous:
+            assert resolved is not None
+            selected = resolved[bar_idx]
+            if selected is None:
+                raise ValueError("No matching H1 generator for ambiguous ripser bar")
+            birth_edges.append(selected[0])
+            death_edges.append(selected[1])
+            continue
         # --- Birth ---
         if bar_idx < len(cocycles):
             cocycle = cocycles[bar_idx]  # (n_edges, 3): [i, j, coeff]
@@ -141,9 +280,7 @@ def _critical_edges_h1(
             death_edges.append(None)
             continue
 
-        # Search upper triangle for edge distance closest to death_val.
-        i_idx, j_idx = np.triu_indices(n, k=1)
-        dists_upper = D_np[i_idx, j_idx]
+        # Non-ambiguous filtration levels have one distinguished edge.
         candidates = np.abs(dists_upper - death_val)
         # Exclude the birth edge to avoid routing both gradients to the same edge.
         b_edge = birth_edges[-1]
@@ -166,6 +303,23 @@ def _critical_edges_h1(
 
         death_edges.append((int(i_idx[best_d]), int(j_idx[best_d])))
 
+        if gradients_requested and birth_edges[-1] is not None:
+            b_edge = birth_edges[-1]
+            assert b_edge is not None
+            d_edge = death_edges[-1]
+            assert d_edge is not None
+            tol = 4.0 * float(np.finfo(np.float32).eps) * max(
+                1.0, abs(birth_val), abs(death_val)
+            )
+            if (
+                abs(float(D_np[b_edge]) - birth_val) > tol
+                or abs(float(D_np[d_edge]) - death_val) > tol
+            ):
+                raise ValueError(
+                    "The proposed H1 critical edge does not reproduce "
+                    "the ripser filtration level within float32 tolerance."
+                )
+
     return birth_edges, death_edges
 
 
@@ -173,6 +327,8 @@ def rips_diagram_torch(
     X: torch.Tensor,
     max_dim: int = 1,
     max_edge_length: float | None = None,
+    *,
+    h1_tie_policy: Literal["reject", "gudhi"] = "reject",
 ) -> list[torch.Tensor]:
     """
     Compute Rips persistence diagram as a list of torch tensors WITH gradients.
@@ -199,6 +355,15 @@ def rips_diagram_torch(
         own H_0 diagram exactly. Gradients still flow through the surviving
         finite bars. With no threshold (``None``) this reduces to n-1 finite
         bars plus a single essential bar.
+    h1_tie_policy : {"reject", "gudhi"}
+        A non-unique H1 critical edge at ripser's float32 filtration precision
+        cannot be differentiated as though it were an identified generator.
+        For differentiable inputs the default "reject" raises rather than
+        silently assigning an unrelated edge. "gudhi" explicitly requests
+        a selected GUDHI flag-persistence generator convention (install
+        topogeoml[tda]). At exact ties, this is a combinatorial selection,
+        not a claim of a unique classical derivative or guaranteed descent.
+        Forward-only inputs (no autograd) retain their barcode outputs.
 
     Returns
     -------
@@ -212,6 +377,10 @@ def rips_diagram_torch(
     matrix D_torch. This means PyTorch's standard autograd handles all
     gradient computation automatically.
     """
+    if h1_tie_policy not in ("reject", "gudhi"):
+        raise ValueError(
+            f"h1_tie_policy must be 'reject' or 'gudhi', got {h1_tie_policy!r}"
+        )
     if X.ndim != 2:
         raise ValueError(f"X must be 2D (n_points, dim); got shape {tuple(X.shape)}")
     n = X.shape[0]
@@ -278,7 +447,13 @@ def rips_diagram_torch(
         if n_h1 == 0:
             diagrams.append(torch.empty((0, 2), dtype=dtype, device=device))
         else:
-            birth_edges, death_edges = _critical_edges_h1(D_np, cocycles_h1, dgm_h1)
+            birth_edges, death_edges = _critical_edges_h1(
+                D_np,
+                cocycles_h1,
+                dgm_h1,
+                gradients_requested=bool(X.requires_grad and torch.is_grad_enabled()),
+                tie_policy=h1_tie_policy,
+            )
 
             birth_tensors: list[torch.Tensor] = []
             death_tensors: list[torch.Tensor] = []
@@ -452,6 +627,11 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
         Subsample to this many points before computing PH (for speed).
     seed : int
         RNG seed for subsampling reproducibility.
+    h1_tie_policy : {"reject", "gudhi"}
+        H1 gradient behavior for ambiguous filtration edges. Defaults to
+        rejecting unidentifiable gradients. Explicit "gudhi" requires the
+        optional GUDHI dependency and selects a persistence generator
+        convention; it is not a unique derivative at exact ties.
     """
 
     def __init__(
@@ -462,8 +642,15 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
         target_betti: dict[int, int] | None = None,
         max_points: int = 500,
         seed: int = 42,
+        *,
+        h1_tie_policy: Literal["reject", "gudhi"] = "reject",
     ) -> None:
         super().__init__()
+        if h1_tie_policy not in ("reject", "gudhi"):
+            raise ValueError(
+                "h1_tie_policy must be 'reject' or 'gudhi'; "
+                f"got {h1_tie_policy!r}"
+            )
         if loss_type not in ("total_persistence", "entropy", "betti_regularization"):
             raise ValueError(
                 f"loss_type must be 'total_persistence', 'entropy', or "
@@ -474,6 +661,7 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
         self.p = p
         self.target_betti = target_betti or {}
         self.max_points = max_points
+        self.h1_tie_policy = h1_tie_policy
         self._rng = np.random.default_rng(seed)  # §6: seeded RNG
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
@@ -501,7 +689,9 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
         else:
             X_sub = X
 
-        diagrams = rips_diagram_torch(X_sub, max_dim=self.max_dim)
+        diagrams = rips_diagram_torch(
+            X_sub, max_dim=self.max_dim, h1_tie_policy=self.h1_tie_policy
+        )
 
         total_loss = torch.tensor(0.0, dtype=torch.float64, device=X.device)
 
