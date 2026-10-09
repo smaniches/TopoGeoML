@@ -19,6 +19,7 @@ from typing import Any, Literal, TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.spatial.distance import pdist
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -147,7 +148,9 @@ class TopologyFeaturePipeline(BaseEstimator, TransformerMixin):  # type: ignore[
         # Estimate filtration-value scale: max pairwise distance across the
         # first few samples (capped to bound fit cost). Used as fallback_max
         # for the vectorizer (substituted for infinite deaths and grid limits).
-        fallback_max = self._estimate_filtration_scale(clouds, n_probe=min(8, n_samples))
+        fallback_max = self._estimate_filtration_scale(
+            clouds, n_probe=min(8, n_samples), metric=self.metric
+        )
 
         self.filtration_: RipsFiltration = RipsFiltration(
             max_homology_dim=self.max_homology_dim,
@@ -253,15 +256,19 @@ class TopologyFeaturePipeline(BaseEstimator, TransformerMixin):  # type: ignore[
     def _estimate_filtration_scale(
         clouds: list[NDArray[np.float64]],
         n_probe: int = 8,
+        metric: str = "euclidean",
     ) -> float:
         """
-        Estimate a representative max filtration value from the training batch.
+        Estimate a representative filtration scale from the training batch.
 
-        Uses the max pairwise Euclidean distance across the first `n_probe`
-        clouds. Provides a finite cap for infinite deaths and vectorizer grids.
-        For precomputed distance-matrix input, uses the max off-diagonal entry.
+        For Euclidean point clouds, use the bounding-box diagonal as a cheap
+        upper bound on pairwise distance. For precomputed distance matrices,
+        use the maximum off-diagonal distance. For other scipy-compatible
+        metrics, compute pairwise distances using the configured metric.
+        Never infer the input type from its shape or diagonal: a valid point
+        cloud can be square with a zero diagonal.
 
-        Returns 1.0 as a safe default if estimation yields a non-positive value.
+        Returns 1.0 if estimation yields a non-positive value.
         """
         if not clouds:
             return 1.0
@@ -270,15 +277,19 @@ class TopologyFeaturePipeline(BaseEstimator, TransformerMixin):  # type: ignore[
         for cloud in probe:
             if cloud.shape[0] < 2:
                 continue
-            if cloud.shape[0] == cloud.shape[1] and np.allclose(np.diag(cloud), 0.0):
-                # Likely precomputed distance matrix: take max off-diagonal.
-                # The line-271 `continue` guarantees shape[0] >= 2, so a square
-                # matrix here has at least two off-diagonal entries.
+            if metric == "precomputed" and cloud.shape[0] != cloud.shape[1]:
+                raise ValueError(f"precomputed distance matrix must be square, got {cloud.shape}")
+            if cloud.shape[0] < 2:
+                continue
+            if metric == "precomputed":
+                # Matrix interpretation is an explicit configuration choice.
                 off_diag = cloud[~np.eye(cloud.shape[0], dtype=bool)]
                 d = float(np.max(off_diag))
-                max_d = max(max_d, d)
+            elif metric == "euclidean":
+                # Bounding-box diagonal is an O(n*d) distance upper bound.
+                d = float(np.linalg.norm(cloud.max(axis=0) - cloud.min(axis=0)))
             else:
-                # Bounding box diagonal as a cheap O(n*d) upper bound on max pair.
-                bbox_diag = float(np.linalg.norm(cloud.max(axis=0) - cloud.min(axis=0)))
-                max_d = max(max_d, bbox_diag)
+                # Honor the same metric that ripser uses for the filtration.
+                d = float(np.max(pdist(cloud, metric=metric)))
+            max_d = max(max_d, d)
         return max_d if max_d > 0.0 else 1.0
