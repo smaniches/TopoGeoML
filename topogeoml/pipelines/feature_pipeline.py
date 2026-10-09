@@ -275,10 +275,10 @@ class TopologyFeaturePipeline(BaseEstimator, TransformerMixin):  # type: ignore[
         probe = clouds[:n_probe]
         max_d = 0.0
         for cloud in probe:
-            if cloud.shape[0] < 2:
-                continue
             if metric == "precomputed" and cloud.shape[0] != cloud.shape[1]:
-                raise ValueError(f"precomputed distance matrix must be square, got {cloud.shape}")
+                raise ValueError(
+                    f"precomputed distance matrix must be square, got {cloud.shape}"
+                )
             if cloud.shape[0] < 2:
                 continue
             if metric == "precomputed":
