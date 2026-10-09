@@ -53,11 +53,13 @@ def _correctness_section(cells: list[dict[str, Any]]) -> list[str]:
     if not relevant:
         return []
     out = ["## Correctness (vs ripser reference)", ""]
-    out.append("Pass = every per-seed finite-bar diagram matches ripser to ``atol`` and "
-               "the backend preserves ``float64`` dtype through the call.")
+    out.append("Pass = every per-seed finite-bar diagram matches ripser by "
+               "bottleneck distance (with diagonal matching) within ``atol`` "
+               "and preserves ``float64`` dtype. Legacy sorted-row deltas "
+               "are diagnostic only.")
     out.append("")
-    out.append("| Backend | Dataset | n_points | atol | Max H_0 diff | Max H_1 diff | Pass |")
-    out.append("|---|---|---|---|---|---|---|")
+    out.append("| Backend | Dataset | n_points | atol | Max H_0 bottleneck | Max H_1 bottleneck | Legacy H_0 row diff | Legacy H_1 row diff | Pass |")
+    out.append("|---|---|---|---|---|---|---|---|---|")
     for cell in relevant:
         p = cell["payload"]
         per_seed = p.get("per_seed", [])
@@ -65,10 +67,13 @@ def _correctness_section(cells: list[dict[str, Any]]) -> list[str]:
             continue
         max_h0 = max((s["max_abs_diff_h0"] for s in per_seed), default=float("nan"))
         max_h1 = max((s["max_abs_diff_h1"] for s in per_seed), default=float("nan"))
+        bottleneck_h0 = max((s.get("bottleneck_h0", float("nan")) for s in per_seed), default=float("nan"))
+        bottleneck_h1 = max((s.get("bottleneck_h1", float("nan")) for s in per_seed), default=float("nan"))
         verdict = "PASS" if p.get("overall_pass") else "FAIL"
         out.append(
             f"| `{cell['backend_name']}` | `{cell['dataset_name']}` "
             f"| {p.get('n_points', '?')} | {p.get('atol', '?'):.0e} "
+            f"| {bottleneck_h0:.2e} | {bottleneck_h1:.2e} "
             f"| {max_h0:.2e} | {max_h1:.2e} | **{verdict}** |"
         )
     out.append("")
