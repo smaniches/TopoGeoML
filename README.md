@@ -1,6 +1,10 @@
 # TopoGeoML
 
+[![Version](https://img.shields.io/badge/version-0.0.7--beta-grey)](CHANGELOG.md)
+
 ## 1. What this is and what problem it solves
+
+TopoGeoML 0.0.7 is beta scientific software. The source branch includes fixes not yet published as a new package release.
 
 TopoGeoML is a Python library for using topology in machine learning. It turns point clouds into fixed-length features for scikit-learn, constructs simplicial and Hodge operators, and provides experimental topology losses for PyTorch. The repository also contains a separate graph-classification research record. These are different deliverables: a working library does not imply a positive research result.
 
@@ -10,7 +14,7 @@ A persistence engine returns birth–death intervals, not a fitted feature trans
 
 ## 3. What is genuinely new and what is inherited
 
-The repository-specific work is the assembly of train-fitted feature calibration, typed diagram provenance, optional PyTorch critical-value routing, simplicial operators, and evidence-oriented experiment runners. Vietoris–Rips persistent homology comes from `ripser`; the optional cubical and tied-generator computations use `GUDHI`; classical numerical and model interfaces come from NumPy, SciPy, scikit-learn, NetworkX, and PyTorch. Persistence images, Betti curves, and Hodge Laplacians are established methods. The code and test record do not establish a new topology theorem or superiority over competing toolkits.
+The repository-specific work is the assembly of train-fitted feature calibration, typed diagram provenance, optional PyTorch critical-value routing, simplicial operators, and evidence-oriented experiment runners. Vietoris–Rips persistent homology comes from `ripser`; the optional cubical and tied-generator computations use `GUDHI`; classical numerical and model interfaces come from NumPy, SciPy, scikit-learn, NetworkX, and PyTorch. Persistence images, Betti curves, and Hodge Laplacians are established methods. The code and test record do not establish a new topology theorem or superiority over competing toolkits. The published package citation uses `version = {0.0.7}`; this source checkout can differ.
 
 ## 4. Quickstart
 
