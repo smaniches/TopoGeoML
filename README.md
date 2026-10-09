@@ -14,11 +14,11 @@ A persistence engine returns birth–death intervals, not a fitted feature trans
 
 ## 3. What is genuinely new and what is inherited
 
-The repository-specific work is the assembly of train-fitted feature calibration, typed diagram provenance, optional PyTorch critical-value routing, simplicial operators, and evidence-oriented experiment runners. Vietoris–Rips persistent homology comes from `ripser`; the optional cubical and tied-generator computations use `GUDHI`; classical numerical and model interfaces come from NumPy, SciPy, scikit-learn, NetworkX, and PyTorch. Persistence images, Betti curves, and Hodge Laplacians are established methods. The code and test record do not establish a new topology theorem or superiority over competing toolkits. The published package citation uses `version = {0.0.7}`; this source checkout can differ.
+The repository-specific work is the assembly of train-fitted feature calibration, typed diagram provenance, optional PyTorch critical-value routing, simplicial operators, and evidence-oriented experiment runners. Vietoris–Rips persistent homology comes from `ripser`; the optional cubical and tied-generator computations use `GUDHI` (Geometry Understanding in Higher Dimensions); classical numerical and model interfaces come from NumPy, SciPy, scikit-learn, NetworkX, and PyTorch. Persistence images, Betti curves, and Hodge Laplacians are established methods. The code and test record do not establish a new topology theorem or superiority over competing toolkits. The published package citation uses `version = {0.0.7}`; this source checkout can differ.
 
 ## 4. Quickstart
 
-Use Python **3.11 or 3.12**, Git, an internet connection for installation, and a **POSIX shell** (Linux/macOS). Run these commands exactly, starting outside the repository:
+Use Python **3.11 or 3.12**, Git, an internet connection for installation, and a **Portable Operating System Interface (POSIX) shell** (Linux/macOS). Run these commands exactly, starting outside the repository:
 
 ~~~bash
 git clone https://github.com/smaniches/TopoGeoML.git
@@ -29,7 +29,7 @@ python -m pip install .
 python examples/circles_vs_lines.py
 ~~~
 
-A successful run prints `Building synthetic dataset`, cross-validation and training scores, and a `Fit provenance` block. Those scores are observations from your run, not guaranteed benchmark targets. This installs the current checkout, which can differ from the most recently published package version. Windows commands and the smaller direct API example are in [Usage](docs/USAGE.md).
+A successful run prints `Building synthetic dataset`, cross-validation and training scores, and a `Fit provenance` block. Those scores are observations from your run, not guaranteed benchmark targets. This installs the current checkout, which can differ from the most recently published package version. Windows commands and the smaller direct application programming interface (API) example are in [Usage](docs/USAGE.md).
 
 ## 5. Where it breaks
 
