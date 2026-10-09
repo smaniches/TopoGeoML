@@ -32,7 +32,7 @@ across axes *are* the finding.
 
 | Axis | Question it answers | Statistical reporting |
 |---|---|---|
-| `correctness` | Does the backend's persistence diagram match the ripser reference (Bauer 2021) to numerical tolerance? Does it preserve `float64`? | Pass/fail per seed; no ranking. |
+| `correctness` | Does the backend's finite persistence diagram match the ripser reference by bottleneck distance (including diagonal matching) within tolerance? Does it preserve `float64`? | Pass/fail per seed; old sorted-row maxima retained as diagnostics, not verdicts. Gradient correctness is separate. |
 | `stability` | Does the backend satisfy the Cohen-Steiner / Chazal-de Silva-Oudot stability theorem for Rips persistence? What is its empirical gradient Lipschitz constant? Does it pass `torch.autograd.gradcheck`? | Theorem violations counted exactly; Lipschitz reported with bootstrap 95% CI; gradcheck pass rate. |
 | `speed` | Forward and forward+backward latency, with GC-disabled measurement windows. | Per-cell min-of-medians across 5 outer passes; paired Wilcoxon signed-rank tests across backends with Benjamini-Hochberg FDR correction. |
 | `optimization` | When used as a loss (longest-H_1 inflation), does descent converge? | Diagnostic only — subgradient choices can legitimately differ across backends (Hofer 2017; Carrière 2021). |
@@ -121,7 +121,20 @@ package does not depend on either; the framework gracefully reports
 `.github/workflows/benchmark.yml` runs the bench on every PR that touches
 `topogeoml/nn/diff_ph.py` or `benchmarks/**`, posts the markdown report
 to the GHA step summary, and uploads the JSON as a build artifact for
-download.
+download. The benchmark result schema is **2.0.0**: `overall_pass` now
+uses bottleneck distance, and `bottleneck_h0` / `bottleneck_h1` are emitted
+alongside the historical sorted-elementwise error fields.
+
+The workflow supplies `--require-correctness-backend topogeoml-diff-ph`,
+so scientific diagram mismatches in **our** backend now fail the CI job
+even when the benchmark program executes without exceptions. Artifacts
+are uploaded with `always()` so failed correctness results remain
+available for diagnosis. Other backends' results remain visible as
+independent reference/comparator diagnostics; their failures are not
+silently reclassified as passing.
+
+A passing forward-diagram test does **not** prove the correctness of H₁
+critical-edge subgradients, which require separate validation.
 
 The CI hardware is a hosted `ubuntu-latest` runner (CPU-only). **CPU
 rankings can flip on GPU** — both backends target GPU and that's where

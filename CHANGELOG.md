@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pairwise_distances` in differentiable Vietoris-Rips now uses direct-coordinate PyTorch distances rather than the squared-norm identity, preventing catastrophic cancellation for small separations under large translations. Gradient and duplicate-point MST regressions were added. Numerical output may change for affected inputs; the original benchmark evidence is preserved.
 - `TopologyFeaturePipeline` now calibrates its training-only vectorization scale using the configured filtration metric rather than guessing from array shape. Square Euclidean point clouds with zero diagonals no longer get mistaken for precomputed distance matrices, and non-Euclidean metrics use their actual pairwise distances. Added regression tests for Euclidean, precomputed, cityblock, and malformed precomputed inputs. The default Euclidean non-square behavior and the published graph-classification research artifacts are unchanged.
 
+### Changed
+
+- **Diff-PH benchmark correctness verdict** now compares finite persistence diagrams to ripser by the GUDHI bottleneck distance, with optimal bar matching and diagonal matches; legacy sorted-row differences remain in the evidence JSON as diagnostics but no longer determine correctness. This addresses order-sensitive false failures and near-zero duplicate bars, without modifying the scientific algorithm or historical benchmark artifacts. The benchmark result schema advances to 2.0.0 because the meaning of `overall_pass` changes.
+- The CPU benchmark workflow now fails if any `topogeoml-diff-ph` scientific correctness verdict fails or is missing, and preserves its JSON/report artifacts even on a failed run. This separates execution success from scientific correctness and does not suppress other backends' diagnostic failures.
+
 ## [0.0.7] — 2026-09-03
 
 Correctness, evidence, security, and release-integrity release. This release ships the repaired H009-R evidence, the `L_1` operator-reuse correction, and the bounded hardening already validated on `main`. H011b remains preregistered and unresolved; no confirmatory COLLAB claim is introduced.

@@ -86,6 +86,15 @@ def main(argv: list[str] | None = None) -> int:
             "without --quick (locally or on a longer-budget runner)."
         ),
     )
+    parser.add_argument(
+        "--require-correctness-backend",
+        nargs="+",
+        default=None,
+        help=(
+            "Treat a missing or failed persistence-diagram correctness verdict "
+            "for any named backend as a nonzero exit (CI scientific gate)."
+        ),
+    )
     args = parser.parse_args(argv)
 
     axis_kwargs = _quick_axis_kwargs() if args.quick else None
@@ -146,6 +155,37 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
         return 1
+
+    # A completed measurement can still conclude that its diagram is wrong.
+    # The runner's CellResult.success only means no exception was raised.
+    # Make scientific verdicts enforceable when CI explicitly requests them.
+    if args.require_correctness_backend:
+        required = set(args.require_correctness_backend)
+        verdict_cells = [
+            c for c in result.cells
+            if c.backend_name in required and c.axis_name == "correctness"
+        ]
+        evaluated = {
+            c.backend_name for c in verdict_cells if c.success and c.payload is not None
+        }
+        missing = sorted(required - evaluated)
+        failed_verdicts = [
+            c for c in verdict_cells
+            if not c.success or not (c.payload or {}).get("overall_pass", False)
+        ]
+        if missing or failed_verdicts:
+            for name in missing:
+                print(
+                    f"[benchmarks] missing required correctness results for {name}",
+                    file=sys.stderr,
+                )
+            for cell in failed_verdicts:
+                print(
+                    f"[benchmarks] correctness FAIL: "
+                    f"{cell.backend_name} / {cell.dataset_name}",
+                    file=sys.stderr,
+                )
+            return 1
     return 0
 
 

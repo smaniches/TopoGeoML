@@ -44,7 +44,7 @@ class TestCLI:
 
         # Validate JSON schema fingerprint.
         payload = json.loads(out_json.read_text())
-        assert payload["provenance"]["schema_version"] == "1.0.0"
+        assert payload["provenance"]["schema_version"] == "2.0.0"
         assert payload["config"]["axis_names"] == ["correctness"]
         assert payload["config"]["backend_names"] == ["topogeoml-diff-ph"]
 
