@@ -56,3 +56,63 @@ jobs:
               raise AssertionError("README installation steps drifted from the tested workflow")
           exec(compile(body[0], "README.md quickstart", "exec"), {"__name__": "__main__"})
           PY
+      - name: Check documentation structure, links, and filenames
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import re
+          import subprocess
+          from pathlib import Path
+
+          selected = [
+              Path("README.md"),
+              Path("docs/ARCHITECTURE.md"),
+              Path("docs/DESIGN_DECISIONS.md"),
+              Path("docs/LIMITATIONS.md"),
+              Path("docs/USAGE.md"),
+              Path("docs/README.md"),
+              Path("docs/research_scope.md"),
+          ]
+          forbidden = re.compile(
+              r"\b(?:robust|seamless|state-of-the-art|cutting-edge|powerful|elegant)\b",
+              re.IGNORECASE,
+          )
+          for file in selected:
+              content = file.read_text(encoding="utf-8")
+              if forbidden.search(content):
+                  raise AssertionError(f"Prohibited wording in {file}")
+              for relative in re.findall(r"\[[^\]]+\]\(([^)]+)\)", content):
+                  url = relative.split("#", 1)[0]
+                  if not url or re.match(r"^(?:[a-z]+:|/)", url):
+                      continue
+                  target = file.parent / url
+                  if not target.exists():
+                      raise AssertionError(f"Broken documentation link: {file} -> {url}")
+
+          expected = [
+              "1. What this is and what problem it solves",
+              "2. Why existing approaches fall short",
+              "3. What is genuinely new and what is inherited",
+              "4. Quickstart",
+              "5. Where it breaks",
+              "6. Documentation",
+          ]
+          readme = Path("README.md").read_text(encoding="utf-8")
+          observed = re.findall(r"^## (.+)$", readme, flags=re.MULTILINE)
+          if observed != expected:
+              raise AssertionError(f"README heading contract changed: {observed!r}")
+
+          tracked = subprocess.check_output(
+              ["git", "ls-files"], text=True
+          ).splitlines()
+          folded = {}
+          for filename in tracked:
+              key = filename.casefold()
+              if key in folded and folded[key] != filename:
+                  raise AssertionError(
+                      f"Case-insensitive file collision: {folded[key]} vs {filename}"
+                  )
+              folded[key] = filename
+          print("Documentation links, wording, section order and path cases OK")
+          PY
