@@ -627,6 +627,11 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
         Subsample to this many points before computing PH (for speed).
     seed : int
         RNG seed for subsampling reproducibility.
+    h1_tie_policy : {"reject", "gudhi"}
+        H1 gradient behavior for ambiguous filtration edges. Defaults to
+        rejecting unidentifiable gradients. Explicit "gudhi" requires the
+        optional GUDHI dependency and selects a persistence generator
+        convention; it is not a unique derivative at exact ties.
     """
 
     def __init__(
@@ -637,8 +642,15 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
         target_betti: dict[int, int] | None = None,
         max_points: int = 500,
         seed: int = 42,
+        *,
+        h1_tie_policy: Literal["reject", "gudhi"] = "reject",
     ) -> None:
         super().__init__()
+        if h1_tie_policy not in ("reject", "gudhi"):
+            raise ValueError(
+                "h1_tie_policy must be 'reject' or 'gudhi'; "
+                f"got {h1_tie_policy!r}"
+            )
         if loss_type not in ("total_persistence", "entropy", "betti_regularization"):
             raise ValueError(
                 f"loss_type must be 'total_persistence', 'entropy', or "
@@ -649,6 +661,7 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
         self.p = p
         self.target_betti = target_betti or {}
         self.max_points = max_points
+        self.h1_tie_policy = h1_tie_policy
         self._rng = np.random.default_rng(seed)  # §6: seeded RNG
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
@@ -676,7 +689,9 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
         else:
             X_sub = X
 
-        diagrams = rips_diagram_torch(X_sub, max_dim=self.max_dim)
+        diagrams = rips_diagram_torch(
+            X_sub, max_dim=self.max_dim, h1_tie_policy=self.h1_tie_policy
+        )
 
         total_loss = torch.tensor(0.0, dtype=torch.float64, device=X.device)
 
