@@ -128,6 +128,50 @@ def test_pipeline_transform_before_fit_raises(noisy_circle: NDArray[np.float64])
         pipe.transform([noisy_circle])
 
 
+# ---------- Filtration-scale calibration ----------
+
+
+def test_scale_does_not_misclassify_square_euclidean_cloud() -> None:
+    """An n-by-n coordinate matrix is not necessarily a distance matrix."""
+    points = np.array(
+        [[0.0, 4.0, 4.0], [4.0, 0.0, 4.0], [4.0, 4.0, 0.0]],
+        dtype=np.float64,
+    )
+    pipe = TopologyFeaturePipeline(metric="euclidean", max_homology_dim=0)
+    pipe.fit([points])
+    expected = float(np.sqrt(3.0 * 4.0**2))
+    assert pipe.fit_provenance_.extras["fallback_max"] == pytest.approx(expected)
+    assert pipe.fit_provenance_.extras["fallback_max"] > 4.0
+
+
+def test_scale_precomputed_uses_explicit_metric() -> None:
+    """The same square array is treated as distances only when configured."""
+    distances = np.array(
+        [[0.0, 4.0, 4.0], [4.0, 0.0, 4.0], [4.0, 4.0, 0.0]],
+        dtype=np.float64,
+    )
+    pipe = TopologyFeaturePipeline(metric="precomputed", max_homology_dim=0)
+    pipe.fit([distances])
+    assert pipe.fit_provenance_.extras["fallback_max"] == pytest.approx(4.0)
+
+
+def test_scale_uses_configured_non_euclidean_metric() -> None:
+    """Manhattan distances may exceed the Euclidean bounding-box diagonal."""
+    points = np.array(
+        [[0.0, 0.0], [3.0, 4.0], [10.0, 2.0]],
+        dtype=np.float64,
+    )
+    pipe = TopologyFeaturePipeline(metric="cityblock", max_homology_dim=0)
+    pipe.fit([points])
+    assert pipe.fit_provenance_.extras["fallback_max"] == pytest.approx(12.0)
+
+
+def test_scale_rejects_nonsquare_precomputed_input_during_fit() -> None:
+    pipe = TopologyFeaturePipeline(metric="precomputed", max_homology_dim=0)
+    with pytest.raises(ValueError, match="must be square"):
+        pipe.fit([np.zeros((2, 3), dtype=np.float64)])
+
+
 # ---------- Discrimination ----------
 
 
