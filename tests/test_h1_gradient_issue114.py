@@ -111,7 +111,7 @@ def test_gudhi_policy_missing_optional_dependency_fails_closed(
     import sys
 
     monkeypatch.setitem(sys.modules, "gudhi", None)
-    with pytest.raises(ImportError, match=r"topogeoml\\[tda\\]"):
+    with pytest.raises(ImportError, match=r"topogeoml\[tda\]"):
         rips_diagram_torch(
             _separated_loop(float(np.sqrt(2.0))),
             max_dim=1,
