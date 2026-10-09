@@ -28,8 +28,9 @@ class TopoGeoMLDiffPH:
     @staticmethod
     def available() -> bool:
         try:
-            import torch  # noqa: F401
             import gudhi  # noqa: F401  -- required for the explicit tie policy
+            import torch  # noqa: F401
+
             import topogeoml  # noqa: F401
 
             # ripser ships with topogeoml's core deps; diff_ph imports it.
