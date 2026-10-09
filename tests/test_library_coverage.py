@@ -591,18 +591,17 @@ class TestFeaturePipelineCoverage:
         assert result > 0  # only the second cloud contributed
 
     def test_calibrate_fallback_max_precomputed_distance_path(self) -> None:
-        """Lines 275-278 — precomputed-distance-matrix branch (square cloud)."""
+        """Precomputed scale requires explicit metric, not shape heuristics."""
         from topogeoml.pipelines.feature_pipeline import TopologyFeaturePipeline
 
-        # Square symmetric matrix with zero diagonal triggers the
-        # precomputed-distance heuristic in _estimate_filtration_scale.
+        # A square distance matrix is interpreted as such only by the metric flag.
         sq = np.array(
             [[0.0, 1.0, 2.0],
              [1.0, 0.0, 1.5],
              [2.0, 1.5, 0.0]], dtype=np.float64,
         )
-        result = TopologyFeaturePipeline._estimate_filtration_scale([sq])
-        assert result > 0
+        result = TopologyFeaturePipeline._estimate_filtration_scale([sq], metric="precomputed")
+        assert result == pytest.approx(2.0)
 
 
 # ---------------------------------------------------------------------------
