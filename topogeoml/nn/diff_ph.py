@@ -125,9 +125,20 @@ def _gudhi_h1_generator_edges(
 
     from scipy.optimize import linear_sum_assignment
 
+    # Only persistence pairs with finite H1 deaths are matched below.
+    # Extending the GUDHI 2-skeleton all the way to the diameter can be
+    # expensive (O(n^3) triangles) and cannot change bars that died earlier.
+    # Include float32 rounding slack so death simplices remain in the complex.
+    finite_deaths = dgm_h1[np.isfinite(dgm_h1).all(axis=1), 1]
+    if len(finite_deaths):
+        last_death = float(np.max(finite_deaths))
+        slack = 8.0 * float(np.finfo(np.float32).eps) * max(1.0, last_death)
+        max_length = min(float(np.max(D_np)), last_death + slack)
+    else:
+        max_length = float(np.max(D_np))
     rips = gudhi.RipsComplex(
         distance_matrix=D_np,
-        max_edge_length=float(np.max(D_np)),
+        max_edge_length=max_length,
     )
     tree = rips.create_simplex_tree(max_dimension=2)
     tree.compute_persistence(homology_coeff_field=2)
