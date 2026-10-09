@@ -1,3 +1,9 @@
+---
+title: "Usage and API"
+nav_order: 8
+description: "Installation, API contracts, evaluation commands, and troubleshooting."
+---
+
 # Usage and API Contracts
 
 This guide describes the checked-out `main` implementation. The published v0.0.7 package predates several fixes, including `h1_tie_policy`. If you require the code documented here, install from the current repository checkout, not an older published wheel. The short first-run commands are in the [README](../README.md).
