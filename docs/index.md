@@ -63,7 +63,7 @@ Smoke runs and exploratory diagnostics are also kept separate from confirmatory 
 - [Statistical summary]({% link STATISTICAL_SUMMARY.md %})
 - [Hypotheses H001-H011b]({% link hypotheses/index.md %})
 - [Historical research report]({% link RESEARCH_REPORT.md %}), Version 0.0.2 through H008c
-- [Limitations and scope]({% link limitations.md %})
+- [Research scope (website summary)]({% link research_scope.md %})
 - [Mathematical foundations]({% link mathematics/foundations.md %})
 
 Code, installation instructions, examples, and the research harness are in the [GitHub repository](https://github.com/smaniches/TopoGeoML).
