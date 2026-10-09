@@ -12,7 +12,7 @@ Each entry gives a constraint, identifiable options, the implemented option, why
 
 ## 1. Keep the core install separate from training dependencies
 
-**Constraint.** Point-cloud feature extraction uses NumPy, SciPy, scikit-learn, ripser, NetworkX, and PyYAML. The neural components use PyTorch and sometimes GUDHI or PyTorch Geometric.
+**Constraint.** Point-cloud feature extraction uses NumPy, SciPy, scikit-learn, ripser, NetworkX, and PyYAML. The neural components use PyTorch and sometimes GUDHI (Geometry Understanding in Higher Dimensions) or PyTorch Geometric.
 
 **Options.** One mandatory dependency set; a small core with optional extras.
 
@@ -28,7 +28,7 @@ Each entry gives a constraint, identifiable options, the implemented option, why
 
 **Chosen, because.** `RipsFiltration.compute` passes arguments to `ripser` and wraps its `dgms` output in typed arrays and provenance, keeping the library's additional responsibility at the interface level.
 
-**Not chosen / cost.** No homegrown Vietoris–Rips reduction is present in this path. Depending on ripser costs a third-party CPU computation and its supported metric and numerical conventions. No in-repository performance comparison with a hypothetical independent reduction is recorded.
+**Not chosen / cost.** No homegrown Vietoris–Rips reduction is present in this path. Depending on ripser costs a third-party central processing unit (CPU) computation and its supported metric and numerical conventions. No in-repository performance comparison with a hypothetical independent reduction is recorded.
 
 ## 3. Store provenance with diagrams and fits
 
@@ -78,7 +78,7 @@ Each entry gives a constraint, identifiable options, the implemented option, why
 
 **Chosen, because.** `topogeoml/nn/diff_ph.py` detaches distances to compute ripser bar and cocycle identities, then reconstructs values by indexing the live PyTorch distance tensor. `cubical_diff_ph.py` applies the same pattern with GUDHI critical pixels. This retains standard PyTorch gradients where the selected critical pairing remains valid.
 
-**Not chosen / cost.** End-to-end differentiation through the persistence reduction is not implemented. Pairing changes are discrete, and the construction does not generally provide a derivative at ties. The detached CPU step also carries a device-transfer cost. No GPU-native speed advantage is claimed.
+**Not chosen / cost.** End-to-end differentiation through the persistence reduction is not implemented. Pairing changes are discrete, and the construction does not generally provide a derivative at ties. The detached CPU step also carries a device-transfer cost. No graphics processing unit (GPU)-native speed advantage is claimed.
 
 ## 8. Refuse ambiguous H₁ gradients by default
 
@@ -126,7 +126,7 @@ Each entry gives a constraint, identifiable options, the implemented option, why
 
 **Options.** Keep only summary statistics and overwrite old output; store configurations, seeds, software context, and original artifacts separately.
 
-**Chosen, because.** `topogeoml/experiments/configs.py` serializes YAML configuration and an environment snapshot, writing JSON via a temporary file followed by `os.replace`. `benchmarks/hodge/runner.py` records the requested model family and uses paired comparisons and within-family Benjamini–Hochberg adjustments. `REPRODUCING.md` requires naming historical families explicitly; `docs/hypotheses/` keeps preregistrations and `notebooks/results/` keeps artifacts.
+**Chosen, because.** `topogeoml/experiments/configs.py` serializes YAML (YAML Ain't Markup Language) configuration and an environment snapshot, writing JavaScript Object Notation (JSON) via a temporary file followed by `os.replace`. `benchmarks/hodge/runner.py` records the requested model family and uses paired comparisons and within-family Benjamini–Hochberg adjustments. `REPRODUCING.md` requires naming historical families explicitly; `docs/hypotheses/` keeps preregistrations and `notebooks/results/` keeps artifacts.
 
 **Not chosen / cost.** Archived findings are not silently revised. Invalidated H009 and incomplete H011b stay visible, making the documentation less concise but preventing selective reporting. A complete historical dependency lockfile is **not** present for every experiment; bit-identical replication is not promised.
 
@@ -134,7 +134,7 @@ Each entry gives a constraint, identifiable options, the implemented option, why
 
 **Constraint.** Numerical changes can preserve shape while altering values or derivatives.
 
-**Options.** Rely on import and smoke tests alone; require regression tests, lint, strict typing, multi-platform CI, and a full-dependency coverage gate.
+**Options.** Rely on import and smoke tests alone; require regression tests, lint, strict typing, multi-platform continuous integration (CI), and a full-dependency coverage gate.
 
 **Chosen, because.** `.github/workflows/ci.yml` runs ruff and mypy, tests supported Python/platform combinations, and requires 100% measured line and branch coverage on `topogeoml` under its full optional dependency stack. Benchmark workflows add algorithm-specific checks.
 
