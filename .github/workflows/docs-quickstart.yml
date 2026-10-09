@@ -2,15 +2,22 @@ name: Documentation quickstart
 
 on:
   pull_request:
+    branches: [main]
     paths:
       - README.md
       - docs/**
+      - pyproject.toml
+      - examples/circles_vs_lines.py
+      - topogeoml/**
       - .github/workflows/docs-quickstart.yml
   push:
     branches: [main]
     paths:
       - README.md
       - docs/**
+      - pyproject.toml
+      - examples/circles_vs_lines.py
+      - topogeoml/**
       - .github/workflows/docs-quickstart.yml
 
 permissions:
@@ -18,43 +25,50 @@ permissions:
 
 jobs:
   quickstart:
-    name: README first run (clean Python 3.11 environment)
+    name: README first run (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.11"
-      - name: Install source package in a new virtual environment
+          python-version: "${{ matrix.python-version }}"
+      - name: Execute README commands in a fresh checkout and environment
         shell: bash
         run: |
           set -euo pipefail
-          python3.11 -m venv .venv
+          # Clone this checkout to test the PR commit, rather than remote main.
+          git clone --no-hardlinks "$GITHUB_WORKSPACE" "$RUNNER_TEMP/TopoGeoML"
+          cd "$RUNNER_TEMP/TopoGeoML"
+          python3 -m venv .venv
           . .venv/bin/activate
-          python -m pip install -e .
-      - name: Execute the Python example copied from README
+          python -m pip install .
+          python -m pip check
+          python examples/circles_vs_lines.py
+      - name: Check README commands against smoke workflow
         shell: bash
         run: |
-          set -euo pipefail
-          . .venv/bin/activate
           python - <<'PY'
           from pathlib import Path
           text = Path("README.md").read_text(encoding="utf-8")
-          marker = "python - <<'PY'\n"
-          if text.count(marker) != 1:
-              raise AssertionError("README must contain exactly one Python here-document example")
-          body = text.split(marker, 1)[1].split("\nPY\n", 1)
-          if len(body) != 2:
-              raise AssertionError("README Python example must end with a PY terminator")
-          if not all(s in text for s in (
-              "python3.11 -m venv .venv",
+          workflow = Path(".github/workflows/docs-quickstart.yml").read_text(encoding="utf-8")
+          required = (
+              "git clone https://github.com/smaniches/TopoGeoML.git",
+              "cd TopoGeoML",
+              "python3 -m venv .venv",
               ". .venv/bin/activate",
-              "python -m pip install -e .",
-          )):
-              raise AssertionError("README installation steps drifted from the tested workflow")
-          exec(compile(body[0], "README.md quickstart", "exec"), {"__name__": "__main__"})
+              "python -m pip install .",
+              "python examples/circles_vs_lines.py",
+          )
+          for command in required:
+              assert command in text, f"README missing quickstart command: {command}"
+          for command in required[2:]:
+              assert command in workflow, f"CI does not exercise README command: {command}"
           PY
       - name: Check documentation structure, links, and filenames
         shell: bash
@@ -96,7 +110,7 @@ jobs:
               "3. What is genuinely new and what is inherited",
               "4. Quickstart",
               "5. Where it breaks",
-              "6. Documentation",
+              "6. Technical documentation",
           ]
           readme = Path("README.md").read_text(encoding="utf-8")
           observed = re.findall(r"^## (.+)$", readme, flags=re.MULTILINE)
