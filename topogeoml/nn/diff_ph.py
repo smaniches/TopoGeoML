@@ -32,7 +32,7 @@ Author: Santiago Maniches (ORCID: 0009-0005-6480-1987)
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import scipy.sparse as sp
@@ -94,6 +94,84 @@ def _critical_edges_h0(
     rows = mst.row[order].tolist()
     cols = mst.col[order].tolist()
     return list(zip(rows, cols, strict=True))
+
+
+def _gudhi_h1_generator_edges(
+    D_np: NDArray[np.float64],
+    dgm_h1: NDArray[np.float64],
+) -> list[tuple[tuple[int, int], tuple[int, int]] | None]:
+    """Map ripser finite H1 bars to GUDHI flag-persistence critical edges.
+
+    This produces a consistent *combinatorial* generator convention under
+    tied edge weights, rather than selecting an arbitrary equal-length edge
+    elsewhere in the point cloud. It does NOT prove a unique classical
+    derivative at nondifferentiable ties: GUDHI chooses one filtration
+    ordering, which should be understood as a selected branch.
+
+    GUDHI is intentionally optional; this path only runs if callers request
+    its generator convention for numerically ambiguous H1 gradients.
+    """
+    try:
+        import gudhi
+    except ImportError as exc:
+        raise ImportError(
+            "Ambiguous H1 edge gradients require GUDHI for "
+            "h1_tie_policy='gudhi'. Install topogeoml[tda], or perturb "
+            "tied point coordinates explicitly and use the default policy."
+        ) from exc
+
+    from scipy.optimize import linear_sum_assignment
+
+    rips = gudhi.RipsComplex(
+        distance_matrix=D_np,
+        max_edge_length=float(np.max(D_np)),
+    )
+    tree = rips.create_simplex_tree(max_dimension=2)
+    tree.compute_persistence(homology_coeff_field=2)
+    generators = tree.flag_persistence_generators()
+    h1_groups = generators[1]
+    rows = (
+        np.asarray(h1_groups[0], dtype=np.int64).reshape(-1, 4)
+        if h1_groups
+        else np.empty((0, 4), dtype=np.int64)
+    )
+    finite_positions = np.flatnonzero(np.isfinite(dgm_h1).all(axis=1))
+    if len(rows) < len(finite_positions):
+        raise ValueError(
+            "GUDHI supplied fewer H1 generator pairs than ripser finite bars; "
+            "critical-edge gradient identification is unresolved."
+        )
+
+    selected: list[tuple[tuple[int, int], tuple[int, int]] | None] = [
+        None for _ in dgm_h1
+    ]
+    if not len(finite_positions):
+        return selected
+
+    b = D_np[rows[:, 0], rows[:, 1]]
+    d = D_np[rows[:, 2], rows[:, 3]]
+    generator_intervals = np.column_stack((b, d))
+    ripser_intervals = dgm_h1[finite_positions]
+    errors = np.max(
+        np.abs(generator_intervals[:, None, :] - ripser_intervals[None, :, :]),
+        axis=2,
+    )
+    assigned_gudhi, assigned_ripser = linear_sum_assignment(errors)
+    for source_idx, local_idx in zip(assigned_gudhi, assigned_ripser, strict=True):
+        ref_idx = int(finite_positions[local_idx])
+        scale = max(1.0, float(np.max(np.abs(ripser_intervals[local_idx]))))
+        tol = 8.0 * float(np.finfo(np.float32).eps) * scale
+        if errors[source_idx, local_idx] > tol:
+            raise ValueError(
+                "GUDHI and ripser H1 persistence pairs disagree beyond float32 "
+                "tolerance; refusing to assign a critical-edge gradient."
+            )
+        row = rows[source_idx]
+        selected[ref_idx] = (
+            (int(row[0]), int(row[1])),
+            (int(row[2]), int(row[3])),
+        )
+    return selected
 
 
 def _critical_edges_h1(
