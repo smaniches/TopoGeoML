@@ -17,11 +17,21 @@ from topogeoml.nn.diff_ph import rips_diagram_torch
 
 
 def _separated_loop(external_length: float) -> torch.Tensor:
-    """A square loop and a separate edge more than 8 units away."""
+    """A square loop and a separate edge more than 8 units away.
+
+    For sqrt(2), use the integer vector (1, 1): the Euclidean distance
+    is exactly equal in float64 to the square diagonal. Subtracting
+    (-10 + sqrt(2)) - (-10) introduces a rounding difference and can
+    accidentally mask the bug being tested.
+    """
+    external_endpoint = (
+        [-9.0, 1.0] if external_length == float(np.sqrt(2.0))
+        else [-10.0 + external_length, 0.0]
+    )
     return torch.tensor(
         [
             [-10.0, 0.0],
-            [-10.0 + external_length, 0.0],
+            external_endpoint,
             [0.0, 0.0],
             [1.0, 0.0],
             [1.0, 1.0],
