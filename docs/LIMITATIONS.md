@@ -1,3 +1,9 @@
+---
+title: "Technical limitations"
+nav_order: 6
+description: "Current error modes, numerical assumptions, and scientific boundaries."
+---
+
 # Limitations and Failure Modes
 
 This document describes the current `topogeoml` code and the separate research record. It is an operational boundary, **not** a promise of future capabilities. For the mathematical implementation see [Architecture](ARCHITECTURE.md); for executable workflows see [Usage](USAGE.md).
