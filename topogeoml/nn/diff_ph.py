@@ -178,9 +178,18 @@ def _critical_edges_h1(
     D_np: NDArray[np.float64],
     cocycles: list[NDArray[np.integer[Any]]],
     dgm_h1: NDArray[np.float64],
+    *,
+    gradients_requested: bool = False,
+    tie_policy: Literal["reject", "gudhi"] = "reject",
 ) -> tuple[list[tuple[int, int] | None], list[tuple[int, int] | None]]:
     """
-    Return (birth_edges, death_edges) for H_1 bars.
+    Return birth/death critical-edge indices for H1 bars.
+
+    For generic edge lengths, the edge giving each birth/death filtration
+    value is unique and the existing ripser cocycle reconstruction suffices.
+    With numerical ties, equal-length unrelated edges are not legitimate
+    substitutes for critical simplices; choose a GUDHI persistence-generator
+    convention explicitly or refuse to construct misleading gradients.
 
     Birth edge: the edge in the cocycle representative whose distance
     is closest to the birth filtration value.
@@ -194,8 +203,46 @@ def _critical_edges_h1(
     n = D_np.shape[0]
     birth_edges: list[tuple[int, int] | None] = []
     death_edges: list[tuple[int, int] | None] = []
+    i_idx, j_idx = np.triu_indices(n, k=1)
+    dists_upper = D_np[i_idx, j_idx]
+
+    ambiguous: set[int] = set()
+    if gradients_requested:
+        # ripser reports float32 filtration values. A distance that is
+        # indistinguishable at that precision does not identify a unique
+        # critical edge, even when distinct in float64 coordinates.
+        for idx, (birth, death) in enumerate(dgm_h1):
+            if not np.isfinite(death):
+                continue
+            birth_tol = 4.0 * float(np.finfo(np.float32).eps) * max(1.0, abs(birth))
+            death_tol = 4.0 * float(np.finfo(np.float32).eps) * max(1.0, abs(death))
+            if (
+                np.count_nonzero(np.abs(dists_upper - birth) <= birth_tol) > 1
+                or np.count_nonzero(np.abs(dists_upper - death) <= death_tol) > 1
+            ):
+                ambiguous.add(idx)
+
+    resolved = None
+    if ambiguous:
+        if tie_policy == "reject":
+            raise ValueError(
+                "Non-identifiable H1 gradient: multiple edges are tied at "
+                "ripser's filtration precision. With a differentiable "
+                "input use h1_tie_policy='gudhi' (requires topogeoml[tda]) "
+                "for an explicit generator convention, or perturb the "
+                "input coordinates. There is no unique derivative at ties."
+            )
+        resolved = _gudhi_h1_generator_edges(D_np, dgm_h1)
 
     for bar_idx, (birth_val, death_val) in enumerate(dgm_h1):
+        if bar_idx in ambiguous:
+            assert resolved is not None
+            selected = resolved[bar_idx]
+            if selected is None:
+                raise ValueError("No matching H1 generator for ambiguous ripser bar")
+            birth_edges.append(selected[0])
+            death_edges.append(selected[1])
+            continue
         # --- Birth ---
         if bar_idx < len(cocycles):
             cocycle = cocycles[bar_idx]  # (n_edges, 3): [i, j, coeff]
@@ -219,9 +266,7 @@ def _critical_edges_h1(
             death_edges.append(None)
             continue
 
-        # Search upper triangle for edge distance closest to death_val.
-        i_idx, j_idx = np.triu_indices(n, k=1)
-        dists_upper = D_np[i_idx, j_idx]
+        # Non-ambiguous filtration levels have one distinguished edge.
         candidates = np.abs(dists_upper - death_val)
         # Exclude the birth edge to avoid routing both gradients to the same edge.
         b_edge = birth_edges[-1]
@@ -243,6 +288,23 @@ def _critical_edges_h1(
             best_d = int(np.argmin(candidates))
 
         death_edges.append((int(i_idx[best_d]), int(j_idx[best_d])))
+
+        if gradients_requested and birth_edges[-1] is not None:
+            b_edge = birth_edges[-1]
+            assert b_edge is not None
+            d_edge = death_edges[-1]
+            assert d_edge is not None
+            tol = 4.0 * float(np.finfo(np.float32).eps) * max(
+                1.0, abs(birth_val), abs(death_val)
+            )
+            if (
+                abs(float(D_np[b_edge]) - birth_val) > tol
+                or abs(float(D_np[d_edge]) - death_val) > tol
+            ):
+                raise ValueError(
+                    "The proposed H1 critical edge does not reproduce "
+                    "the ripser filtration level within float32 tolerance."
+                )
 
     return birth_edges, death_edges
 
