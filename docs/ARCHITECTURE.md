@@ -1,3 +1,9 @@
+---
+title: "Architecture"
+nav_order: 2
+description: "Implemented modules, data flow, provenance, and validation boundaries."
+---
+
 # Architecture
 
 **Scope:** the code on `main` as inspected for this guide, including the H₁ tie-handling correction merged in PR #115. Paths below are the evidence for the implementation descriptions. This document describes code behavior, not a speculative future platform.
