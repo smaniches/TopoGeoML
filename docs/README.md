@@ -17,6 +17,7 @@ The [repository README](../README.md) provides installation and the first run. T
 - [Hypothesis index](hypotheses/index.md) links preregistered designs through H011b, including the corrected H009-R study. Historical H009 evidence is invalidated rather than silently replaced.
 - [Reproducing](../REPRODUCING.md) explains current-code reruns versus historical replication and names the intended comparison families.
 - [Mathematical foundations](mathematics/foundations.md) provides definitions used in the signal-topology modules.
+- [Research scope](research_scope.md) preserves the concise documentation-site summary at its previous published URL.
 - [Research report](RESEARCH_REPORT.md) is a historical snapshot through H008c, **not** the most recent claim register.
 
 Benchmark and publication numbers belong to committed evidence files, not to this index. See each experiment's recorded seeds, software context, and decision rule before reusing a result.
