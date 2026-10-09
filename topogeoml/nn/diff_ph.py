@@ -15,11 +15,14 @@ H_0 (connected components):
     Gradient of death_i w.r.t. X flows through (X[u] - X[v]) / ||X[u] - X[v]||.
 
 H_1 (loops):
-    Birth: the youngest edge in the ripser cocycle representative whose distance
-    equals the birth filtration value. This is the standard subgradient choice
-    (Hofer et al. 2017, Clough et al. 2020).
-    Death: the edge in the upper-star whose distance equals the death value.
-    Both birth and death gradients are subgradients — correct for descent.
+    In generic position with isolated edge lengths, a filtration value
+    identifies its critical edge, permitting autograd through that distance.
+    At tied filtration levels, a merely equal-length edge elsewhere in the
+    point cloud is NOT a valid substitute for the persistence generator.
+    Default: reject ambiguous autograd routes rather than silently return
+    incorrect gradients. Explicit opt-in: GUDHI flag-persistence generator
+    selection (a chosen combinatorial branch, not a unique classical
+    derivative at a nondifferentiable tie).
 
 References
 ----------
@@ -191,14 +194,14 @@ def _critical_edges_h1(
     substitutes for critical simplices; choose a GUDHI persistence-generator
     convention explicitly or refuse to construct misleading gradients.
 
-    Birth edge: the edge in the cocycle representative whose distance
-    is closest to the birth filtration value.
+    In numerically generic configurations, ripser's cocycle and the
+    unique closest filtration edges identify the selected birth and death.
+    For ambiguous finite bars and differentiable inputs, either reject
+    the route or use an explicit GUDHI critical-generator convention.
 
-    Death edge: the edge in the full upper-star distance matrix whose
-    distance is closest to the death filtration value (and is not the
-    birth edge). This is a subgradient approximation.
-
-    Returns lists of (i, j) tuples or None for infinite deaths.
+    This only constructs a selected piecewise gradient on generic inputs;
+    at ties a unique classical derivative need not exist. Returns (i, j)
+    pairs or None for infinite deaths.
     """
     n = D_np.shape[0]
     birth_edges: list[tuple[int, int] | None] = []
