@@ -35,7 +35,7 @@ import torch
 from benchmarks.backends import PHBackend, available_backends, get_backend
 from benchmarks.datasets import Dataset, get_dataset
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "2.0.0"
 
 
 @dataclass(frozen=True)
