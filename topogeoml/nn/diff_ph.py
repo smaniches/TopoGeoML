@@ -313,6 +313,8 @@ def rips_diagram_torch(
     X: torch.Tensor,
     max_dim: int = 1,
     max_edge_length: float | None = None,
+    *,
+    h1_tie_policy: Literal["reject", "gudhi"] = "reject",
 ) -> list[torch.Tensor]:
     """
     Compute Rips persistence diagram as a list of torch tensors WITH gradients.
@@ -339,6 +341,15 @@ def rips_diagram_torch(
         own H_0 diagram exactly. Gradients still flow through the surviving
         finite bars. With no threshold (``None``) this reduces to n-1 finite
         bars plus a single essential bar.
+    h1_tie_policy : {"reject", "gudhi"}
+        A non-unique H1 critical edge at ripser's float32 filtration precision
+        cannot be differentiated as though it were an identified generator.
+        For differentiable inputs the default "reject" raises rather than
+        silently assigning an unrelated edge. "gudhi" explicitly requests
+        a selected GUDHI flag-persistence generator convention (install
+        topogeoml[tda]). At exact ties, this is a combinatorial selection,
+        not a claim of a unique classical derivative or guaranteed descent.
+        Forward-only inputs (no autograd) retain their barcode outputs.
 
     Returns
     -------
@@ -352,6 +363,10 @@ def rips_diagram_torch(
     matrix D_torch. This means PyTorch's standard autograd handles all
     gradient computation automatically.
     """
+    if h1_tie_policy not in ("reject", "gudhi"):
+        raise ValueError(
+            f"h1_tie_policy must be 'reject' or 'gudhi', got {h1_tie_policy!r}"
+        )
     if X.ndim != 2:
         raise ValueError(f"X must be 2D (n_points, dim); got shape {tuple(X.shape)}")
     n = X.shape[0]
@@ -418,7 +433,13 @@ def rips_diagram_torch(
         if n_h1 == 0:
             diagrams.append(torch.empty((0, 2), dtype=dtype, device=device))
         else:
-            birth_edges, death_edges = _critical_edges_h1(D_np, cocycles_h1, dgm_h1)
+            birth_edges, death_edges = _critical_edges_h1(
+                D_np,
+                cocycles_h1,
+                dgm_h1,
+                gradients_requested=bool(X.requires_grad and torch.is_grad_enabled()),
+                tie_policy=h1_tie_policy,
+            )
 
             birth_tensors: list[torch.Tensor] = []
             death_tensors: list[torch.Tensor] = []
