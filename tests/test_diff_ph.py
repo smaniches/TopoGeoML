@@ -103,6 +103,36 @@ def test_pairwise_distances_identical_points_keep_sparse_mst_edges() -> None:
 
 # --- rips_diagram_torch ---
 
+
+@pytest.mark.parametrize("invalid_dim", [-2, -1, 2, 3])
+def test_diagram_rejects_unsupported_dimensions_before_backend(
+    monkeypatch: pytest.MonkeyPatch, invalid_dim: int,
+) -> None:
+    from topogeoml.nn import diff_ph
+
+    def backend_must_not_run(_points: torch.Tensor) -> torch.Tensor:
+        pytest.fail("unsupported homology dimensions must be rejected before computation")
+
+    monkeypatch.setattr(diff_ph, "pairwise_distances", backend_must_not_run)
+    X = torch.randn(4, 2, dtype=torch.float64)
+    with pytest.raises(ValueError, match="max_dim must be 0 or 1"):
+        rips_diagram_torch(X, max_dim=invalid_dim)
+
+
+@pytest.mark.parametrize("invalid_dim", [True, False, 1.0, "1", None])
+def test_diagram_rejects_non_integer_dimensions(invalid_dim: object) -> None:
+    with pytest.raises(ValueError, match="max_dim must be an integer"):
+        rips_diagram_torch(
+            torch.randn(4, 2, dtype=torch.float64),
+            max_dim=invalid_dim,  # type: ignore[arg-type]
+        )
+
+
+def test_diagram_accepts_numpy_integer_dimension() -> None:
+    X = torch.randn(4, 2, dtype=torch.float64)
+    assert len(rips_diagram_torch(X, max_dim=np.int64(0))) == 1
+
+
 def test_diagram_shape_h0_only() -> None:
     X = _circle(n=20)
     dgms = rips_diagram_torch(X, max_dim=0)
@@ -278,6 +308,24 @@ def test_betti_regularization_all_essential_returns_zero() -> None:
 
 
 # --- TopologyRegularizer module ---
+
+
+@pytest.mark.parametrize("invalid_dim", [-1, 2, 4])
+def test_regularizer_rejects_unsupported_dimensions_at_init(invalid_dim: int) -> None:
+    with pytest.raises(ValueError, match="max_dim must be 0 or 1"):
+        TopologyRegularizer(max_dim=invalid_dim)
+
+
+@pytest.mark.parametrize("invalid_dim", [True, 1.0])
+def test_regularizer_rejects_non_integer_dimensions(invalid_dim: object) -> None:
+    with pytest.raises(ValueError, match="max_dim must be an integer"):
+        TopologyRegularizer(max_dim=invalid_dim)  # type: ignore[arg-type]
+
+
+def test_regularizer_accepts_supported_dimensions() -> None:
+    assert TopologyRegularizer(max_dim=0).max_dim == 0
+    assert TopologyRegularizer(max_dim=1).max_dim == 1
+
 
 def test_regularizer_module_forward() -> None:
     reg = TopologyRegularizer(max_dim=0, loss_type="total_persistence")
