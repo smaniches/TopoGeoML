@@ -35,6 +35,7 @@ Author: Santiago Maniches (ORCID: 0009-0005-6480-1987)
 
 from __future__ import annotations
 
+from numbers import Integral
 from typing import Any, Literal
 
 import numpy as np
@@ -323,6 +324,18 @@ def _critical_edges_h1(
     return birth_edges, death_edges
 
 
+def _validate_rips_max_dim(max_dim: int) -> None:
+    """Reject dimensions with no implemented differentiable Rips reconstruction."""
+    if isinstance(max_dim, bool) or not isinstance(max_dim, Integral):
+        raise ValueError(f"max_dim must be an integer 0 or 1; got {max_dim!r}")
+    if max_dim not in (0, 1):
+        raise ValueError(
+            "max_dim must be 0 or 1; differentiable H2+ persistence is not "
+            "implemented. Use RipsFiltration for non-differentiable higher "
+            f"homology (got max_dim={max_dim!r})."
+        )
+
+
 def rips_diagram_torch(
     X: torch.Tensor,
     max_dim: int = 1,
@@ -345,7 +358,8 @@ def rips_diagram_torch(
         Shape (n_points, ambient_dim). Should have requires_grad=True
         for gradient flow.
     max_dim : int
-        Highest homology dimension (default 1: H_0 and H_1).
+        Only 0 (H_0) or 1 (H_0 and H_1) is supported (default 1).
+        Higher dimensions raise ValueError before persistence computation.
     max_edge_length : float, optional
         Maximum edge length (``thresh``) passed to ripser. A truncating
         value — below the largest minimum-spanning-tree edge weight — is
@@ -377,6 +391,7 @@ def rips_diagram_torch(
     matrix D_torch. This means PyTorch's standard autograd handles all
     gradient computation automatically.
     """
+    _validate_rips_max_dim(max_dim)
     if h1_tie_policy not in ("reject", "gudhi"):
         raise ValueError(
             f"h1_tie_policy must be 'reject' or 'gudhi', got {h1_tie_policy!r}"
@@ -615,7 +630,8 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
     Parameters
     ----------
     max_dim : int
-        Highest homology dimension to compute (default 1).
+        Only 0 (H_0) or 1 (H_0 and H_1) is supported (default 1).
+        Unsupported dimensions raise ValueError at construction.
     loss_type : str
         'total_persistence', 'entropy', or 'betti_regularization'.
     p : float
@@ -646,6 +662,7 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
         h1_tie_policy: Literal["reject", "gudhi"] = "reject",
     ) -> None:
         super().__init__()
+        _validate_rips_max_dim(max_dim)
         if h1_tie_policy not in ("reject", "gudhi"):
             raise ValueError(
                 "h1_tie_policy must be 'reject' or 'gudhi'; "

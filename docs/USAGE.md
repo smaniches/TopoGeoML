@@ -111,7 +111,7 @@ loss.backward()
 assert cloud.grad is not None
 ```
 
-`rips_diagram_torch` takes a two-dimensional PyTorch point cloud and returns H₀ and, when requested, H₁ tensors with two birth/death columns; infinite deaths remain infinite. **The current reconstruction implements only H₀ and H₁**: passing `max_dim > 1` makes ripser compute additional dimensions but does not reconstruct or return those higher-dimensional bars. Do not use `max_dim > 1` as a differentiable higher-homology API. It builds a distance matrix, delegates bar identities to ripser on detached CPU data, then indexes those distances to make selected values differentiable. It does not differentiate through ripser.
+`rips_diagram_torch` takes a two-dimensional PyTorch point cloud and returns H₀ and, when requested, H₁ tensors with two birth/death columns; infinite deaths remain infinite. **The differentiable reconstruction implements only H₀ and H₁.** Both `rips_diagram_torch` and `TopologyRegularizer` accept `max_dim=0` or `1` and raise `ValueError` for negative, non-integer, or H₂-and-higher requests before persistence computation, rather than silently omitting requested bars. Use the non-differentiable `RipsFiltration` API for higher homology. It builds a distance matrix, delegates bar identities to ripser on detached CPU data, then indexes those distances to make selected values differentiable. It does not differentiate through ripser.
 
 For an autograd-connected H₁ input with ambiguous birth or death edges, the default `h1_tie_policy="reject"` raises rather than inventing a critical edge. If you explicitly accept a GUDHI-selected combinatorial branch, use:
 
