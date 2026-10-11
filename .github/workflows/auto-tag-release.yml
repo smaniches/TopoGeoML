@@ -1,0 +1,6 @@
+name: Auto Tag Release
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+permissions: {}
