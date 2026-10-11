@@ -85,10 +85,19 @@ def test_existing_integrity_and_publication_chain_is_preserved() -> None:
         "build", "sbom", "attest-sbom"
     }
     assert set(jobs["sign-and-release"]["needs"]) == {
-        "build", "sbom", "attest-sbom"
+        "build", "sbom", "attest-sbom", "publish-pypi"
     }
     assert jobs["publish-pypi"]["environment"]["name"] == "pypi"
     publisher = _commands(jobs["publish-pypi"])
     assert "verify_pypi_files.py" in publisher
     assert "--require-complete" in publisher
     assert "scripts/bind_release_sbom.py" in _commands(jobs["sbom"])
+
+    assert set(jobs["verify-released-artifacts"]["needs"]) == {
+        "publish-pypi", "sign-and-release"
+    }
+    verifier = _commands(jobs["verify-released-artifacts"])
+    assert "verify_pypi_files.py" in verifier
+    assert "releases/tags/$GITHUB_REF_NAME" in verifier
+    assert "sha256:" in verifier
+    assert "sigstore.json" in verifier
