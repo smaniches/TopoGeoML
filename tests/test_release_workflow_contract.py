@@ -61,4 +61,4 @@ def test_sbom_attestation_executes_no_project_or_dependency_code() -> None:
 def test_publication_waits_for_verified_sbom_attestation() -> None:
     jobs = _jobs()
     assert set(jobs["publish-pypi"]["needs"]) == {"build", "sbom", "attest-sbom"}
-    assert set(jobs["sign-and-release"]["needs"]) == {"build", "sbom", "attest-sbom"}
+    assert set(jobs["sign-and-release"]["needs"]) == {"build", "sbom", "attest-sbom", "publish-pypi"}
