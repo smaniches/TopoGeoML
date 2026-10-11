@@ -1,6 +1,82 @@
 name: Auto Tag Release
+
+# A reviewed merge and successful main CI authorize tagging the new version.
+# GitHub suppresses push triggers from GITHUB_TOKEN-created tags, so dispatch
+# release.yml explicitly. Never rebuild an already-tagged version here.
 on:
   workflow_run:
-    workflows: [CI]
+    workflows: ["CI"]
     types: [completed]
+
 permissions: {}
+
+concurrency:
+  group: topogeoml-auto-tag
+  cancel-in-progress: false
+
+jobs:
+  tag-and-dispatch:
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main' &&
+          github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Check out exactly the CI-passing commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Tag a newer validated release and dispatch its publisher
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$(git rev-parse HEAD)" == "$CI_SHA" ]]
+          main_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
+          if [[ "$main_sha" != "$CI_SHA" ]]; then
+            echo "::notice::main advanced; wait for the new head's successful CI"
+            exit 0
+          fi
+
+          version="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' topogeoml/_version.py)"
+          if ! [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::invalid release version: $version"
+            exit 1
+          fi
+          grep -Fq "## [$version]" CHANGELOG.md || {
+            echo "::error::missing changelog entry for $version"
+            exit 1
+          }
+          tag="v$version"
+          if git show-ref --verify --quiet "refs/tags/$tag"; then
+            echo "::notice::$tag is already tagged; no automatic republishing"
+            exit 0
+          fi
+
+          previous="$(git tag --list 'v[0-9]*' | sort -V | tail -n 1)"
+          if [[ -n "$previous" && "$(printf '%s\n%s\n' "$previous" "$tag" | sort -V | tail -n 1)" != "$tag" ]]; then
+            echo "::error::release version $tag must exceed $previous"
+            exit 1
+          fi
+          # Tag only the same reviewed commit that passed CI.
+          [[ "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" == "$CI_SHA" ]] || {
+            echo "::notice::main advanced before tag creation"
+            exit 0
+          }
+          git_tag_sha="$(gh api --method POST "repos/$GITHUB_REPOSITORY/git/tags" \
+            -f tag="$tag" -f message="Release $tag" \
+            -f object="$CI_SHA" -f type=commit --jq .sha)"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/tags/$tag" -f sha="$git_tag_sha" >/dev/null
+          gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "$tag" \
+            --field tag="$tag"
+          echo "Dispatched $tag from validated commit $CI_SHA" >> "$GITHUB_STEP_SUMMARY"
