@@ -44,10 +44,19 @@ def local_distributions(dist_dir: Path) -> dict[str, tuple[Path, str]]:
 def pypi_metadata(project: str, version: str) -> dict[str, Any] | None:
     project_path = urllib.parse.quote(project, safe="")
     version_path = urllib.parse.quote(version, safe="")
-    url = f"https://pypi.org/pypi/{project_path}/{version_path}/json"
+    # PyPI's JSON API is CDN-cached. A pre-upload 404 for this version can
+    # remain cached after two immutable artifacts were successfully uploaded.
+    # Use a unique URL per request so retries check current registry state,
+    # rather than repeating the same pre-publication negative cache entry.
+    cache_query = urllib.parse.urlencode({"topogeoml_fresh": str(time.time_ns())})
+    url = f"https://pypi.org/pypi/{project_path}/{version_path}/json?{cache_query}"
     request = urllib.request.Request(
         url,
-        headers={"Accept": "application/json", "User-Agent": "topogeoml-release-verifier/1"},
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "topogeoml-release-verifier/1",
+            "Cache-Control": "no-cache",
+        },
     )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
