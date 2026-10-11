@@ -110,77 +110,50 @@ docs/hypotheses/HYPOTHESIS-NNN-description.md (commit hash: ...)
 
 ## Releasing
 
-A release has two explicit maintainer approvals: merging the hand-authored
-release PR, then creating the release tag from that exact reviewed commit.
-No workflow creates tags automatically.
+A reviewed version-bump PR merged into protected `main` is the approval to
+publish. The package's version is declared in `topogeoml/_version.py`; the
+other public version surfaces and the release date must agree in CI. Normal
+code, documentation, and dependency merges never publish a new release
+unless the version has been advanced beyond the latest tag.
 
 Prepare one focused release PR that:
 
-1. bumps `topogeoml/_version.py` and the version references in
-   `CITATION.cff`, `.zenodo.json`, `README.md`, `docs/index.md`, and
-   `LIMITATIONS.md`;
-2. adds the `## [X.Y.Z]` section to `CHANGELOG.md`;
-3. passes the complete required CI suite; and
-4. is reviewed and merged deliberately.
+1. Updates `topogeoml/_version.py`, `CITATION.cff`, `.zenodo.json`,
+   `README.md`, `docs/index.md`, `LIMITATIONS.md`, and all other
+   version-bound metadata.
+2. Adds a matching `## [X.Y.Z]` entry to `CHANGELOG.md`.
+3. Passes required CI checks and is reviewed and merged deliberately.
 
-After merge, copy the exact squash-merge commit SHA from the release PR and
-create an annotated tag on that commit. Do not tag a moving branch name or an
-unreviewed later `main` commit.
+After successful main-branch CI, `.github/workflows/auto-tag-release.yml`
+checks out **the exact commit whose CI passed**, confirms it still equals
+`main`, verifies the release version and changelog, rejects a non-increasing
+version, and creates an annotated `vX.Y.Z` tag at that commit. Existing tags
+are never moved. The workflow explicitly dispatches `release.yml` against
+that tag with `tag=vX.Y.Z`: GitHub suppresses ordinary push-triggered
+workflow cascades from `GITHUB_TOKEN`-created tags, so dispatch is mandatory.
+
+`.github/workflows/release.yml` also accepts a manually pushed version tag.
+Its `workflow_dispatch` entrypoint requires both `--ref vX.Y.Z` and a
+matching `--field tag=vX.Y.Z`; the unprivileged validation job rejects
+branch dispatch, mismatched versions, and missing changelog entries before
+any build or publication job starts. Its existing release supply-chain
+contract is unchanged: build once, attest provenance, derive and verify a
+CycloneDX SBOM from the exact wheel, publish missing PyPI artifacts through
+Trusted Publishing, and sign/attach the same distributions to GitHub Release.
+
+**Recovery:** If a publication job fails after the build succeeds, use
+**Re-run failed jobs** on its original run or `gh run rerun RUN_ID --failed`.
+This preserves the original build artifacts. Do not start a new run or move
+the release tag to work around partial publication; immutable PyPI files
+cannot safely be overwritten. The PyPI job verifies SHA-256 hashes for
+pre-existing files and uploads only absent distributions. If tagging
+succeeded but dispatch never created a release run, first confirm no existing
+run or published artifact for that tag, then dispatch that existing exact tag:
 
 ```bash
-set -euo pipefail
-
-git fetch origin main --tags
-
-# Replace the value below with the release PR's exact squash-merge commit SHA.
-RELEASE_SHA="PASTE_FULL_40_CHARACTER_COMMIT_SHA_HERE"
-
-git cat-file -e "${RELEASE_SHA}^{commit}"
-git merge-base --is-ancestor "$RELEASE_SHA" origin/main
-
-VERSION=$(git show "$RELEASE_SHA:topogeoml/_version.py" \
-  | sed -n 's/^__version__ = "\(.*\)"/\1/p')
-TAG="v$VERSION"
-CHANGELOG_FILE=$(mktemp)
-trap 'rm -f "$CHANGELOG_FILE"' EXIT
-
-git show "$RELEASE_SHA:CHANGELOG.md" > "$CHANGELOG_FILE"
-test -n "$VERSION"
-printf '%s\n' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
-grep -F "## [$VERSION]" "$CHANGELOG_FILE" >/dev/null
-
-if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
-  echo "Refusing to overwrite existing tag $TAG" >&2
-  exit 1
-fi
-
-git tag -a "$TAG" "$RELEASE_SHA" -m "$TAG"
-test "$(git rev-parse "${TAG}^{commit}")" = "$RELEASE_SHA"
-git show --no-patch --decorate "$TAG"
-git push origin "refs/tags/$TAG"
+gh workflow run release.yml --ref vX.Y.Z --field tag=vX.Y.Z
 ```
 
-The tag push triggers `.github/workflows/release.yml`, which checks out that
-exact tag, builds the distributions, generates provenance and an SBOM,
-publishes through PyPI Trusted Publishing, signs the artifacts with Sigstore,
-and creates the GitHub Release.
-
-The publication workflow is deliberately tag-triggered only. Do not start a
-new workflow run to recover a partial release: a new run would rebuild the
-wheel and sdist and could produce files that differ from artifacts already
-accepted by PyPI.
-
-Inspect the original tag-triggered run and the external state before recovery.
-If `build` succeeded and a downstream job failed, use **Re-run failed jobs** on
-the original run, or run `gh run rerun RUN_ID --failed`. The successful build
-is not rerun, and the failed job downloads the original `release-artifacts`.
-
-The PyPI job is safe to rerun after a partial upload. Before publishing, it
-compares every filename already present on PyPI with the original local
-artifact and requires the SHA-256 digest to match. It rejects hash mismatches
-and unexpected remote filenames, then stages and uploads only distributions
-that are still absent. If none are missing, the upload step is skipped. A
-post-publication check polls PyPI and requires the complete remote filename set
-and every digest to match the original artifacts. Do not bypass these checks,
-use a blanket `skip-existing`, rebuild the distributions, or move a published
-tag.
+GitHub Releases and PyPI publication are automated by this mechanism; a
+separate Zenodo deposit must still be checked against the versioned tag and
+DOI before claiming that external archival synchronization is complete.

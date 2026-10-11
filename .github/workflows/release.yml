@@ -1,20 +1,68 @@
 name: Release
 
-# Tag-triggered only. Recover failed downstream jobs by re-running failed jobs
-# in the original workflow run so its successful build artifacts are reused.
+# Exact-tag releases. workflow_dispatch is required for the GITHUB_TOKEN
+# auto-tag workflow; its tag input must match its immutable ref.
+# Recover partial publications by rerunning failed jobs in the original run.
 on:
   push:
     tags:
       - "v[0-9]*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing version tag matching the dispatch ref (e.g. v0.0.8)"
+        required: true
+        type: string
 
 permissions:
   contents: read
 
+concurrency:
+  group: topogeoml-release-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
+  validate-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Require an exact version tag on both entrypoints
+        shell: bash
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          [[ "$REF_TYPE" == "tag" ]] || { echo "::error::release ref is not a tag"; exit 1; }
+          [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "::error::release tag must be vX.Y.Z"; exit 1;
+          }
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$INPUT_TAG" != "$REF_NAME" ]]; then
+            echo "::error::dispatch tag must equal the tag ref"; exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require package and changelog metadata to match the immutable ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' topogeoml/_version.py)"
+          [[ "$GITHUB_REF_NAME" == "v$version" ]] || {
+            echo "::error::release ref disagrees with package version"; exit 1;
+          }
+          grep -Fq "## [$version]" CHANGELOG.md || {
+            echo "::error::release ref lacks matching changelog"; exit 1;
+          }
+
   # This job creates the release artifacts and their build-provenance
   # attestation. Runtime dependency resolution is deliberately kept out of
   # this OIDC-authorized job; it happens in the unprivileged `sbom` job below.
   build:
+    needs: validate-release
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -201,7 +249,8 @@ jobs:
             --delay-seconds 5
 
   sign-and-release:
-    needs: [build, sbom, attest-sbom]
+    # Do not create a citable GitHub/Zenodo release if PyPI failed.
+    needs: [build, sbom, attest-sbom, publish-pypi]
     runs-on: ubuntu-latest
     permissions:
       contents: write       # create GitHub Release
@@ -232,3 +281,66 @@ jobs:
             dist/*
             sbom.cdx.json
             *.sigstore.json
+
+  # A green Release run must mean that both registries expose the exact
+  # distributions produced by this run, not merely that upload steps returned.
+  verify-released-artifacts:
+    needs: [publish-pypi, sign-and-release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-dist
+          path: dist
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-sbom
+          path: .
+      - name: Reconcile PyPI files to exact build hashes
+        run: |
+          python .github/scripts/verify_pypi_files.py \
+            --project topogeoml --version "${GITHUB_REF_NAME#v}" \
+            --dist-dir dist --require-complete --attempts 12 --delay-seconds 5
+      - name: Reconcile GitHub Release artifacts to exact build hashes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          assets="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" \
+            --jq '[.assets[] | {name: .name, digest: .digest}]')"
+          RELEASE_ASSETS="$assets" python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          entries = json.loads(os.environ["RELEASE_ASSETS"])
+          assets = {}
+          for entry in entries:
+              if entry["name"] in assets:
+                  raise SystemExit(f"duplicate GitHub release asset: {entry['name']}")
+              assets[entry["name"]] = entry["digest"]
+          distributions = sorted(
+              [*Path("dist").glob("*.whl"), *Path("dist").glob("*.tar.gz")]
+          )
+          if len(distributions) != 2:
+              raise SystemExit("expected exactly one wheel and one sdist")
+          for path in [*distributions, Path("sbom.cdx.json")]:
+              digest = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+              if assets.get(path.name) != digest:
+                  raise SystemExit(f"GitHub Release digest mismatch or missing: {path.name}")
+          for path in distributions:
+              bundle = path.name + ".sigstore.json"
+              if bundle not in assets:
+                  raise SystemExit(f"missing Sigstore bundle: {bundle}")
+          print("GitHub Release assets match the exact built distributions and SBOM")
+          PY
