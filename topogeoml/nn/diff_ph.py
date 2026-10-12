@@ -189,6 +189,19 @@ def _gudhi_h1_generator_edges(
     return selected
 
 
+def _reject_ambiguous_essential_bars(
+    dgm_h1: NDArray[np.float64], ambiguous: set[int]
+) -> None:
+    """Fail before constructing a GUDHI complex for unsupported essential ties."""
+    if any(not np.isfinite(dgm_h1[idx, 1]) for idx in ambiguous):
+        raise ValueError(
+            "No matching H1 generator for ambiguous ripser bar. The "
+            "GUDHI convention resolves finite bars only; an essential "
+            "(infinite-death) H1 bar with tied birth edges has no "
+            "implemented critical-edge selection."
+        )
+
+
 def _critical_edges_h1(
     D_np: NDArray[np.float64],
     cocycles: list[NDArray[np.integer[Any]]],
@@ -249,15 +262,8 @@ def _critical_edges_h1(
                 "for an explicit generator convention, or perturb the "
                 "input coordinates. There is no unique derivative at ties."
             )
-        # Essential bars have no finite death generator in this resolver.
-        # Reject before constructing the potentially cubic-size GUDHI complex.
-        if any(not np.isfinite(dgm_h1[idx, 1]) for idx in ambiguous):
-            raise ValueError(
-                "No matching H1 generator for ambiguous ripser bar. The "
-                "GUDHI convention resolves finite bars only; an essential "
-                "(infinite-death) H1 bar with tied birth edges has no "
-                "implemented critical-edge selection."
-            )
+        # GUDHI handles only finite bars; reject unsupported essential ties first.
+        _reject_ambiguous_essential_bars(dgm_h1, ambiguous)
         resolved = _gudhi_h1_generator_edges(D_np, dgm_h1)
 
     for bar_idx, (birth_val, death_val) in enumerate(dgm_h1):
