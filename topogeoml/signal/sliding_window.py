@@ -1,8 +1,10 @@
 """
 Sliding-window persistent homology feature extraction.
 
-Implements DEFINITION 5.5 and the algorithm specification of §6.2 in
-``docs/mathematics/foundations.md``.
+Implements the sliding-window feature-extraction stage of DEFINITION 5.5
+and algorithm specification §6.2 in ``docs/mathematics/foundations.md``.
+For a univariate signal, first call ``takens_embedding`` in
+``topogeoml.signal.delay_embedding``.
 
 The extracted feature vector is invariant under the isometry group of
 :math:`(\\mathbb{R}^k, \\|\\cdot\\|_2)` acting on the point cloud

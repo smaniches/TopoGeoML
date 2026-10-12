@@ -272,6 +272,22 @@ def test_essential_h1_bar_with_tied_birth_is_not_resolved_by_gudhi_policy() -> N
 
 
 @pytest.mark.torch
+def test_essential_h1_tie_never_enters_gudhi_generator_builder(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import topogeoml.nn.diff_ph as diff_ph
+
+    def forbidden_builder(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("Must reject essential H1 tie before GUDHI construction")
+
+    monkeypatch.setattr(diff_ph, "_gudhi_h1_generator_edges", forbidden_builder)
+    with pytest.raises(ValueError, match="finite bars only"):
+        rips_diagram_torch(
+            _unit_square(), max_dim=1, max_edge_length=1.2, h1_tie_policy="gudhi"
+        )
+
+
+@pytest.mark.torch
 def test_essential_h1_bar_with_unique_birth_edge_keeps_its_gradient() -> None:
     """A generic quadrilateral truncated below both diagonals has one essential
     H1 bar whose birth is the unique longest side; its gradient must flow to

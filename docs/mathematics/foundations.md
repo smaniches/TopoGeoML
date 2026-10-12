@@ -111,7 +111,11 @@ with the convention $0 \log 0 := 0$. If $L = 0$ (all finite bars degenerate), $E
 4. From each diagram extract: $|\mathcal{D}_{\text{finite}}|$ (count of finite bars), $\operatorname{Pers}_1(\mathcal{D})$, $\operatorname{Pers}_2(\mathcal{D})$, $E(\mathcal{D})$, $\max_i(d_i - b_i)$ (longest lifetime).
 5. Concatenate the per-window per-dimension statistics into a single vector, optionally pooled (mean and max) across windows to produce a fixed-length vector.
 
-This construction is implemented in `topogeoml.signal.sliding_window.sliding_window_topology_features`.
+For univariate signals, the implemented path is the composition
+`topogeoml.signal.delay_embedding.takens_embedding` followed by
+`topogeoml.signal.sliding_window.sliding_window_topology_features`.
+The latter accepts an already-embedded two-dimensional point cloud;
+neither function alone implements the complete construction.
 
 ## 6. Algorithm Specifications
 
