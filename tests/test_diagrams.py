@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import numpy as np
 import pytest
 
@@ -84,7 +86,7 @@ def test_diagram_immutable() -> None:
     """Frozen dataclass: replacement requires new construction."""
     bars = {0: np.array([[0.0, 1.0]], dtype=np.float64)}
     diag = PersistenceDiagram(bars=bars, provenance=_provenance())
-    with pytest.raises(Exception):  # FrozenInstanceError under dataclasses
+    with pytest.raises(dataclasses.FrozenInstanceError):
         diag.bars = {}  # type: ignore[misc]
 
 

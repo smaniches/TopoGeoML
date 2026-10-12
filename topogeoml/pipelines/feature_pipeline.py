@@ -132,7 +132,7 @@ class TopologyFeaturePipeline(BaseEstimator, TransformerMixin):  # type: ignore[
         """
         Fit the pipeline.
 
-        For v0.1 fitting is mostly metadata capture: validate the input shape,
+        Fitting is mostly metadata capture: validate the input shape,
         compute the fallback_max for vectorization from training data scale,
         and freeze the vectorizer configuration. No global state is leaked
         from training to transform beyond `fallback_max`, so per-fold use

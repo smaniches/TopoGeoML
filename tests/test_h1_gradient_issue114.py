@@ -233,3 +233,64 @@ def test_training_regularizer_gudhi_tie_policy_backpropagates() -> None:
 def test_training_regularizer_validates_tie_policy() -> None:
     with pytest.raises(ValueError, match="h1_tie_policy"):
         TopologyRegularizer(h1_tie_policy="silent")  # type: ignore[arg-type]
+
+
+def _unit_square() -> torch.Tensor:
+    """Four tied unit edges; truncating below the diagonal leaves the loop
+    essential, so its birth edge is ambiguous but it has no death edge."""
+    return torch.tensor(
+        [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]],
+        dtype=torch.float64,
+        requires_grad=True,
+    )
+
+
+@pytest.mark.torch
+def test_essential_h1_bar_with_tied_birth_is_rejected_by_default() -> None:
+    """Tie detection must not skip essential (infinite-death) H1 bars: the
+    birth of a truncated loop is still realised by one of several tied
+    edges, and silently routing the gradient to one of them contradicts
+    the documented fail-closed contract."""
+    points = _unit_square()
+    with pytest.raises(ValueError, match="Non-identifiable H1 gradient"):
+        rips_diagram_torch(points, max_dim=1, max_edge_length=1.2)
+
+    # Forward-only evaluation keeps the essential bar.
+    h1 = rips_diagram_torch(points.detach(), max_dim=1, max_edge_length=1.2)[1]
+    assert h1.shape == (1, 2)
+    assert h1[0, 0].item() == pytest.approx(1.0)
+    assert torch.isinf(h1[0, 1])
+
+
+@pytest.mark.torch
+def test_essential_h1_bar_with_tied_birth_is_not_resolved_by_gudhi_policy() -> None:
+    pytest.importorskip("gudhi")
+    with pytest.raises(ValueError, match="No matching H1 generator"):
+        rips_diagram_torch(
+            _unit_square(), max_dim=1, max_edge_length=1.2, h1_tie_policy="gudhi"
+        )
+
+
+@pytest.mark.torch
+def test_essential_h1_bar_with_unique_birth_edge_keeps_its_gradient() -> None:
+    """A generic quadrilateral truncated below both diagonals has one essential
+    H1 bar whose birth is the unique longest side; its gradient must flow to
+    exactly that edge's endpoints."""
+    points = torch.tensor(
+        [[0.0, 0.0], [1.0, 0.05], [1.1, 1.0], [-0.05, 0.9]],
+        dtype=torch.float64,
+        requires_grad=True,
+    )
+    h1 = rips_diagram_torch(points, max_dim=1, max_edge_length=1.3)[1]
+    assert h1.shape == (1, 2)
+    assert torch.isinf(h1[0, 1])
+    h1[0, 0].backward()
+
+    expected_birth = torch.linalg.norm(points[2] - points[3]).item()
+    assert h1[0, 0].item() == pytest.approx(expected_birth)
+    grad = points.grad
+    assert grad is not None
+    assert torch.all(grad[:2] == 0)
+    direction = (points[2] - points[3]).detach() / expected_birth
+    assert torch.allclose(grad[2], direction)
+    assert torch.allclose(grad[3], -direction)

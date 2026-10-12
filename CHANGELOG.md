@@ -5,6 +5,19 @@ All notable changes to TopoGeoML will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Differentiable cubical persistence read GUDHI vertex indices in the wrong memory order** (`topogeoml.nn.cubical_diff_ph`). `gudhi.CubicalComplex.vertices_of_persistence_pairs()` returns indices into the image flattened in Fortran (column-major) order; the code indexed the row-major flattening. Bar values and the pixels receiving gradient were therefore wrong for every image that is not transpose-symmetric (verified: finite-bar error up to 0.79 on unit-range random images before, exact agreement with GUDHI after). Existing tests used symmetric rings, so the defect was silent. Affects `cubical_diagram_torch` and `CubicalTopologyLoss`; six regression tests (2D asymmetric, non-square, 3D, gradient location, batched) fail on the previous code. **Numerical outputs change for affected inputs.**
+- **Essential H₁ bars bypassed the fail-closed tie check (Issue #114 follow-up)** in `topogeoml.nn.diff_ph`. Tie detection skipped infinite-death bars, so a loop truncated by `max_edge_length` with tied birth edges silently routed its gradient to an arbitrary edge. Birth-edge identifiability is now tested for all bars; under `h1_tie_policy="gudhi"` an essential bar with tied births raises an explicit "finite bars only" error. Forward-only inputs and essential bars with a unique birth edge are unchanged.
+- `topogeoml.nn.hodge` type-checks with torch installed (`check_sparse_tensor_invariants` is untyped upstream).
+
+### Documentation and maintenance
+
+- Removed stale `v0.0.1` / `v0.1` / `v0.2` roadmap language and "item N of scope" markers from module and function docstrings across `core`, `nn`, `audits`, `experiments`, `signal`, `training`, `data`, and `pipelines`; each replaced with a present-tense statement of what is and is not implemented. Corrected docstrings that described a non-existent implementation (`sliding_window_view`/`np.correlate` in `signal.delay_embedding`; "atomic write lands in v0.1" where `os.replace` is already used; a `fit(X)` filtration contract that does not exist). `docs/mathematics/foundations.md` now points to `signal.sliding_window.sliding_window_topology_features` instead of a never-shipped `signal/invariant_features.py`. The 3D note string of `cubical_mask_diagnostic` no longer promises a "v0.1 backend".
+- Test hygiene: `pytest.raises(Exception)` narrowed to the concrete exceptions; lint fixes in `examples/` and `experiments/` (not CI-linted).
+
 ## [0.0.8] — 2026-10-09
 
 This release publishes the post-0.0.7 library correctness fixes, scientific benchmark-gating corrections, and source-grounded maintainer documentation. It does not introduce a new graph-classification claim or change archived experiment results. The H₁ gradient safety change can raise on exact or near-tied filtration values; callers must choose an explicit tie policy where needed.

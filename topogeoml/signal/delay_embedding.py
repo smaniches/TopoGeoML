@@ -61,15 +61,10 @@ def takens_embedding(
 
     Notes
     -----
-    The implementation uses ``numpy.lib.stride_tricks.sliding_window_view``,
-    which constructs a view (no data copy) followed by a copy with
-    explicit float64 dtype (elite-code-standards §1.3) and reverses the
-    column order so that index 0 is the most recent sample (matching the
-    convention of Definition 3.1).
-
-    The function performs no Python-level sample loop for the construction
-    (elite-code-standards §3.1). The stride-trick view plus a single copy
-    is vectorized at C level.
+    The implementation builds an ``(n_points, embedding_dim)`` index array
+    once and gathers from the float64 signal in a single advanced-indexing
+    step; column 0 is the most recent sample (matching the convention of
+    Definition 3.1). There is no Python-level loop over samples.
     """
     if signal.ndim != 1:
         raise ValueError(
@@ -167,9 +162,8 @@ def estimate_delay_autocorrelation(
     s_centered = s - s.mean()
     var = float((s_centered * s_centered).sum()) + 1e-300  # §1.4: division safety
 
-    # Vectorized autocorrelation over all lags.
-    # We use np.correlate for the full sequence; this is O(T * max_lag) explicit
-    # but with no Python sample loop (§3.1 — the iteration is over lags, not samples).
+    # Lag-by-lag autocorrelation with early exit at the first lag below the
+    # threshold: O(T * max_lag) worst case, iterating over lags, not samples.
     for lag in range(1, max_lag + 1):
         rho = float((s_centered[:-lag] * s_centered[lag:]).sum()) / var
         if abs(rho) <= threshold:

@@ -46,7 +46,6 @@ from sklearn.preprocessing import StandardScaler
 from topogeoml.training.callbacks import ShapeOfLearningCallback
 from topogeoml.training.snapshot import DivergenceAlert
 
-
 # ---------------------------------------------------------------------------
 # Reproducibility (elite-code-standards §6)
 # ---------------------------------------------------------------------------
@@ -245,10 +244,9 @@ def run_demo(
 
     # --- Find when loss would "reveal" the shift (test loss exceeds 1.2× pre-shift mean) ---
     pre_losses = [h["loss"] for h in loss_history if h["phase"] == "pre"]
-    post_losses = [h["loss"] for h in loss_history if h["phase"] == "post"]
     pre_mean = float(np.mean(pre_losses[-50:])) if pre_losses else 0.0
 
-    print(f"\n=== Results ===")
+    print("\n=== Results ===")
     print(f"Distribution shift occurred at step:  {phase_shift_step}")
     print(f"First topology alert at step:          {first_alert_step}")
     if steps_after_shift is not None:

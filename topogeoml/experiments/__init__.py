@@ -1,10 +1,10 @@
 """
-Experiment runners, configs, and benchmark harnesses.
+Experiment configuration schema.
 
-v0.0.1 ships:
-    configs.py — YAML loader / JSON writer for the experiment schema (item 10).
+    configs.py — YAML loader / JSON writer for the experiment schema.
 
-v0.1 will add MLflow / W&B adapters and the cross-competition benchmark harness.
+The bundled driver is ``examples/run_experiment.py``; benchmark harnesses
+live in the top-level ``benchmarks`` package.
 """
 
 from topogeoml.experiments.configs import (

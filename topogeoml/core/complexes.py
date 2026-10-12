@@ -63,7 +63,7 @@ class SimplicialComplex:
     def __post_init__(self) -> None:
         all_simplices: set[Simplex] = set()
         for facet in self.facets:
-            verts = tuple(sorted(set(int(v) for v in facet)))
+            verts = tuple(sorted({int(v) for v in facet}))
             if len(verts) == 0:
                 continue
             if any(v < 0 for v in verts):
@@ -169,7 +169,7 @@ def is_chain_complex(
     Verify ∂_{k-1} ∘ ∂_k = 0 for all k in [1, max_dim].
 
     The fundamental identity of chain complexes. If this fails, the boundary
-    operator construction is wrong. Item 6 of the v0.0.1 spec.
+    operator construction is wrong.
 
     Parameters
     ----------
@@ -190,7 +190,7 @@ def is_chain_complex(
         if complex_.n_simplices(k) == 0 or complex_.n_simplices(k - 1) == 0:
             continue
         d_k = complex_.boundary_matrix(k)
-        # The line-190 `continue` plus `range(1, ...)` already guarantee
+        # The `continue` above plus `range(1, ...)` already guarantee
         # ``k >= 1`` and ``n_simplices(k - 1) > 0`` here, so no extra guard.
         d_km1 = complex_.boundary_matrix(k - 1)
         if d_km1.shape[0] > 0:

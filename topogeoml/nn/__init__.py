@@ -1,11 +1,12 @@
 """
 Differentiable topology-aware PyTorch modules.
 
-v0.0.1:
-    hodge.py   — HodgeMessagePassing layer (item 8)
+    hodge.py            — HodgeMessagePassing layer
+    diff_ph.py          — Differentiable Rips persistence + topology losses
+    cubical_diff_ph.py  — Differentiable cubical persistence (GUDHI-backed)
 
-v0.1:
-    diff_ph.py — Differentiable persistent homology + topology losses
+All submodules require torch and are imported explicitly, e.g.
+``from topogeoml.nn.diff_ph import rips_diagram_torch``.
 """
 
 __all__: list[str] = []

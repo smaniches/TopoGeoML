@@ -1,5 +1,5 @@
 """
-Graph → clique-complex lift (item 5 of the v0.0.1 scope lock).
+Graph → clique-complex lift.
 
 Given a `networkx.Graph` or a square adjacency matrix, build the simplicial
 complex whose simplices are the cliques of the graph (the *clique complex*,

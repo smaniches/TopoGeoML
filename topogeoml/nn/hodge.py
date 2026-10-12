@@ -112,7 +112,7 @@ def sparse_scipy_to_torch(
     # The COO comes from a valid scipy sparse matrix, so its indices are already
     # in bounds and consistent. Declare that intent explicitly with torch's
     # documented context manager while keeping the setting scoped to this call.
-    with torch.sparse.check_sparse_tensor_invariants(False):
+    with torch.sparse.check_sparse_tensor_invariants(False):  # type: ignore[no-untyped-call]
         tensor = torch.sparse_coo_tensor(indices, values, shape).coalesce()
     if device is not None:
         tensor = tensor.to(device)
@@ -130,8 +130,9 @@ class HodgeMessagePassing(nn.Module):  # type: ignore[misc]
     out_features : int
         Output feature dimension.
     laplacian : torch.sparse.Tensor | sp.spmatrix | np.ndarray
-        Pre-computed normalized Laplacian of shape (n_k, n_k). Will be cast to
-        a torch sparse tensor at construction time.
+        Pre-computed normalized Laplacian of shape (n_k, n_k). SciPy sparse
+        and NumPy inputs are converted to a torch sparse tensor at
+        construction time; a torch tensor is used as given.
     activation : callable, optional
         Nonlinearity (default torch.relu). Pass None for linear layer.
     bias : bool

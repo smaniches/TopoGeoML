@@ -7,8 +7,9 @@ backend. Implementation uses scipy.ndimage connected-component labeling on the
 foreground and on the background, exploiting Alexander duality on a closed
 ambient grid.
 
-Item 4 of the v0.0.1 scope. The full cubical filtration (sub-level sets of a
-real-valued image producing a persistence diagram) is deferred to v0.1.
+This is a mask diagnostic, not a filtration. The full cubical persistence
+of a real-valued image (sub-level sets producing a persistence diagram) is
+provided by ``topogeoml.nn.cubical_diff_ph`` (GUDHI-backed, torch extra).
 
 Conventions
 -----------
@@ -40,7 +41,7 @@ class CubicalDiagnostic:
     """Number of foreground connected components."""
 
     betti_1: int
-    """Number of 1-dimensional holes (2D inputs only; -1 for 3D until v0.1)."""
+    """Number of 1-dimensional holes (2D inputs only; -1 sentinel for 3D)."""
 
     euler_characteristic: int
     """χ = β_0 - β_1 for 2D inputs. -1 for higher dims until extended."""
@@ -78,8 +79,8 @@ def cubical_mask_diagnostic(
     -------
     CubicalDiagnostic
         β_0 always reported. β_1 reported for 2D inputs (via Alexander duality
-        on the padded background); reported as -1 for 3D pending v0.1 cubical
-        persistence backend.
+        on the padded background); reported as -1 for 3D, where this mask
+        diagnostic does not compute it.
 
     Examples
     --------
@@ -123,11 +124,11 @@ def cubical_mask_diagnostic(
         euler = betti_0 - betti_1
         extras["bg_connectivity"] = bg_connectivity
     else:
-        # 3D β_1 / β_2 require a cubical persistence backend (GUDHI's
-        # cubical_complex or cripser). Deferred to v0.1.
+        # 3D β_1 / β_2 require a cubical persistence backend; see
+        # ``topogeoml.nn.cubical_diff_ph`` (GUDHI). Not computed here.
         betti_1 = -1
         euler = -1
-        extras["note"] = "3D β_1 not computed; pending v0.1 cubical PH backend"
+        extras["note"] = "3D β_1 not computed by this mask diagnostic; see topogeoml.nn.cubical_diff_ph"
 
     return CubicalDiagnostic(
         betti_0=betti_0,
