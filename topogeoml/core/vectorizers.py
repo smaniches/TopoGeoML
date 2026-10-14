@@ -5,8 +5,10 @@ Vectorization is what makes topological features usable by downstream ML.
 Each vectorizer produces a deterministic feature vector of known length so
 the pipeline output shape is predictable for sklearn / XGBoost / PyTorch.
 
-v0.1 ships persistence images (Adams et al. 2017) and Betti curves.
-Landscapes (Bubenik 2015) and persistence entropy land in v0.2.
+This module provides persistence images (Adams et al. 2017) and Betti
+curves. Persistence entropy is available as a pooled signal feature in
+``topogeoml.signal.sliding_window``; persistence landscapes (Bubenik 2015)
+are not implemented.
 """
 
 from __future__ import annotations
@@ -199,6 +201,7 @@ class BettiCurveVectorizer:
 
     @property
     def output_dim(self) -> int:
+        """Length of the feature vector produced by transform()."""
         return len(self.homology_dims) * self.resolution
 
     def transform_one(self, diagram: PersistenceDiagram) -> NDArray[np.float64]:

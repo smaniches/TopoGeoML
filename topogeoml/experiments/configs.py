@@ -1,8 +1,6 @@
 """
 Experiment configuration loader and result serializer.
 
-Item 10 of the v0.0.1 scope.
-
 An experiment is fully specified by a YAML file describing:
   - dataset: how to generate / load inputs
   - pipeline: which TopoGeoML pipeline + hyperparameters
@@ -16,8 +14,8 @@ Results are written as a single JSON object with mandatory provenance:
   - environment (package versions, RNG seeds)
   - timestamp (UTC ISO 8601)
 
-This is enough to reproduce or audit any run. v0.1 will add MLflow / W&B
-adapters, but the JSON output is the canonical truth.
+This is enough to reproduce or audit any run. No experiment-tracker
+adapters (MLflow, W&B) are provided; the JSON output is the canonical truth.
 """
 
 from __future__ import annotations
@@ -37,7 +35,7 @@ import yaml  # type: ignore[import-untyped]
 
 @dataclass
 class DatasetConfig:
-    """Synthetic-dataset spec for v0.0.1. Real-data loaders land in v0.1."""
+    """Dataset spec. Only synthetic datasets are implemented by the bundled driver."""
 
     name: str  # e.g. "synthetic_shapes"
     n_per_class: int = 25
@@ -182,8 +180,8 @@ def write_results(
         "timestamp_utc": dt.datetime.now(dt.UTC).isoformat(),
     }
 
-    # Binary write (elite-code-standards §2.1) — atomic-ish via temp + rename
-    # would be better; v0.0.1 keeps the simple form. Atomic write lands in v0.1.
+    # Write to a sibling temp file and atomically replace the target so a
+    # crash mid-write never leaves a truncated results file behind.
     tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
     with open(tmp_path, "wb") as f:
         f.write(json.dumps(payload, indent=2, sort_keys=True).encode("utf-8"))

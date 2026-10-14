@@ -1,12 +1,13 @@
 """
 Filtrations: maps from data to persistence diagrams.
 
-v0.1 ships Vietoris-Rips via ripser. Alpha, cubical, lower-star, and the
-PH metric cascade (Euclidean → Spectral → Fermat with d_int/d_amb selection)
-land in v0.2.
+This module provides the Vietoris-Rips filtration via ripser. Cubical
+persistence lives in ``topogeoml.core.cubical`` (binary-mask diagnostic) and
+``topogeoml.nn.cubical_diff_ph`` (differentiable, GUDHI-backed).
 
-The contract: filtration.fit(X) is a no-op for stateless filtrations;
-filtration.compute(X) returns a PersistenceDiagram with provenance attached.
+The contract: a filtration is a stateless, frozen configuration object;
+``filtration.compute(X)`` returns a PersistenceDiagram with provenance
+attached.
 """
 
 from __future__ import annotations
@@ -46,8 +47,9 @@ class RipsFiltration:
     Notes
     -----
     For n > ~2000 points, set max_edge_length to a finite value to avoid
-    explosive complex sizes. Use intrinsic-dimension diagnostics from
-    metric_space_diagnostics (v0.2) to pick this principled.
+    explosive complex sizes. A data-driven choice is the scale of the
+    nearest-neighbour distances (e.g. ``audit_embedding`` reports the median
+    nearest-neighbour distance); no built-in diagnostic selects it for you.
     """
 
     max_homology_dim: int = 1

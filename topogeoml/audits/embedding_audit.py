@@ -10,11 +10,9 @@ a subsample of the embedding matrix and reporting:
   - longest H_1 bar lifetime — single most significant loop
   - mean / median nearest-neighbor distance — local density indicator
 
-This is a v0.0.1 prototype. The full audit (drift-tensor correction, intrinsic
-dimension calibration, PH metric cascade selection, marketplace-graph aware
-audits) lands in v0.1+.
-
-Item 9 of the v0.0.1 scope.
+This is a heuristic diagnostic: it uses Euclidean Rips persistence with a
+data-scale threshold and does not calibrate the metric or estimate intrinsic
+dimension. Treat the Betti estimates as descriptive, not inferential.
 """
 
 from __future__ import annotations
@@ -112,9 +110,9 @@ def audit_embedding(
 
     Notes
     -----
-    Persistence-threshold defaulting is a v0.0.1 heuristic. v0.1 will use the
-    PH metric cascade (Euclidean → Spectral → Fermat) with intrinsic-dimension
-    calibration to pick the right metric *before* deciding what's significant.
+    Persistence-threshold defaulting is a heuristic (2x the median
+    nearest-neighbour distance). Pass ``persistence_threshold`` explicitly
+    when the data scale is known or the metric is not Euclidean-like.
     """
     X = np.ascontiguousarray(embeddings, dtype=np.float64)
     if X.ndim != 2:
@@ -140,7 +138,7 @@ def audit_embedding(
     median_nn = float(np.median(nn_d))
 
     # Threshold defaults to 2× median NN distance — bars shorter than the
-    # local data scale are noise. Replace with cascade-calibrated value in v0.1.
+    # local data scale are treated as noise.
     if persistence_threshold is None:
         persistence_threshold = 2.0 * median_nn
 

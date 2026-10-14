@@ -14,6 +14,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 from numpy.typing import NDArray
+from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -124,7 +125,7 @@ def test_pipeline_accepts_3d_array_input(
 
 def test_pipeline_transform_before_fit_raises(noisy_circle: NDArray[np.float64]) -> None:
     pipe = TopologyFeaturePipeline()
-    with pytest.raises(Exception):  # sklearn NotFittedError
+    with pytest.raises(NotFittedError):
         pipe.transform([noisy_circle])
 
 

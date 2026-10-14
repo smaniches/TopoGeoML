@@ -93,13 +93,24 @@ def _gudhi_cubical_vertex_pairs(
     cc.persistence()
     verts = cc.vertices_of_persistence_pairs()
 
+    def _to_c_order(idx: NDArray[np.int64]) -> NDArray[np.int64]:
+        # gudhi stores the ``vertices`` array in Fortran (column-major)
+        # order, so the returned vertex indices address ``img_np`` flattened
+        # column-major. Callers index ``img.reshape(-1)`` (row-major), so
+        # remap here; for 1-row/1-column or transpose-symmetric images the
+        # two orders coincide, which is why the mismatch is silent there.
+        multi = np.unravel_index(idx, img_np.shape, order="F")
+        return np.asarray(
+            np.ravel_multi_index(multi, img_np.shape, order="C"), dtype=np.int64
+        )
+
     finite_by_dim: list[NDArray[np.int64]] = []
     finite_pairs_per_dim = verts[0]
     for k in range(max_dim + 1):
         if k < len(finite_pairs_per_dim):
             arr = np.asarray(finite_pairs_per_dim[k], dtype=np.int64)
             if arr.ndim == 2 and arr.shape[1] == 2:
-                finite_by_dim.append(arr)
+                finite_by_dim.append(_to_c_order(arr))
             elif arr.size == 0:  # pragma: no cover
                 # gudhi 3.12 always returns a (n, 2) array even when n=0;
                 # we fall through here only on a future schema change.
@@ -111,7 +122,7 @@ def _gudhi_cubical_vertex_pairs(
 
     essential_per_dim = verts[1]
     essential_h0 = (
-        np.asarray(essential_per_dim[0], dtype=np.int64)
+        _to_c_order(np.asarray(essential_per_dim[0], dtype=np.int64))
         if len(essential_per_dim) > 0
         else np.zeros((0,), dtype=np.int64)
     )

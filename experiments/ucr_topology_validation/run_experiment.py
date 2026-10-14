@@ -60,7 +60,6 @@ from topogeoml.signal import (
     takens_embedding,
 )
 
-
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -479,7 +478,7 @@ def analyze_dataset(
             by_seed_fold[key] = {}
         by_seed_fold[key][r.feature_set] = r.balanced_accuracy
 
-    for key, d in sorted(by_seed_fold.items()):
+    for _key, d in sorted(by_seed_fold.items()):
         if "baseline" in d and "augmented" in d:
             pairs.append((d["baseline"], d["augmented"]))
 
@@ -627,7 +626,7 @@ def run_experiment(
 
     output = {
         "experiment": "ucr_topology_validation",
-        "timestamp_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "timestamp_utc": dt.datetime.now(dt.UTC).isoformat(),
         "seed_global": GLOBAL_SEED,
         "datasets": list(dataset_order),
         "results_per_dataset": all_results,

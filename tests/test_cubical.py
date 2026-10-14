@@ -81,7 +81,7 @@ def test_rejects_4d_input() -> None:
 
 
 def test_3d_input_betti_0_only() -> None:
-    """3D inputs report β_0 only in v0.0.1; β_1 is -1 (pending v0.1)."""
+    """3D inputs report β_0 only; β_1 is the -1 sentinel (not computed by the mask diagnostic)."""
     mask = np.zeros((5, 5, 5), dtype=bool)
     mask[1:4, 1:4, 1:4] = True
     d = cubical_mask_diagnostic(mask)

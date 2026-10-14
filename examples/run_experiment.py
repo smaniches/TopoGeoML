@@ -152,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
     assert isinstance(timing, dict)
 
     out_path = write_results(config, results, timing=timing)
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  CV {config.validation.metric}: {results['cv_mean']:.4f} ± {results['cv_std']:.4f}")
     print(f"  Train {config.validation.metric}: {results['train_score']:.4f}")
     print(f"  Feature dim: {results['feature_dim']}")

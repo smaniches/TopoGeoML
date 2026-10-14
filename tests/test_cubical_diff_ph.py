@@ -464,3 +464,101 @@ class TestBatchedTransferEquivalence:
         grad_scalar = pred_scalar.grad.detach().clone()
 
         assert torch.allclose(grad_batched, grad_scalar, atol=1e-12)
+
+
+# ---------------------------------------------------------------------------
+# Regression: gudhi vertex indices are Fortran-ordered
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skipif(not _has_gudhi(), reason="gudhi not installed")
+class TestGudhiVertexOrderRegression:
+    """``vertices_of_persistence_pairs`` indexes the input flattened in
+    column-major (Fortran) order. The differentiable reconstruction indexes
+    the row-major flattening, so without a remap every non-transpose-
+    symmetric image yielded bar values that disagree with gudhi's own
+    ``persistence()``. Ring images are transpose-symmetric, which is why
+    the earlier tests did not catch this.
+    """
+
+    @staticmethod
+    def _gudhi_reference(img_np, max_dim: int) -> list[set[tuple[float, float]]]:
+        import gudhi
+
+        cc = gudhi.CubicalComplex(vertices=img_np)
+        pairs = cc.persistence()
+        out: list[set[tuple[float, float]]] = [set() for _ in range(max_dim + 1)]
+        for dim, (b, d) in pairs:
+            if dim <= max_dim:
+                out[dim].add((round(float(b), 12), round(float(d), 12)))
+        return out
+
+    @staticmethod
+    def _as_sets(dgms) -> list[set[tuple[float, float]]]:
+        return [
+            {
+                (round(float(b), 12), round(float(d), 12))
+                for b, d in dgm.detach().tolist()
+            }
+            for dgm in dgms
+        ]
+
+    @pytest.mark.parametrize(
+        ("shape", "max_dim"),
+        [((5, 9), 1), ((9, 5), 1), ((7, 7), 1), ((4, 6, 7), 2)],
+    )
+    def test_bar_values_match_gudhi_persistence(self, shape, max_dim) -> None:
+        from topogeoml.nn.cubical_diff_ph import cubical_diagram_torch
+
+        gen = torch.Generator().manual_seed(2024)
+        # Distinct values guarantee each bar is realised by a unique vertex.
+        img = torch.randperm(int(torch.tensor(shape).prod()), generator=gen)
+        img = img.to(torch.float64).reshape(shape) / img.numel()
+        assert not torch.equal(img, img.transpose(0, 1))
+
+        dgms = cubical_diagram_torch(img, max_dim=max_dim, include_essential=True)
+        assert self._as_sets(dgms) == self._gudhi_reference(img.numpy(), max_dim)
+
+    def test_gradient_lands_on_the_critical_pixels(self) -> None:
+        """The H_1 bar of an off-centre ring is realised by the ring's dimmest
+        pixel (birth) and the hole's brightest pixel (death); the gradient
+        must land on exactly those two row-major positions."""
+        from topogeoml.nn.cubical_diff_ph import cubical_diagram_torch
+
+        img = torch.full((4, 7), 0.9, dtype=torch.float64)
+        img[1:4, 2:7] = 0.2  # ring (rows 1-3, cols 2-6)
+        img[2, 3:6] = 0.5  # hole interior
+        img[1, 4] = 0.3  # unique ring maximum -> H_1 birth vertex
+        img[2, 5] = 0.7  # unique hole maximum  -> H_1 death vertex
+        img.requires_grad_(True)
+
+        h1 = cubical_diagram_torch(img, max_dim=1)[1]
+        assert h1.shape == (1, 2)
+        assert h1[0, 0].item() == pytest.approx(0.3)
+        assert h1[0, 1].item() == pytest.approx(0.7)
+
+        (h1[0, 1] - h1[0, 0]).backward()
+        expected = torch.zeros_like(img)
+        expected[1, 4] = -1.0
+        expected[2, 5] = 1.0
+        assert torch.equal(img.grad, expected)
+
+    def test_batched_loss_uses_remapped_indices(self) -> None:
+        from topogeoml.nn.cubical_diff_ph import (
+            CubicalTopologyLoss,
+            betti_matching_loss,
+            cubical_diagram_torch,
+        )
+
+        torch.manual_seed(7)
+        pred = torch.rand(2, 5, 8, dtype=torch.float64, requires_grad=True)
+        loss_module = CubicalTopologyLoss(target_betti={1: 0}, invert=False)
+        loss_module(pred).backward()
+
+        manual = torch.zeros_like(pred)
+        for b in range(pred.shape[0]):
+            single = pred[b].detach().clone().requires_grad_(True)
+            h1 = cubical_diagram_torch(single, max_dim=1)[1]
+            assert self._as_sets([h1]) == self._gudhi_reference(single.detach().numpy(), 1)[1:]
+            betti_matching_loss(h1, target_n_bars=0).backward()
+            manual[b] = single.grad / pred.shape[0]
+        assert torch.allclose(pred.grad, manual, atol=1e-12)

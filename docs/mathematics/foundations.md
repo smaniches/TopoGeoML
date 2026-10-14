@@ -85,7 +85,7 @@ $$\operatorname{Dgm}_k(\Phi(P_W(s, t_0))) = \operatorname{Dgm}_k(P_W(s, t_0))$$
 
 **COROLLARY 4.3**. *Persistence diagrams of sliding-window point clouds are invariant under global temporal translation $\Delta t$ and (in dimension $k = 1$, where sign flip is realized by reflection through the origin only when composed with an appropriate offset) under reflection. They are not invariant under global temporal scaling $t \mapsto t/c$ nor under signal scaling $s \mapsto \alpha s$ for $\alpha \ne 1$.*
 
-**REMARK 4.4** (Achieving scale invariance). Scale invariance under $s \mapsto \alpha s$ (which rescales all pairwise distances by $\alpha$) can be obtained by normalizing the persistence diagram: divide all bar endpoints by the diameter $\operatorname{diam}(P_W(s, t_0))$ before further processing. This is the standard scale-normalization choice in the TDA literature (Bubenik, 2015, §2.2 in the context of persistence landscapes). We adopt this normalization in `signal/invariant_features.py`.
+**REMARK 4.4** (Achieving scale invariance). Scale invariance under $s \mapsto \alpha s$ (which rescales all pairwise distances by $\alpha$) can be obtained by normalizing the persistence diagram: divide all bar endpoints by the diameter $\operatorname{diam}(P_W(s, t_0))$ before further processing. This is the standard scale-normalization choice in the TDA literature (Bubenik, 2015, §2.2 in the context of persistence landscapes). We adopt this normalization in `topogeoml/signal/sliding_window.py` (the `scale_normalize` option of `sliding_window_topology_features`).
 
 ## 5. Vectorization of Persistence Diagrams
 
@@ -111,7 +111,11 @@ with the convention $0 \log 0 := 0$. If $L = 0$ (all finite bars degenerate), $E
 4. From each diagram extract: $|\mathcal{D}_{\text{finite}}|$ (count of finite bars), $\operatorname{Pers}_1(\mathcal{D})$, $\operatorname{Pers}_2(\mathcal{D})$, $E(\mathcal{D})$, $\max_i(d_i - b_i)$ (longest lifetime).
 5. Concatenate the per-window per-dimension statistics into a single vector, optionally pooled (mean and max) across windows to produce a fixed-length vector.
 
-This construction is implemented in `topogeoml.signal.invariant_features.signal_topology_features`.
+For univariate signals, the implemented path is the composition
+`topogeoml.signal.delay_embedding.takens_embedding` followed by
+`topogeoml.signal.sliding_window.sliding_window_topology_features`.
+The latter accepts an already-embedded two-dimensional point cloud;
+neither function alone implements the complete construction.
 
 ## 6. Algorithm Specifications
 

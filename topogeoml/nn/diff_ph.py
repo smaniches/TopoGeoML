@@ -189,6 +189,19 @@ def _gudhi_h1_generator_edges(
     return selected
 
 
+def _reject_ambiguous_essential_bars(
+    dgm_h1: NDArray[np.float64], ambiguous: set[int]
+) -> None:
+    """Fail before constructing a GUDHI complex for unsupported essential ties."""
+    if any(not np.isfinite(dgm_h1[idx, 1]) for idx in ambiguous):
+        raise ValueError(
+            "No matching H1 generator for ambiguous ripser bar. The "
+            "GUDHI convention resolves finite bars only; an essential "
+            "(infinite-death) H1 bar with tied birth edges has no "
+            "implemented critical-edge selection."
+        )
+
+
 def _critical_edges_h1(
     D_np: NDArray[np.float64],
     cocycles: list[NDArray[np.integer[Any]]],
@@ -225,16 +238,18 @@ def _critical_edges_h1(
     if gradients_requested:
         # ripser reports float32 filtration values. A distance that is
         # indistinguishable at that precision does not identify a unique
-        # critical edge, even when distinct in float64 coordinates.
+        # critical edge, even when distinct in float64 coordinates. An
+        # essential bar (``max_edge_length`` truncation) has no death edge,
+        # but its birth edge is subject to the same identifiability test.
         for idx, (birth, death) in enumerate(dgm_h1):
-            if not np.isfinite(death):
-                continue
             birth_tol = 4.0 * float(np.finfo(np.float32).eps) * max(1.0, abs(birth))
-            death_tol = 4.0 * float(np.finfo(np.float32).eps) * max(1.0, abs(death))
-            if (
-                np.count_nonzero(np.abs(dists_upper - birth) <= birth_tol) > 1
-                or np.count_nonzero(np.abs(dists_upper - death) <= death_tol) > 1
-            ):
+            tied = np.count_nonzero(np.abs(dists_upper - birth) <= birth_tol) > 1
+            if np.isfinite(death):
+                death_tol = 4.0 * float(np.finfo(np.float32).eps) * max(1.0, abs(death))
+                tied = tied or (
+                    np.count_nonzero(np.abs(dists_upper - death) <= death_tol) > 1
+                )
+            if tied:
                 ambiguous.add(idx)
 
     resolved = None
@@ -247,6 +262,8 @@ def _critical_edges_h1(
                 "for an explicit generator convention, or perturb the "
                 "input coordinates. There is no unique derivative at ties."
             )
+        # GUDHI handles only finite bars; reject unsupported essential ties first.
+        _reject_ambiguous_essential_bars(dgm_h1, ambiguous)
         resolved = _gudhi_h1_generator_edges(D_np, dgm_h1)
 
     for bar_idx, (birth_val, death_val) in enumerate(dgm_h1):
@@ -254,7 +271,12 @@ def _critical_edges_h1(
             assert resolved is not None
             selected = resolved[bar_idx]
             if selected is None:
-                raise ValueError("No matching H1 generator for ambiguous ripser bar")
+                raise ValueError(
+                    "No matching H1 generator for ambiguous ripser bar. The "
+                    "GUDHI convention resolves finite bars only; an essential "
+                    "(infinite-death) H1 bar with tied birth edges has no "
+                    "implemented critical-edge selection."
+                )
             birth_edges.append(selected[0])
             death_edges.append(selected[1])
             continue
@@ -377,7 +399,10 @@ def rips_diagram_torch(
         a selected GUDHI flag-persistence generator convention (install
         topogeoml[tda]). At exact ties, this is a combinatorial selection,
         not a claim of a unique classical derivative or guaranteed descent.
-        Forward-only inputs (no autograd) retain their barcode outputs.
+        The GUDHI matching covers finite bars only; an essential H1 bar
+        (``max_edge_length`` truncation) with tied birth edges raises under
+        both policies. Forward-only inputs (no autograd) retain their
+        barcode outputs.
 
     Returns
     -------
