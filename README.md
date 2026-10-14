@@ -8,6 +8,8 @@ TopoGeoML 0.0.8 is beta scientific software. This version includes post-0.0.7 co
 
 TopoGeoML is a Python library for using topology in machine learning. It turns point clouds into fixed-length features for scikit-learn, constructs simplicial and Hodge operators, and provides experimental topology losses for PyTorch. The repository also contains a separate graph-classification research record. These are different deliverables: a working library does not imply a positive research result.
 
+**Research authorship:** Santiago Maniches (ORCID [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)) is the sole scientific author of the research contributions and directs this project's development and publication. AI-assisted tools have supported coding, tests, documentation, and internal review; they do not constitute additional scientific authorship or external validation. The upstream libraries and established methods are credited below.
+
 ## 2. Why existing approaches fall short
 
 A persistence engine returns birth–death intervals, not a fitted feature transformer, a training loss, or an auditable experiment. Connecting these pieces by hand risks mixing training and evaluation data or assigning gradients to the wrong critical edges. TopoGeoML supplies those connections; it does not replace the underlying numerical libraries.
