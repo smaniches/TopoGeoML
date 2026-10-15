@@ -17,7 +17,8 @@ squares, cubes) inherit the *maximum* over their incident vertices.
 For every finite-persistence bar :math:`(b_i, d_i)` gudhi's
 :func:`gudhi.CubicalComplex.vertices_of_persistence_pairs` returns the
 pair :math:`(v_b, v_d)` of vertex indices whose filtration value realizes
-the birth and the death (flat row-major indexing). We then construct
+the birth and the death (flat column-major indexing over the image; they
+are remapped to row-major before indexing the tensor). We then construct
 bars as
 
 .. math::

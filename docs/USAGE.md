@@ -6,7 +6,7 @@ description: "Installation, software interface contracts, evaluation commands, a
 
 # Usage and Application Programming Interfaces (APIs)
 
-This guide describes the checked-out `main` implementation. This guide covers the v0.0.8 release and its `h1_tie_policy` API. The earlier v0.0.7 package lacks that argument. Pin a release version or commit for reproducibility. The short first-run commands are in the [README](../README.md).
+This guide describes the checked-out `main` implementation. This guide covers the v0.0.9 release and its `h1_tie_policy` API. The earlier v0.0.7 package lacks that argument; v0.0.8 has it but returns incorrect differentiable cubical bars on non-transpose-symmetric images and does not reject tied essential H1 births. Pin a release version or commit for reproducibility. The short first-run commands are in the [README](../README.md).
 
 ## Installation: which environment is required?
 
