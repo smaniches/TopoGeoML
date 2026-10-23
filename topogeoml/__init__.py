@@ -5,7 +5,7 @@ A Python-first research and engineering stack connecting persistent homology,
 higher-order topological domains, and geometric deep learning into reproducible
 ML pipelines.
 
-v0.0.9 public surface:
+v0.0.10 public surface:
     Core:
         PersistenceDiagram, DiagramProvenance, RipsFiltration,
         PersistenceImageVectorizer, BettiCurveVectorizer,
