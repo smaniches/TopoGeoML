@@ -30,3 +30,9 @@ minimal proof of concept where possible).
   report is accepted and an expected fix timeline, or why it was declined.
 - **Disclosure:** coordinated. We will agree on a disclosure window with the
   reporter and credit reporters who wish to be named.
+
+## FileLock compatibility constraint (2026-10-23)
+
+The optional PyTorch environments resolved FileLock 3.32.3, inside the affected range for CVE-2026-112940. The `torch` and `bench` extras now require 3.20.3, which predates the affected SQLite locking feature. This is a compatibility constraint, not a vulnerability suppression. Revisit it when upstream PyTorch permits the patched >=4.2.1 line. No reachability of the vulnerable code path from TopoGeoML was established.
+
+Advisory: https://github.com/tox-dev/filelock/security/advisories/GHSA-v4x8-3wr5-3wq8

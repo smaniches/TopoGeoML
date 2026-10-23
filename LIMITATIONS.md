@@ -1,6 +1,6 @@
-# Limitations of TopoGeoML v0.0.9
+# Limitations of TopoGeoML v0.0.10
 
-TopoGeoML is a pre-stable scientific software library and an accompanying empirical research record. This document states the limits of the current implementation and of the claims supported by the repository. Version `0.0.9` includes the post-0.0.8 cubical-persistence and essential-H1 tie corrections. `0.0.9` is pre-stable; pin an exact release or commit when reproducing results. It is not a roadmap.
+TopoGeoML is a pre-stable scientific software library and an accompanying empirical research record. This document states the limits of the current implementation and of the claims supported by the repository. Version `0.0.9` includes the post-0.0.8 cubical-persistence and essential-H1 tie corrections. `0.0.10` is pre-stable; pin an exact release or commit when reproducing results. It is not a roadmap.
 
 If observed behavior contradicts the public API documentation, treat that as a defect and open an issue.
 
@@ -60,7 +60,7 @@ The repository checks gradient flow, selected small-input `torch.autograd.gradch
 
 ## 4. Feature-pipeline limits
 
-`TopologyFeaturePipeline` is a scikit-learn transformer for batches of point clouds, but each sample is currently processed serially. The public `n_jobs` constructor argument is reserved and does not provide parallel persistence computation in v0.0.9.
+`TopologyFeaturePipeline` is a scikit-learn transformer for batches of point clouds, but each sample is currently processed serially. The public `n_jobs` constructor argument is reserved and does not provide parallel persistence computation in v0.0.10.
 
 The persistence-image representation depends on the fitted filtration scale, image resolution, and Gaussian bandwidth. Distribution shift in geometric scale can therefore move test points outside the scale represented well by the training grid. Fit the transformer inside each cross-validation fold and normalize geometry deliberately when scale is not itself a feature.
 
@@ -108,6 +108,6 @@ It does not claim that topology improves every machine-learning task, that Hodge
 
 ## 10. Version stability
 
-`0.0.9` is pre-stable. Public APIs can change before `1.0`. Pin exact versions in downstream research, record configuration and dependency versions, and rerun validation when upgrading.
+`0.0.10` is pre-stable. Public APIs can change before `1.0`. Pin exact versions in downstream research, record configuration and dependency versions, and rerun validation when upgrading.
 
 Santiago Maniches (ORCID: [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)).
