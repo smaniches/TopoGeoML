@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.10] — 2026-10-29
+
+### Security
+
+- Require `filelock>=4.2.1` in optional `torch` and `bench` extras, addressing the known CVE-2026-112909 and CVE-2026-112940 affected ranges. The formerly proposed 3.20.3 pin was rejected because it remained vulnerable. Validate installation of the actual full-dependency and benchmark extras against supported Python runtimes; do not assume PyTorch constrains FileLock below 4.
+- No algorithm, numerical output, or archived experiment is changed. This dependency requirement does not prove absence of vulnerabilities in all installations or reachability of any particular FileLock code path.
+
 ## [0.0.9] — 2026-10-15
 
 This maintenance release distributes two numerical corrections that were merged after 0.0.8 (#122). It introduces no new research claim and does not change any archived experiment, graph-classification ledger statistic, or frozen benchmark result; none of those depend on the differentiable cubical path.

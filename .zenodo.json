@@ -17,19 +17,16 @@
     "mechanism elimination",
     "reproducible science"
   ],
-  "license": {"id": "MIT"},
+  "license": {
+    "id": "MIT"
+  },
   "upload_type": "software",
   "access_right": "open",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "related_identifiers": [
     {
       "identifier": "10.5281/zenodo.20365816",
       "relation": "isVersionOf",
-      "scheme": "doi"
-    },
-    {
-      "identifier": "10.5281/zenodo.23291234",
-      "relation": "isNewVersionOf",
       "scheme": "doi"
     },
     {

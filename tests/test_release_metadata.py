@@ -34,7 +34,16 @@ def test_structured_release_metadata_agrees() -> None:
     assert citation["version"] == __version__
     assert zenodo["version"] == __version__
     assert citation["doi"] == _related_identifier(zenodo, "isVersionOf")
-    assert _related_identifier(zenodo, "isNewVersionOf") != citation["doi"]
+    # A previous-version DOI is optional when the exact predecessor cannot
+    # be independently verified. Never reuse the known 0.0.8 record for 0.0.10.
+    prior = [
+        item["identifier"]
+        for item in zenodo["related_identifiers"]
+        if item["relation"] == "isNewVersionOf"
+    ]
+    assert len(prior) <= 1
+    if prior:
+        assert prior[0] not in {citation["doi"], "10.5281/zenodo.23291234"}
 
     release_date = str(citation["date-released"])
     assert f"## [{__version__}] — {release_date}" in _text("CHANGELOG.md")
@@ -64,3 +73,14 @@ def test_public_version_surfaces_agree() -> None:
         content = _text(path)
         for marker in markers:
             assert marker in content, f"{path} missing release marker {marker!r}"
+
+
+def test_optional_filelock_security_floor() -> None:
+    """Both PyTorch extras must reject the known vulnerable FileLock range."""
+    import tomllib
+
+    metadata = tomllib.loads(_text("pyproject.toml"))
+    extras = metadata["project"]["optional-dependencies"]
+    for extra in ("torch", "bench"):
+        assert "filelock>=4.2.1" in extras[extra]
+        assert "filelock==3.20.3" not in extras[extra]
