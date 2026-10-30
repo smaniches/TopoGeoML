@@ -7,12 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.10] — 2026-10-23
+## [0.0.10] — 2026-10-29
 
 ### Security
 
-- Constrain FileLock to 3.20.3 in the optional `torch` and `bench` extras. This version predates the feature affected by CVE-2026-112940 and remains compatible with the currently tested PyTorch dependency range. The default non-PyTorch installation is unchanged. Revisit the pin when PyTorch permits FileLock >=4.2.1.
-- No algorithm, numerical output, or archived experiment is changed. This dependency advisory does not establish that TopoGeoML invokes the vulnerable SQLite lock path.
+- Require `filelock>=4.2.1` in optional `torch` and `bench` extras, addressing the known CVE-2026-112909 and CVE-2026-112940 affected ranges. The formerly proposed 3.20.3 pin was rejected because it remained vulnerable. Validate installation of the actual full-dependency and benchmark extras against supported Python runtimes; do not assume PyTorch constrains FileLock below 4.
+- No algorithm, numerical output, or archived experiment is changed. This dependency requirement does not prove absence of vulnerabilities in all installations or reachability of any particular FileLock code path.
 
 ## [0.0.9] — 2026-10-15
 

@@ -31,8 +31,23 @@ minimal proof of concept where possible).
 - **Disclosure:** coordinated. We will agree on a disclosure window with the
   reporter and credit reporters who wish to be named.
 
-## FileLock compatibility constraint (2026-10-23)
+## Optional filelock dependency floor (2026-10-29)
 
-The optional PyTorch environments resolved FileLock 3.32.3, inside the affected range for CVE-2026-112940. The `torch` and `bench` extras now require 3.20.3, which predates the affected SQLite locking feature. This is a compatibility constraint, not a vulnerability suppression. Revisit it when upstream PyTorch permits the patched >=4.2.1 line. No reachability of the vulnerable code path from TopoGeoML was established.
+The optional `torch` and `bench` environments previously resolved vulnerable
+`filelock` versions. In addition to the SQLite-backed read-write lock issue
+CVE-2026-112940 (introduced in 3.20.4), the older `UnixFileLock` issue
+CVE-2026-112909 also affects 3.20.3 and earlier releases. The known patched
+release floor is **4.2.1**. Both optional extras now require
+`filelock>=4.2.1` on supported Python 3.11+. We do not pin an artificial
+upper bound or suppress any vulnerability advisory.
 
-Advisory: https://github.com/tox-dev/filelock/security/advisories/GHSA-v4x8-3wr5-3wq8
+The full-dependency coverage job installs the real optional dependency closure
+and runs `pip-audit --local`; benchmark smoke jobs install the separate
+`bench` extra. Such checks provide evidence for the resolved, tested
+configuration, not a universal claim that every consumer's environment is safe.
+No vulnerable-lock exploit path through TopoGeoML code has been demonstrated.
+Users should keep lock directories private from untrusted local accounts.
+
+Advisories:
+- https://github.com/tox-dev/filelock/security/advisories/GHSA-v4x8-3wr5-3wq8
+- https://github.com/tox-dev/filelock/security/advisories/GHSA-69hj-f68j-2879

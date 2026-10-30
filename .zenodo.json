@@ -30,11 +30,6 @@
       "scheme": "doi"
     },
     {
-      "identifier": "10.5281/zenodo.23291234",
-      "relation": "isNewVersionOf",
-      "scheme": "doi"
-    },
-    {
       "identifier": "https://github.com/smaniches/TopoGeoML",
       "relation": "isSupplementTo",
       "scheme": "url"

@@ -51,9 +51,10 @@ dependencies = [
 # PyTorch / PyG: differentiable layers, GNN integration. Heavy install.
 torch = [
     "torch>=2.0",
-    # CVE-2026-112940: 3.20.3 predates the affected SQLite lock feature.
-    # Temporary compatibility pin while PyTorch constrains FileLock below 4.
-    "filelock==3.20.3",
+    # filelock <=4.2.0 has multiple advisories (including CVE-2026-112909).
+    # Require patched 4.2.1+ on supported Python >=3.11. No upper bound:
+    # test the actual resolved PyTorch/optional dependency closure in CI.
+    "filelock>=4.2.1",
     "torch-geometric>=2.4",
 ]
 # Higher-order topological domains via TopoNetX.
@@ -87,9 +88,10 @@ all = [
 # canonical MNIST download with cached checksums.
 bench = [
     "torch>=2.0",
-    # CVE-2026-112940: 3.20.3 predates the affected SQLite lock feature.
-    # Temporary compatibility pin while PyTorch constrains FileLock below 4.
-    "filelock==3.20.3",
+    # filelock <=4.2.0 has multiple advisories (including CVE-2026-112909).
+    # Require patched 4.2.1+ on supported Python >=3.11. No upper bound:
+    # test the actual resolved PyTorch/optional dependency closure in CI.
+    "filelock>=4.2.1",
     "torch-topological>=0.1.9",
     "torchvision>=0.15",
     "gudhi>=3.9",
