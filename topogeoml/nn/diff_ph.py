@@ -476,7 +476,11 @@ def rips_diagram_torch(
     else:
         deaths_h0 = infinite_h0
 
-    diagrams.append(torch.stack([births_h0, deaths_h0], dim=1))
+    h0_diagram = torch.stack([births_h0, deaths_h0], dim=1)
+    if n_h0_finite == 0:
+        # When every H0 bar is essential, preserve a zero-gradient path to X.
+        h0_diagram = h0_diagram + D_torch.reshape(-1)[:0].sum()
+    diagrams.append(h0_diagram)
 
     # --- H_1 diagram ---
     if max_dim >= 1:
@@ -485,7 +489,8 @@ def rips_diagram_torch(
         n_h1 = len(dgm_h1)
 
         if n_h1 == 0:
-            diagrams.append(torch.empty((0, 2), dtype=dtype, device=device))
+            # An empty diagram is still a differentiable function of X.
+            diagrams.append(D_torch[:0, :2])
         else:
             birth_edges, death_edges = _critical_edges_h1(
                 D_np,
@@ -535,6 +540,11 @@ def rips_diagram_torch(
 # Topology loss functions
 # ---------------------------------------------------------------------------
 
+def _connected_zero(reference: torch.Tensor) -> torch.Tensor:
+    """Return zero on the input's autograd graph, without reading Inf/NaN values."""
+    return reference.reshape(-1)[:0].sum()
+
+
 def finite_lifetimes(diagram: torch.Tensor) -> torch.Tensor:
     """
     Return lifetimes (death - birth) for finite bars.
@@ -542,7 +552,7 @@ def finite_lifetimes(diagram: torch.Tensor) -> torch.Tensor:
     """
     mask = torch.isfinite(diagram[:, 1])
     if not mask.any():
-        return torch.empty(0, dtype=diagram.dtype, device=diagram.device)
+        return diagram[:0, 0]
     finite = diagram[mask]
     return finite[:, 1] - finite[:, 0]
 
@@ -561,10 +571,10 @@ def total_persistence_loss(
     """
     lifetimes = finite_lifetimes(diagram)
     if lifetimes.numel() == 0:
-        return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
+        return _connected_zero(diagram)
     significant = lifetimes[lifetimes > threshold]
     if significant.numel() == 0:
-        return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
+        return _connected_zero(diagram)
     return significant.pow(p).sum()
 
 
@@ -577,7 +587,7 @@ def persistence_entropy_loss(diagram: torch.Tensor) -> torch.Tensor:
     """
     lifetimes = finite_lifetimes(diagram)
     if lifetimes.numel() == 0:
-        return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
+        return _connected_zero(diagram)
     total = lifetimes.sum() + 1e-300  # §1.4: division safety
     p = lifetimes / total
     p = torch.clamp(p, min=1e-300)  # prevent log(0)
@@ -621,13 +631,13 @@ def betti_regularization_loss(
         # n_essential exceeds the target: it is exactly 0. Reducing the component
         # count in this regime requires acting on the distance matrix, not a
         # truncated diagram.
-        return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
+        return _connected_zero(diagram)
     # Sort descending: most prominent first
     sorted_lifetimes, _ = lifetimes.sort(descending=True)
     significant = sorted_lifetimes[sorted_lifetimes > prominence_threshold]
     n_real = n_essential + significant.numel()
     if n_real <= target_n_components:
-        return torch.tensor(0.0, dtype=diagram.dtype, device=diagram.device)
+        return _connected_zero(diagram)
     # Essential bars already fill part of the target budget; the remainder is for
     # finite bars. Keep the most prominent finite (significant) bars within that
     # remaining budget and penalize only the LEAST prominent excess -- pushing the
@@ -735,7 +745,8 @@ class TopologyRegularizer(nn.Module):  # type: ignore[misc]
             X_sub, max_dim=self.max_dim, h1_tie_policy=self.h1_tie_policy
         )
 
-        total_loss = torch.tensor(0.0, dtype=torch.float64, device=X.device)
+        # A legitimate zero penalty must not detach the training loss from X.
+        total_loss = _connected_zero(X_sub).to(torch.float64)
 
         for k, dgm in enumerate(diagrams):
             if dgm.numel() == 0:
