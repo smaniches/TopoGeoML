@@ -1,6 +1,6 @@
-# Limitations of TopoGeoML v0.0.10
+# Limitations of TopoGeoML v0.0.11
 
-TopoGeoML is a pre-stable scientific software library and an accompanying empirical research record. This document states the limits of the current implementation and of the claims supported by the repository. Version `0.0.9` includes the post-0.0.8 cubical-persistence and essential-H1 tie corrections. `0.0.10` is pre-stable; pin an exact release or commit when reproducing results. It is not a roadmap.
+TopoGeoML is a pre-stable scientific software library and an accompanying empirical research record. This document states the limits of the current implementation and of the claims supported by the repository. Version `0.0.9` includes the post-0.0.8 cubical-persistence and essential-H1 tie corrections. `0.0.11` is pre-stable; pin an exact release or commit when reproducing results. The zero-loss autograd repair in v0.0.11 prevents detached exact-zero training penalties; it does not resolve ambiguities at non-differentiable topology changes. It is not a roadmap.
 
 If observed behavior contradicts the public API documentation, treat that as a defect and open an issue.
 
@@ -108,6 +108,6 @@ It does not claim that topology improves every machine-learning task, that Hodge
 
 ## 10. Version stability
 
-`0.0.10` is pre-stable. Public APIs can change before `1.0`. Pin exact versions in downstream research, record configuration and dependency versions, and rerun validation when upgrading.
+`0.0.11` is pre-stable. Public APIs can change before `1.0`. Pin exact versions in downstream research, record configuration and dependency versions, and rerun validation when upgrading.
 
 Santiago Maniches (ORCID: [0009-0005-6480-1987](https://orcid.org/0009-0005-6480-1987)).
