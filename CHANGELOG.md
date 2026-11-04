@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11] — 2026-11-04
+
+Corrective release for differentiable zero topology penalties. When a loss was
+exactly zero (empty persistence diagrams, essential-only bars, or no excess
+penalty), some PyTorch paths returned a detached scalar, causing
+`.backward()` to fail instead of returning a valid zero gradient.
+
+- Connect exact zero loss values to the input autograd graph without unsafe
+  `inf * 0` arithmetic. Regression tests cover loss helpers, truncated H0,
+  empty H1, and `TopologyRegularizer` (#128).
+- Preserve existing nonzero loss behavior, public API, and archived research
+  results. The remaining H1 critical-edge mathematical validation (#114)
+  is separate; no unique derivative at ambiguous ties is claimed.
+- Include previously merged CI dependency and coverage-report maintenance.
+  The release does not claim improved graph-classification performance.
+
+
 ## [0.0.10] — 2026-10-29
 
 ### Security
